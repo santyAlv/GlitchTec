@@ -385,7 +385,7 @@
 
     var tecnico = (sum.mode === 'tecnico');
 
-    document.querySelector('#screen-win .win-title').textContent =
+    document.querySelector('#screen-win .doc-title-win').textContent =
       tecnico ? '// TODOS LOS EQUIPOS ENTREGADOS' : '// SISTEMA RESTAURADO';
     document.querySelector('#screen-win .win-lead').textContent = tecnico
       ? 'Cerraste las cuatro órdenes. Cuatro clientes se van con su equipo andando.'
