@@ -422,7 +422,7 @@
     desc: 'Version del sistema.',
     run: function () {
       print('');
-      print('WinTEC XP  [Version 5.1.2600]', 'info');
+      print('WinTEC 95  [Version 4.02.TEC]', 'info');
       print('Integridad del sistema: ' + Math.round(GT.state.integrity) + '%',
             GT.state.integrity < 40 ? 'err' : '');
       print('Nivel de infeccion: ' + GT.getInfection() + '%', 'warn');
@@ -556,7 +556,7 @@
   }
 
   function banner() {
-    print('WinTEC XP  [Version 5.1.2600]', 'dim');
+    print('WinTEC 95  [Version 4.02.TEC]', 'dim');
     print('(c) Corporacion WinTEC. Todos los derechos reservados.', 'dim');
     print('');
     print('Escribi  help  para ver los comandos disponibles.', 'info');

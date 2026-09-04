@@ -16,69 +16,90 @@
   /* ============================================================
      Iconos (SVG inline, sin archivos externos)
      ============================================================ */
+  /* Iconos de 16x16 pixeles, dibujados sobre rejilla entera y con
+     shape-rendering="crispEdges": nada de curvas ni degrades, para
+     que al escalarlos a 32 px se vean como los del sistema. */
+  function pix(inner) {
+    return '<svg viewBox="0 0 16 16" shape-rendering="crispEdges">' + inner + '</svg>';
+  }
+
   ui.icons = {
-    terminal:
-      '<svg viewBox="0 0 32 32"><rect x="1.5" y="3.5" width="29" height="25" rx="2" fill="#0b1712" stroke="#3a5c4c"/>' +
-      '<rect x="1.5" y="3.5" width="29" height="5" fill="#1d3129" stroke="#3a5c4c"/>' +
-      '<text x="6" y="21" font-family="monospace" font-size="11" fill="#35ff7a">&gt;_</text></svg>',
+    terminal: pix(
+      '<path d="M0 1h16v11H0z" fill="#5a625f"/>' +
+      '<path d="M1 2h14v9H1z" fill="#04090b"/>' +
+      '<path d="M3 4h1v1H3zM4 5h1v1H4zM5 6h1v1H5zM4 7h1v1H4zM3 8h1v1H3z" fill="#2bf07a"/>' +
+      '<path d="M7 8h4v1H7z" fill="#2bf07a"/>' +
+      '<path d="M6 12h4v2H6zM3 14h10v1H3z" fill="#5a625f"/>'),
 
-    folder:
-      '<svg viewBox="0 0 32 32"><path d="M2 8a2 2 0 012-2h8l3 3h13a2 2 0 012 2v14a2 2 0 01-2 2H4a2 2 0 01-2-2z" fill="#f2c14e" stroke="#a97d16"/>' +
-      '<path d="M2 12h28v12a2 2 0 01-2 2H4a2 2 0 01-2-2z" fill="#ffd977" stroke="#a97d16"/></svg>',
+    folder: pix(
+      '<path d="M0 2h6l2 2h8v10H0z" fill="#8a6a10"/>' +
+      '<path d="M1 3h5l2 2h7v8H1z" fill="#f5c344"/>' +
+      '<path d="M1 6h14v7H1z" fill="#ffd968"/>'),
 
-    folderLock:
-      '<svg viewBox="0 0 32 32"><path d="M2 8a2 2 0 012-2h8l3 3h13a2 2 0 012 2v14a2 2 0 01-2 2H4a2 2 0 01-2-2z" fill="#c9b municipal" /></svg>',
+    folderLock: pix(
+      '<path d="M0 2h6l2 2h8v10H0z" fill="#5f6360"/>' +
+      '<path d="M1 3h5l2 2h7v8H1z" fill="#a9ada6"/>' +
+      '<path d="M1 6h14v7H1z" fill="#cfd3cb"/>' +
+      '<path d="M6 7h1v2H6zM9 7h1v2H9zM7 6h2v1H7z" fill="#2f3433"/>' +
+      '<path d="M5 9h6v4H5z" fill="#4d5459"/>' +
+      '<path d="M7 10h2v2H7z" fill="#ffd968"/>'),
 
-    taskmgr:
-      '<svg viewBox="0 0 32 32"><rect x="2.5" y="4.5" width="27" height="23" rx="2" fill="#e8eef5" stroke="#5b6b7c"/>' +
-      '<rect x="2.5" y="4.5" width="27" height="4" fill="#5b8fd6" stroke="#5b6b7c"/>' +
-      '<rect x="6" y="18" width="4" height="6" fill="#2f9c52"/><rect x="12" y="14" width="4" height="10" fill="#2f9c52"/>' +
-      '<rect x="18" y="11" width="4" height="13" fill="#d6a029"/><rect x="24" y="17" width="3" height="7" fill="#d6293e"/></svg>',
+    taskmgr: pix(
+      '<path d="M0 1h16v13H0z" fill="#5a625f"/>' +
+      '<path d="M1 2h14v11H1z" fill="#e8e8e0"/>' +
+      '<path d="M1 2h14v2H1z" fill="#0a2a86"/>' +
+      '<path d="M3 9h2v3H3zM6 7h2v5H6z" fill="#12833c"/>' +
+      '<path d="M9 5h2v7H9z" fill="#c98f10"/>' +
+      '<path d="M12 8h2v4h-2z" fill="#a3121b"/>'),
 
-    mail:
-      '<svg viewBox="0 0 32 32"><rect x="2.5" y="7.5" width="27" height="18" rx="2" fill="#fff" stroke="#5b6b7c"/>' +
-      '<path d="M3 9l13 9 13-9" fill="none" stroke="#5b8fd6" stroke-width="2"/>' +
-      '<path d="M3 25l9-8M29 25l-9-8" fill="none" stroke="#b8c4d0"/></svg>',
+    mail: pix(
+      '<path d="M0 3h16v10H0z" fill="#4d5459"/>' +
+      '<path d="M1 4h14v8H1z" fill="#ffffff"/>' +
+      '<path d="M1 4h14v1H1zM2 5h12v1H2zM3 6h10v1H3zM4 7h8v1H4zM5 8h6v1H5zM6 9h4v1H6zM7 10h2v1H7z" fill="#c3ccd4"/>'),
 
-    doc:
-      '<svg viewBox="0 0 32 32"><path d="M7 3h13l6 6v20H7z" fill="#fff" stroke="#7a8592"/>' +
-      '<path d="M20 3v6h6" fill="#dde5ee" stroke="#7a8592"/>' +
-      '<path d="M11 14h12M11 18h12M11 22h8" stroke="#8aa0b5" stroke-width="1.4"/></svg>',
+    doc: pix(
+      '<path d="M2 0h8l4 4v12H2z" fill="#5a625f"/>' +
+      '<path d="M3 1h6v4h4v10H3z" fill="#ffffff"/>' +
+      '<path d="M9 1l4 4H9z" fill="#c8ccd0"/>' +
+      '<path d="M5 7h6v1H5zM5 9h6v1H5zM5 11h4v1H5z" fill="#8a93a0"/>'),
 
-    exe:
-      '<svg viewBox="0 0 32 32"><rect x="4.5" y="4.5" width="23" height="23" rx="2" fill="#3b4a5a" stroke="#1e2a36"/>' +
-      '<rect x="7" y="7" width="18" height="6" fill="#5b8fd6"/>' +
-      '<text x="8" y="24" font-family="monospace" font-size="9" fill="#ffd24d">EXE</text></svg>',
+    exe: pix(
+      '<path d="M1 2h14v12H1z" fill="#2f3433"/>' +
+      '<path d="M2 3h12v10H2z" fill="#c3c7c3"/>' +
+      '<path d="M2 3h12v2H2z" fill="#0a2a86"/>' +
+      '<path d="M4 7h3v3H4zM9 7h3v3H9z" fill="#2bf07a"/>' +
+      '<path d="M4 11h8v1H4z" fill="#5a625f"/>'),
 
-    danger:
-      '<svg viewBox="0 0 32 32"><path d="M16 3l14 25H2z" fill="#ffd24d" stroke="#b5121b" stroke-width="1.6"/>' +
-      '<path d="M16 12v8" stroke="#7a0c12" stroke-width="2.6" stroke-linecap="round"/>' +
-      '<circle cx="16" cy="24" r="1.5" fill="#7a0c12"/></svg>',
+    danger: pix(
+      '<path d="M8 1l7 13H1z" fill="#7a0c12"/>' +
+      '<path d="M8 3l5 10H3z" fill="#ffd24d"/>' +
+      '<path d="M7 6h2v4H7zM7 11h2v2H7z" fill="#3a0a0e"/>'),
 
-    book:
-      '<svg viewBox="0 0 32 32"><path d="M4 5h10a3 3 0 013 3v20a3 3 0 00-3-3H4z" fill="#4a90d9" stroke="#245e96"/>' +
-      '<path d="M28 5H18a3 3 0 00-3 3v20a3 3 0 013-3h10z" fill="#6fb0ef" stroke="#245e96"/></svg>',
+    book: pix(
+      '<path d="M1 2h14v12H1z" fill="#0a2a86"/>' +
+      '<path d="M2 3h5v10H2zM9 3h5v10H9z" fill="#eef2f8"/>' +
+      '<path d="M3 5h3v1H3zM3 7h3v1H3zM10 5h3v1h-3zM10 7h3v1h-3z" fill="#8a93a0"/>' +
+      '<path d="M7 2h2v12H7z" fill="#06133f"/>'),
 
-    trash:
-      '<svg viewBox="0 0 32 32"><path d="M8 10h16l-1.6 18a2 2 0 01-2 1.8H11.6a2 2 0 01-2-1.8z" fill="#b8c4d0" stroke="#5b6b7c"/>' +
-      '<rect x="6" y="6" width="20" height="4" rx="1" fill="#8fa0b0" stroke="#5b6b7c"/>' +
-      '<path d="M13 14v11M19 14v11" stroke="#5b6b7c" stroke-width="1.4"/></svg>',
+    trash: pix(
+      '<path d="M6 1h4v1H6zM3 2h10v2H3z" fill="#4d5459"/>' +
+      '<path d="M4 5h8v9H4z" fill="#b8bcc0"/>' +
+      '<path d="M4 5h8v1H4z" fill="#8e9398"/>' +
+      '<path d="M6 7h1v6H6zM9 7h1v6H9z" fill="#6d7479"/>'),
 
-    shield:
-      '<svg viewBox="0 0 32 32"><path d="M16 3l11 4v10c0 7-4.6 11.4-11 13-6.4-1.6-11-6-11-13V7z" fill="#2f9c52" stroke="#14562a"/>' +
-      '<path d="M10 16l4.4 4.4L23 12" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>',
+    shield: pix(
+      '<path d="M2 2h12v6H2zM2 8h12l-6 6z" fill="#0d4a20"/>' +
+      '<path d="M3 3h10v5H3zM3 8h10l-5 5z" fill="#2f9c52"/>' +
+      '<path d="M5 6h1v1H5zM6 7h1v1H6zM7 8h1v1H7zM8 7h1v1H8zM9 6h1v1H9zM10 5h1v1h-1z" fill="#ffffff"/>' +
+      '<path d="M5 7h1v1H5zM6 8h1v1H6zM7 9h1v1H7zM8 8h1v1H8zM9 7h1v1H9zM10 6h1v1h-1z" fill="#ffffff"/>'),
 
-    skull:
-      '<svg viewBox="0 0 32 32"><path d="M16 3C9.4 3 4 8 4 14.4c0 3.8 1.9 6.6 4.4 8.3V27h15.2v-4.3c2.5-1.7 4.4-4.5 4.4-8.3C28 8 22.6 3 16 3z" fill="#e6ebf0" stroke="#3a4652"/>' +
-      '<circle cx="11.4" cy="15" r="3.1" fill="#1a222b"/><circle cx="20.6" cy="15" r="3.1" fill="#1a222b"/>' +
-      '<path d="M16 19l-1.6 3h3.2z" fill="#1a222b"/></svg>'
+    skull: pix(
+      '<path d="M3 2h10v8H3zM5 10h6v4H5z" fill="#e8e8e0"/>' +
+      '<path d="M3 2h1v8H3zM12 2h1v8h-1z" fill="#c2c2ba"/>' +
+      '<path d="M5 5h2v2H5zM9 5h2v2H9z" fill="#14181a"/>' +
+      '<path d="M7 8h2v1H7z" fill="#14181a"/>' +
+      '<path d="M6 10h1v4H6zM9 10h1v4H9z" fill="#8e9398"/>')
   };
-
-  ui.icons.folderLock =
-    '<svg viewBox="0 0 32 32"><path d="M2 8a2 2 0 012-2h8l3 3h13a2 2 0 012 2v14a2 2 0 01-2 2H4a2 2 0 01-2-2z" fill="#c9bda0" stroke="#7d7458"/>' +
-    '<path d="M2 12h28v12a2 2 0 01-2 2H4a2 2 0 01-2-2z" fill="#ded4b8" stroke="#7d7458"/>' +
-    '<rect x="12" y="17" width="9" height="7" rx="1" fill="#5b6b7c" stroke="#333d47"/>' +
-    '<path d="M14 17v-2.2a2.5 2.5 0 015 0V17" fill="none" stroke="#333d47" stroke-width="1.6"/></svg>';
 
   /* ============================================================
      Pantallas

@@ -1,5 +1,7 @@
 /* ============================================================
    Glitch.TEC — pantallas completas: titulo, manual, boot, finales
+   Todas viven dentro del mismo sistema visual: fondo de escritorio
+   con trama y paneles grises en relieve.
    ============================================================ */
 
 .screen {
@@ -7,22 +9,16 @@
   inset: 0;
   display: none;
   overflow: auto;
-  background: var(--bg-deep);
+  background-color: var(--desk-dark);
+  background-image:
+    linear-gradient(45deg, rgba(255,255,255,.03) 25%, transparent 25%,
+                           transparent 75%, rgba(255,255,255,.03) 75%),
+    linear-gradient(45deg, rgba(255,255,255,.03) 25%, transparent 25%,
+                           transparent 75%, rgba(255,255,255,.03) 75%);
+  background-size: 2px 2px;
+  background-position: 0 0, 1px 1px;
 }
 .screen.is-active { display: block; }
-
-/* ---------- Fondo de rejilla ---------- */
-.screen::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(53,255,122,.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(53,255,122,.045) 1px, transparent 1px);
-  background-size: 34px 34px;
-  pointer-events: none;
-}
-#screen-desktop::before { display: none; }
 
 /* ================= TITULO ================= */
 .title-wrap {
@@ -37,13 +33,16 @@
   padding: 40px 20px;
 }
 
+/* El titulo es la pantalla de arranque del sistema: fósforo sobre
+   negro, dentro del marco del monitor. */
 .game-title {
   font-family: var(--mono);
-  font-size: clamp(48px, 11vw, 132px);
-  letter-spacing: 6px;
+  font-size: clamp(44px, 10vw, 116px);
+  font-weight: bold;
+  letter-spacing: 4px;
   margin: 0;
   color: var(--green);
-  text-shadow: 0 0 22px rgba(53,255,122,.45);
+  text-shadow: 0 0 18px rgba(43,240,122,.5);
   position: relative;
 }
 .game-title .dot { color: var(--red); }
@@ -79,225 +78,245 @@
 
 .game-sub {
   font-family: var(--mono);
-  color: var(--text-dim);
+  color: #8fb0a8;
   letter-spacing: 4px;
-  font-size: clamp(11px, 1.6vw, 16px);
-  margin: 6px 0 26px;
+  font-size: clamp(11px, 1.6vw, 15px);
+  margin: 6px 0 22px;
 }
 
+/* Ficha de presentacion: un panel gris del sistema */
 .game-tagline {
-  max-width: 520px;
+  max-width: 460px;
+  margin: 0 0 28px;
+  padding: 12px 16px;
   line-height: 1.7;
-  color: #9fbdb4;
-  font-size: 14px;
-  margin: 0 0 34px;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--face);
+  box-shadow: var(--bevel-out), 2px 2px 0 rgba(0,0,0,.4);
 }
 
 .main-menu {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: min(320px, 84vw);
+  gap: 8px;
+  width: min(300px, 84vw);
 }
 
+/* Boton del sistema: relieve gris, se hunde al apretar */
 .menu-btn {
-  font-family: var(--mono);
-  letter-spacing: 2px;
-  font-size: 14px;
-  padding: 14px 18px;
-  color: var(--green);
-  background: rgba(53,255,122,.06);
-  border: 1px solid var(--green-dim);
-  border-radius: 2px;
-  transition: background .12s, color .12s, transform .08s, box-shadow .12s;
+  padding: 9px 16px;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: .5px;
+  color: var(--ink);
+  background: var(--face);
+  box-shadow: var(--bevel-out);
 }
-.menu-btn:hover {
-  background: var(--green);
-  color: #04120a;
-  box-shadow: 0 0 22px rgba(53,255,122,.45);
-}
-.menu-btn:active { transform: translateY(1px); }
-.menu-btn.ghost { color: var(--text-dim); border-color: var(--line); background: transparent; }
-.menu-btn.ghost:hover { background: #1b2630; color: var(--text); box-shadow: none; }
+.menu-btn:hover { background: #cbcfcb; }
+.menu-btn:active { box-shadow: var(--bevel-press); padding: 10px 15px 8px 17px; }
+.menu-btn.ghost { color: var(--ink-dim); }
 
 .build-tag {
-  margin-top: 38px;
+  margin-top: 30px;
   font-family: var(--mono);
   font-size: 11px;
-  color: #3f5a55;
+  color: #6d918a;
   letter-spacing: 1px;
 }
 
 /* ================= DOCUMENTOS (manual / creditos / victoria) ================= */
+/* Se presentan como una hoja de ayuda del sistema */
 .doc {
   position: relative;
   z-index: 1;
-  max-width: 940px;
-  margin: 0 auto;
-  padding: 46px 24px 60px;
+  max-width: 900px;
+  margin: 26px auto 40px;
+  padding: 3px;
+  background: var(--face);
+  box-shadow: var(--bevel-out), 3px 3px 0 rgba(0,0,0,.4);
+  color: var(--ink);
 }
 
 .doc-title {
-  font-family: var(--mono);
-  color: var(--green);
-  letter-spacing: 3px;
-  font-size: clamp(20px, 3vw, 30px);
-  margin: 0 0 28px;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 14px;
+  margin: 0 0 14px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(90deg, var(--title-1) 0%, var(--title-2) 100%);
 }
-.win-title { color: var(--cyan); }
+.doc-title-win { background: linear-gradient(90deg, #0d5c2c 0%, #2fa85c 100%); }
 
 .doc-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(258px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(252px, 1fr));
+  gap: 12px;
+  padding: 0 14px;
 }
 
+/* Cada tema del manual es un group box con su leyenda */
 .doc-card {
-  background: var(--bg-panel);
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--green-dim);
-  border-radius: 3px;
-  padding: 16px 18px;
+  position: relative;
+  padding: 14px 13px 12px;
+  background: var(--face);
+  box-shadow: var(--bevel-thin-in);
 }
 .doc-card h3 {
-  margin: 0 0 10px;
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--amber);
-  letter-spacing: 1px;
+  position: absolute;
+  top: -7px;
+  left: 8px;
+  margin: 0;
+  padding: 0 5px;
+  background: var(--face);
+  font-size: 11px;
+  color: #7a2f06;
 }
-.doc-card p { margin: 0; font-size: 13px; line-height: 1.65; color: #a9c6bd; }
-.doc-card b { color: #e6fff2; }
+.doc-card p { margin: 0; font-size: 11.5px; line-height: 1.65; color: var(--ink); }
+.doc-card b { font-weight: bold; }
 
 .cmd-list, .lvl-list {
   margin: 0;
   padding-left: 16px;
-  font-size: 12.5px;
-  line-height: 2;
-  color: #a9c6bd;
+  font-size: 11.5px;
+  line-height: 1.9;
+  color: var(--ink);
 }
 .cmd-list { list-style: none; padding-left: 0; }
-.cmd-list code { display: inline-block; min-width: 0; }
-.lvl-list li b { color: #e6fff2; }
+.cmd-list code { display: inline-block; }
+.lvl-list li b { font-weight: bold; }
 
 .doc-foot {
-  margin-top: 26px;
-  font-size: 12.5px;
-  color: var(--text-dim);
-  line-height: 1.8;
-  border-top: 1px dashed var(--line);
-  padding-top: 16px;
+  margin: 18px 14px 0;
+  padding: 10px 12px;
+  font-size: 11.5px;
+  color: var(--ink-dim);
+  line-height: 1.75;
+  background: var(--paper-2);
+  box-shadow: var(--bevel-thin-in);
 }
 
 .doc-actions {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-top: 26px;
+  padding: 16px 14px;
 }
-.doc-actions .menu-btn { flex: 0 0 auto; min-width: 190px; }
+.doc-actions .menu-btn { flex: 0 0 auto; min-width: 176px; }
 
-/* ---------- creditos ---------- */
-.credits { list-style: none; margin: 0; padding: 0; }
+/* ---------- creditos: una lista del sistema ---------- */
+.credits {
+  list-style: none;
+  margin: 0 14px;
+  padding: 4px;
+  background: var(--paper);
+  box-shadow: var(--bevel-in);
+}
 .credits li {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding: 14px 4px;
-  border-bottom: 1px dashed var(--line);
-  font-family: var(--mono);
+  padding: 7px 8px;
+  border-bottom: 1px solid #e4e4dc;
 }
-.credits span { color: #e6fff2; font-size: 15px; }
-.credits em { color: var(--green); font-style: normal; font-size: 12px; letter-spacing: 1px; }
+.credits li:last-child { border-bottom: 0; }
+.credits span { font-size: 12px; }
+.credits em { font-style: normal; font-size: 11px; color: var(--ink-dim); }
 
-/* ================= BOOT ================= */
-#screen-boot { background: #000; }
-#screen-boot::before { display: none; }
+/* ================= BOOT (POST del equipo) ================= */
+#screen-boot { background: #000; background-image: none; }
 #boot-log {
   position: relative;
   z-index: 1;
   margin: 0;
-  padding: 26px 30px;
+  padding: 24px 28px;
   font-family: var(--mono);
   font-size: 13.5px;
-  line-height: 1.65;
-  color: #d8d8d8;
+  line-height: 1.6;
+  color: #d0d6d0;
   white-space: pre-wrap;
 }
 #boot-log .ok   { color: var(--green); }
 #boot-log .warn { color: var(--amber); }
 #boot-log .err  { color: var(--red); font-weight: bold; }
 #boot-log .dim  { color: #6a6a6a; }
-#boot-log .cur  { background: #d8d8d8; color: #000; }
+#boot-log .cur  { background: #d0d6d0; color: #000; }
 
-/* ================= BSOD ================= */
-#screen-lose { background: #0a1a8c; }
-#screen-lose::before { display: none; }
+/* ================= PANTALLA AZUL ================= */
+#screen-lose { background: #0000aa; background-image: none; }
 .bsod {
   position: relative;
   z-index: 1;
-  max-width: 720px;
+  max-width: 700px;
   margin: 0 auto;
-  padding: 8vh 26px;
+  padding: 9vh 26px;
   font-family: var(--mono);
-  color: #fff;
+  color: #c8c8c8;
   font-size: 14px;
-  line-height: 1.85;
+  line-height: 1.9;
 }
 .bsod h2 {
-  background: #cfcfcf;
-  color: #0a1a8c;
+  background: #c8c8c8;
+  color: #0000aa;
   display: inline-block;
-  padding: 2px 14px;
-  font-size: 16px;
-  letter-spacing: 4px;
-  margin: 0 0 26px;
+  padding: 1px 12px;
+  font-size: 15px;
+  letter-spacing: 3px;
+  margin: 0 0 24px;
 }
-.bsod-code { color: #ffd479; margin: 22px 0; }
-.bsod-hint { color: #9fb4ff; margin-top: 22px; }
-.bsod .menu-btn { color: #fff; border-color: #7f9cff; background: rgba(255,255,255,.07); }
-.bsod .menu-btn:hover { background: #fff; color: #0a1a8c; box-shadow: none; }
+.bsod-code { color: #ffff54; margin: 20px 0; }
+.bsod-hint { color: #a8a8ff; margin-top: 20px; }
+.bsod .doc-actions { padding: 24px 0 0; }
+.bsod .menu-btn {
+  color: #c8c8c8;
+  background: #0000aa;
+  box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #5454ff;
+}
+.bsod .menu-btn:hover { background: #0000cc; }
+.bsod .menu-btn:active { box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #5454ff; }
 
 .bsod-stats {
   list-style: none;
-  margin: 22px 0 0;
-  padding: 14px 18px;
-  border: 1px solid rgba(255,255,255,.28);
-  background: rgba(0,0,0,.18);
+  margin: 20px 0 0;
+  padding: 12px 16px;
+  border: 1px solid #7a7aff;
+  background: rgba(0,0,0,.2);
 }
 .bsod-stats li { display: flex; justify-content: space-between; gap: 20px; }
-.bsod-stats li b { font-weight: bold; }
 
 /* ================= VICTORIA ================= */
-#screen-win { background: radial-gradient(circle at 50% 0%, #0d2438 0%, #05070a 70%); }
-.doc.win .bsod-stats {
+#screen-win { background-color: #1c6b53; }
+.doc-win .bsod-stats {
+  margin: 0 14px;
+  padding: 8px 12px;
+  border: 0;
+  background: var(--paper);
+  box-shadow: var(--bevel-in);
   font-family: var(--mono);
-  border-color: var(--line);
-  background: var(--bg-panel);
-  color: var(--text);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 2;
+  color: var(--ink);
 }
-.doc.win .bsod-stats li b { color: var(--cyan); }
-.win-lead { color: #a9c6bd; font-size: 14px; line-height: 1.7; }
+.win-lead { margin: 0 14px 14px; font-size: 12px; line-height: 1.7; color: var(--ink); }
+
+/* Lo aprendido: el group box de cierre */
 .win-learn {
-  margin-top: 26px;
-  background: var(--bg-panel);
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--cyan);
-  padding: 16px 20px;
+  position: relative;
+  margin: 22px 14px 0;
+  padding: 16px 14px 13px;
+  background: var(--face);
+  box-shadow: var(--bevel-thin-in);
 }
 .win-learn h3 {
-  margin: 0 0 10px;
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--amber);
-  letter-spacing: 1px;
+  position: absolute;
+  top: -7px; left: 8px;
+  margin: 0;
+  padding: 0 5px;
+  background: var(--face);
+  font-size: 11px;
+  color: #7a2f06;
 }
-.win-learn ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.9; color: #a9c6bd; }
-.win-learn b { color: #e6fff2; }
+.win-learn ul { margin: 0; padding-left: 18px; font-size: 11.5px; line-height: 1.9; color: var(--ink); }
 
 /* ================= SELECCION DE MODO ================= */
 .modes-wrap {
@@ -308,21 +327,22 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 22px 50px;
+  padding: 36px 22px 44px;
 }
 
 .modes-title {
   font-family: var(--mono);
-  font-size: clamp(20px, 3.4vw, 30px);
-  letter-spacing: 5px;
+  font-size: clamp(18px, 3vw, 26px);
+  letter-spacing: 4px;
   color: var(--green);
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   text-align: center;
+  text-shadow: 0 0 14px rgba(43,240,122,.4);
 }
 .modes-lead {
-  margin: 0 0 34px;
-  font-size: 13px;
-  color: var(--text-dim);
+  margin: 0 0 26px;
+  font-size: 12px;
+  color: #9fc0b8;
   letter-spacing: 1px;
   text-align: center;
 }
@@ -330,101 +350,93 @@
 .modes-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-  width: min(940px, 100%);
+  gap: 16px;
+  width: min(900px, 100%);
 }
 
+/* Cada modo es un panel del sistema que se hunde al elegirlo */
 .mode-card {
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  padding: 24px 22px 22px;
+  padding: 16px 16px 14px;
   text-align: left;
-  background: rgba(10, 16, 22, .82);
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--green-dim);
-  transition: transform .14s, box-shadow .14s, border-color .14s, background .14s;
+  color: var(--ink);
+  background: var(--face);
+  box-shadow: var(--bevel-out), 3px 3px 0 rgba(0,0,0,.4);
 }
-.mode-card:hover {
-  transform: translateY(-4px);
-  background: rgba(14, 22, 30, .95);
-  border-color: var(--green);
-  box-shadow: 0 14px 44px rgba(0,0,0,.65), 0 0 26px rgba(53,255,122,.16);
-}
-.mode-card:focus-visible {
-  outline: 2px solid var(--green);
-  outline-offset: 3px;
-}
-.mode-card.tecnico { border-top-color: #b07a12; }
-.mode-card.tecnico:focus-visible { outline-color: var(--amber); }
-.mode-card.tecnico:hover { border-color: var(--amber); box-shadow: 0 14px 44px rgba(0,0,0,.65), 0 0 26px rgba(255,204,68,.18); }
+.mode-card:hover { background: #cbcfcb; }
+.mode-card:active { box-shadow: var(--bevel-press), 1px 1px 0 rgba(0,0,0,.4); }
 
 .mode-ico {
-  width: 58px; height: 58px;
-  margin-bottom: 14px;
+  width: 46px; height: 46px;
+  margin-bottom: 12px;
   display: grid;
   place-items: center;
-  font-size: 27px;
-  border: 1px solid var(--green-dim);
-  background: rgba(53,255,122,.07);
+  font-size: 24px;
+  color: #fff;
+  background: #123f78;
+  box-shadow: inset -1px -1px 0 #061c3a, inset 1px 1px 0 #6ba3e0;
 }
-.mode-card.tecnico .mode-ico { border-color: #b07a12; background: rgba(255,204,68,.07); }
+.mode-ico svg { width: 30px; height: 30px; image-rendering: pixelated; }
+.mode-card.tecnico .mode-ico {
+  background: #7a4c06;
+  box-shadow: inset -1px -1px 0 #2e1c00, inset 1px 1px 0 #ffcf6b;
+}
 
 .mode-tag {
   font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 3px;
-  color: var(--text-dim);
+  font-size: 9.5px;
+  letter-spacing: 2px;
+  color: var(--ink-dim);
 }
 .mode-name {
-  margin: 4px 0 10px;
-  font-family: var(--mono);
-  font-size: 21px;
-  letter-spacing: 2px;
-  color: var(--green);
+  margin: 3px 0 9px;
+  font-size: 17px;
+  font-weight: bold;
+  letter-spacing: .5px;
 }
-.mode-card.tecnico .mode-name { color: var(--amber); }
 
 .mode-desc {
-  margin: 0 0 14px;
-  font-size: 13px;
-  line-height: 1.65;
-  color: #9fbdb4;
+  margin: 0 0 12px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--ink);
 }
 
 .mode-list {
   list-style: none;
-  margin: 0 0 18px;
-  padding: 0;
-  font-size: 11.5px;
+  margin: 0 0 14px;
+  padding: 7px 8px;
+  font-size: 11px;
   line-height: 1.55;
-  color: var(--text-dim);
+  color: var(--ink);
+  background: var(--paper);
+  box-shadow: var(--bevel-in);
 }
-.mode-list li { padding: 3px 0 3px 16px; position: relative; }
+.mode-list li { padding: 2px 0 2px 14px; position: relative; }
 .mode-list li::before {
-  content: "▸";
+  content: "\25AA";
   position: absolute;
   left: 0;
-  color: var(--green-dim);
+  color: var(--title-1);
 }
-.mode-card.tecnico .mode-list li::before { color: #b07a12; }
+.mode-card.tecnico .mode-list li::before { color: #7a4c06; }
 
 .mode-go {
   margin-top: auto;
-  font-family: var(--mono);
-  font-size: 12.5px;
-  letter-spacing: 2px;
-  padding: 12px;
+  font-size: 11.5px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  padding: 7px;
   text-align: center;
-  color: var(--green);
-  border: 1px solid var(--green-dim);
-  background: rgba(53,255,122,.06);
+  color: var(--ink);
+  background: var(--face);
+  box-shadow: var(--bevel-out);
 }
-.mode-card:hover .mode-go { background: var(--green); color: #04120a; }
-.mode-card.tecnico .mode-go { color: var(--amber); border-color: #b07a12; background: rgba(255,204,68,.06); }
-.mode-card.tecnico:hover .mode-go { background: var(--amber); color: #221803; }
+.mode-card:active .mode-go { box-shadow: var(--bevel-press); }
 
-.modes-foot { margin-top: 30px; }
+.modes-foot { justify-content: center; padding-top: 26px; }
 
 @media (max-width: 760px) {
   .modes-grid { grid-template-columns: 1fr; }

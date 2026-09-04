@@ -248,7 +248,7 @@
           '<div class="tm-gauge" id="tm-ram-g"><i style="width:0%"></i></div>' +
         '</div>' +
       '</div>' +
-      '<div id="tm-p5" style="height:74px;background:#0b1610;border-bottom:1px solid #a9a48f;"></div>' +
+      '<div id="tm-p5"></div>' +
       '<div class="tm-alert" id="tm-alert"></div>' +
       '<div class="tm-table-wrap">' +
         '<table class="tm-table">' +

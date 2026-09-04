@@ -1,35 +1,79 @@
 /* ============================================================
-   Glitch.TEC — base: variables, reset, tipografia
+   Glitch.TEC — base del sistema visual "WinTEC 95"
+   Paleta gris de escritorio noventoso + fósforo de monitor CRT.
+   Todo el chrome del juego se arma con estos tokens y biseles.
    ============================================================ */
 
 :root {
-  --green:       #35ff7a;
-  --green-dim:   #159c46;
-  --amber:       #ffcc44;
-  --red:         #ff3b52;
-  --red-dim:     #a51226;
-  --cyan:        #56d8ff;
-  --violet:      #b26bff;
+  /* ---------- Chrome del sistema operativo ---------- */
+  --face:       #c3c7c3;   /* gris de paneles, botones y ventanas */
+  --face-lit:   #e2e6e2;   /* luz interna del bisel */
+  --face-dim:   #9aa09a;
+  --hi:         #ffffff;   /* borde iluminado */
+  --sh:         #838a83;   /* sombra media */
+  --sh-deep:    #2f3433;   /* sombra dura */
 
-  --bg-deep:     #05070a;
-  --bg-panel:    #0b1016;
-  --line:        #1d2a36;
-  --text:        #cfe6dd;
-  --text-dim:    #6f8a86;
+  --ink:        #0d1114;   /* texto sobre gris */
+  --ink-dim:    #4d5459;
+  --ink-soft:   #6d7479;
 
-  /* Chrome estilo WinTEC XP */
-  --xp-blue-1:   #3f8cf3;
-  --xp-blue-2:   #0b47b6;
-  --xp-face:     #ece9d8;
-  --xp-face-2:   #d6d2c2;
-  --xp-border:   #0a3a94;
-  --xp-taskbar1: #3f8cf3;
-  --xp-taskbar2: #1c4fb8;
-  --xp-start1:   #63b357;
-  --xp-start2:   #2f7a2a;
+  --desk:       #1e6b66;   /* verde azulado del escritorio */
+  --desk-dark:  #0d3a38;
 
-  --mono: "Consolas", "Lucida Console", "DejaVu Sans Mono", monospace;
-  --ui:   "Tahoma", "Verdana", "Segoe UI", sans-serif;
+  --title-1:    #0a2a86;   /* barra de titulo activa */
+  --title-2:    #2a7cc7;
+  --title-off1: #6f7a84;   /* barra de titulo inactiva */
+  --title-off2: #a4adb5;
+
+  --sel:        #0a2a86;   /* seleccion */
+  --sel-text:   #ffffff;
+
+  --paper:      #ffffff;   /* areas de contenido (listas, documentos) */
+  --paper-2:    #f4f4ec;
+
+  /* ---------- Fósforo del monitor (terminal, boot, HUD) ---------- */
+  --green:      #2bf07a;
+  --green-dim:  #12833c;
+  --amber:      #ffc63c;
+  --red:        #ff3b52;
+  --red-dim:    #9d1024;
+  --cyan:       #4fd2ff;
+  --violet:     #b26bff;
+
+  --bg-deep:    #05080a;
+  --bg-panel:   #0a0f13;
+  --line:       #1b2730;
+  --text:       #cfe6dd;
+  --text-dim:   #6f8a86;
+
+  /* ---------- Biseles reutilizables ---------- */
+  /* Relieve: la pieza sobresale de la pantalla (botones, ventanas) */
+  --bevel-out:
+    inset -1px -1px 0 var(--sh-deep),
+    inset  1px  1px 0 var(--hi),
+    inset -2px -2px 0 var(--sh),
+    inset  2px  2px 0 var(--face-lit);
+  /* Hundido: la pieza es un hueco (campos, listas, medidores) */
+  --bevel-in:
+    inset  1px  1px 0 var(--sh-deep),
+    inset -1px -1px 0 var(--hi),
+    inset  2px  2px 0 var(--sh),
+    inset -2px -2px 0 var(--face-lit);
+  /* Un solo pixel, para separadores y marcos finos */
+  --bevel-thin-in:  inset 1px 1px 0 var(--sh), inset -1px -1px 0 var(--hi);
+  --bevel-thin-out: inset -1px -1px 0 var(--sh), inset 1px 1px 0 var(--hi);
+  /* Boton apretado */
+  --bevel-press:
+    inset  1px  1px 0 var(--sh-deep),
+    inset -1px -1px 0 var(--face-lit),
+    inset  2px  2px 0 var(--sh);
+
+  /* Trama de 1px: el "dither" de los fondos de los 90 */
+  --dither: linear-gradient(45deg, rgba(255,255,255,.55) 25%, transparent 25%,
+                                   transparent 75%, rgba(255,255,255,.55) 75%);
+
+  --mono: "Lucida Console", "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
+  --ui:   "MS Sans Serif", "Pixelated MS Sans Serif", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -41,8 +85,12 @@ html, body {
   background: #000;
   overflow: hidden;
   font-family: var(--ui);
-  color: var(--text);
-  -webkit-font-smoothing: antialiased;
+  font-size: 12px;
+  color: var(--ink);
+  /* Sin suavizado: las letras tienen que verse duras, como en un CRT */
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+  text-rendering: geometricPrecision;
 }
 
 body { user-select: none; }
@@ -52,7 +100,7 @@ body { user-select: none; }
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: var(--bg-deep);
+  background: var(--desk-dark);
 }
 
 button {
@@ -69,24 +117,99 @@ input, textarea {
   color: inherit;
 }
 
+/* Foco al estilo de la epoca: recuadro punteado, sin halos */
+:focus-visible { outline: 1px dotted var(--ink); outline-offset: -4px; }
+
+::selection { background: var(--sel); color: var(--sel-text); }
+
 code {
   font-family: var(--mono);
-  background: rgba(53, 255, 122, .1);
-  border: 1px solid rgba(53, 255, 122, .25);
-  border-radius: 3px;
+  background: var(--paper);
+  box-shadow: var(--bevel-thin-in);
   padding: 0 4px;
-  color: var(--green);
-  font-size: .92em;
+  color: #14431f;
+  font-size: .95em;
 }
 
 .hidden { display: none !important; }
 
-/* Scrollbars retro */
-::-webkit-scrollbar { width: 14px; height: 14px; }
-::-webkit-scrollbar-track { background: #0d141b; }
-::-webkit-scrollbar-thumb {
-  background: #22323f;
-  border: 2px solid #0d141b;
-  border-radius: 2px;
+/* ============================================================
+   Piezas compartidas del chrome
+   ============================================================ */
+
+/* Panel gris en relieve */
+.panel95 {
+  background: var(--face);
+  box-shadow: var(--bevel-out);
 }
-::-webkit-scrollbar-thumb:hover { background: #35505f; }
+
+/* Hueco hundido (contenido, listas, campos) */
+.sunken95 {
+  background: var(--paper);
+  box-shadow: var(--bevel-in);
+}
+
+/* Marco agrupador con leyenda, el "group box" clasico */
+.group95 {
+  position: relative;
+  margin-top: 9px;
+  padding: 14px 12px 12px;
+  box-shadow: var(--bevel-thin-in);
+}
+.group95 > legend,
+.group95 > .legend {
+  position: absolute;
+  top: -7px;
+  left: 8px;
+  padding: 0 5px;
+  background: var(--face);
+  font-size: 11px;
+  color: var(--ink);
+}
+
+/* ============================================================
+   Barras de desplazamiento del sistema
+   ============================================================ */
+::-webkit-scrollbar { width: 16px; height: 16px; }
+
+::-webkit-scrollbar-track {
+  background-color: #d3d7d3;
+  background-image: var(--dither), var(--dither);
+  background-size: 2px 2px;
+  background-position: 0 0, 1px 1px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--face);
+  box-shadow: var(--bevel-out);
+  border: 0;
+}
+
+::-webkit-scrollbar-button:single-button {
+  background: var(--face);
+  box-shadow: var(--bevel-out);
+  height: 16px;
+  width: 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 7px 7px;
+}
+::-webkit-scrollbar-button:single-button:vertical:decrement {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 7'%3E%3Cpath d='M3.5 1 6.5 5.5h-6z' fill='%230d1114'/%3E%3C/svg%3E");
+}
+::-webkit-scrollbar-button:single-button:vertical:increment {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 7'%3E%3Cpath d='M3.5 6 .5 1.5h6z' fill='%230d1114'/%3E%3C/svg%3E");
+}
+::-webkit-scrollbar-button:single-button:horizontal:decrement {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 7'%3E%3Cpath d='M1 3.5 5.5.5v6z' fill='%230d1114'/%3E%3C/svg%3E");
+}
+::-webkit-scrollbar-button:single-button:horizontal:increment {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 7'%3E%3Cpath d='M6 3.5 1.5 6.5v-6z' fill='%230d1114'/%3E%3C/svg%3E");
+}
+::-webkit-scrollbar-corner { background: var(--face); }
+
+/* Las zonas de fósforo (terminal, jefe final) llevan su propia barra */
+.term-out::-webkit-scrollbar-track,
+.boss-body::-webkit-scrollbar-track { background: #06110c; background-image: none; }
+.term-out::-webkit-scrollbar-thumb,
+.boss-body::-webkit-scrollbar-thumb { background: #123523; box-shadow: none; }

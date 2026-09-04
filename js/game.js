@@ -31,7 +31,7 @@
     { t: '  [!] SECTOR CORRUPTO EN \\Sistema\\cuarentena', c: 'err', d: 520 },
     { t: '  [!] 1 proceso sin firma digital en el arranque', c: 'err', d: 420 },
     { t: '', d: 120 },
-    { t: 'Iniciando WinTEC XP...', c: 'warn', d: 620 },
+    { t: 'Iniciando WinTEC 95...', c: 'warn', d: 620 },
     { t: 'h o l a   e s t u d i a n t e', c: 'err', d: 900 },
     { t: '', d: 200 }
   ];

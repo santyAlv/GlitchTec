@@ -4,7 +4,7 @@ Prototipo funcional de un **videojuego educativo** sobre informática, con **dos
 
 | Modo | De qué va |
 |---|---|
-| **PC Corrompida** (software) | Un escritorio WinTEC XP infectado por un malware consciente. Terminal real, administrador de tareas, correo y purga final. Un **hacker** se pasea por la pantalla, te bloquea teclas y te corrompe los colores. |
+| **PC Corrompida** (software) | Un escritorio WinTEC 95 infectado por un malware consciente. Terminal real, administrador de tareas, correo y purga final. Un **hacker** se pasea por la pantalla, te bloquea teclas y te corrompe los colores. |
 | **Servicio Técnico** (hardware) | Sos el técnico del taller: entran equipos rotos y hay que **diagnosticar** por qué fallan, repararlos y explicar la falla. |
 
 **Materia:** PISWD · **Profesor:** Callamullo Diego
@@ -27,6 +27,29 @@ Prototipo funcional de un **videojuego educativo** sobre informática, con **dos
 | Lógica del servidor | **PHP** |
 | Base de datos | **MySQL / MariaDB** |
 | Control de versiones | **Git + GitHub** |
+
+---
+
+## Dirección de arte — "WinTEC 95"
+
+Todo el juego pasa dentro de una computadora vieja, así que la interfaz **es**
+el escenario: se ve como un sistema operativo de fines de los 90 corriendo en un
+monitor CRT. Está armado enteramente con las tecnologías del stack (HTML, CSS y
+JavaScript): no hay imágenes, ni fuentes externas, ni librerías de UI.
+
+| Pieza | Cómo se resuelve |
+|---|---|
+| **Paleta** | Gris de sistema (`--face`), azul de barra de título, verde azulado de escritorio y el fósforo del monitor (verde, ámbar, rojo, cian) para terminal, boot y HUD. |
+| **Relieve** | Tres variables de `box-shadow` (`--bevel-out`, `--bevel-in`, `--bevel-thin-in`) reemplazan a los bordes redondeados: lo que se aprieta sobresale, lo que muestra contenido está hundido. |
+| **Tipografía** | Sans de sistema sin suavizado (`-webkit-font-smoothing: none`) para la interfaz y monoespaciada para todo lo que "sale de la máquina". |
+| **Iconos** | SVG de 16×16 sobre rejilla entera con `shape-rendering="crispEdges"`, escalados a 32 px con `image-rendering: pixelated` (`js/ui.js`). |
+| **Tramas** | El "dither" de un pixel de los fondos noventosos, hecho con dos degradés a 45° superpuestos. |
+| **Filtro CRT** | Líneas de barrido, máscara de fósforo RGB, viñeta, curvatura simulada y parpadeo del tubo, todo en `css/effects.css`. |
+
+La corrupción del malware está construida sobre ese mismo sistema: cuando la
+infección sube, se desincroniza la imagen, se parten los canales de color y hasta
+las barras de título cambian de tono. Los pop-ups y el panel del hacker usan el
+marco del sistema con otro color: parecen del sistema, pero no lo son.
 
 ---
 
@@ -153,6 +176,11 @@ Debería responder `{ "ok": true, "db": true, ... }`.
 glitch-tec/
 ├── index.html              # Shell de la interfaz (menú, modos, escritorio, taller)
 ├── css/                    # Estilos (escritorio, ventanas, CRT, hacker, taller)
+│   ├── base.css            # Sistema visual: paleta, biseles, tipografía, scrollbars
+│   ├── screens.css         # Título, manual, boot, pantalla azul, victoria
+│   ├── desktop.css         # Escritorio, iconos, barra de tareas, menú Inicio, HUD
+│   ├── windows.css         # Chrome de ventanas y aplicaciones internas
+│   ├── effects.css         # Filtro CRT y corrupción
 │   ├── hacker.css          # Personaje, panel de rescate, corrupción de colores
 │   └── tech.css            # Banco de trabajo del modo técnico
 ├── js/
@@ -223,7 +251,7 @@ git push -u origin main
 
 ## Estado del prototipo (alfa)
 
-Implementado: selección de modo, escritorio WinTEC XP, Terminal, Explorador, pop-ups del malware,
+Implementado: selección de modo, escritorio WinTEC 95, Terminal, Explorador, pop-ups del malware,
 Administrador de tareas, TEC-Mail, purga final, **hacker con bloqueo de teclas y corrupción de
 colores**, **modo Servicio Técnico con 4 órdenes de trabajo**, puntuación/integridad/tiempo,
 p5.js, API PHP y esquema MySQL.
