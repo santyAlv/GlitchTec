@@ -17,6 +17,9 @@ if ($matchId <= 0) {
     json_error('match_id inválido');
 }
 
+/* Normalizo cada campo a su tipo antes de tocar la base: el (int) de los
+   numeros y el !empty() del booleano me garantizan que a MySQL le llega lo que
+   la columna espera, aunque el cliente mande cualquier cosa (o nada). */
 $won       = !empty($body['won']) ? 1 : 0;
 $score     = (int)($body['score'] ?? 0);
 $base      = (int)($body['base_score'] ?? 0);
@@ -63,6 +66,12 @@ try {
         ':id'        => $matchId,
     ]);
 
+    /* Ademas de cerrar la fila de la partida, dejo asentado un evento de
+       cierre. Es redundante a proposito: la tabla "partidas" guarda el ESTADO
+       final (una fila por partida, que es lo que consulta el ranking) y la
+       tabla "eventos" guarda la HISTORIA (muchas filas por partida), que sirve
+       para analizar despues donde se traba la gente. Es la misma idea que
+       tener un log al lado de una tabla de resultados. */
     $ev = db()->prepare(
         'INSERT INTO eventos (partida_id, event_type, detail_json, created_at)
          VALUES (:pid, :etype, :detail, NOW())'

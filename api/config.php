@@ -11,6 +11,27 @@ const DB_USER = 'root';
 const DB_PASS = '';          // XAMPP por defecto: vacío
 const DB_CHARSET = 'utf8mb4';
 
+/**
+ * Devuelve LA conexion a la base (patron singleton hecho a mano).
+ *
+ * La variable estatica es la clave: en PHP, una $variable marcada como static
+ * dentro de una funcion NO se borra cuando la funcion termina, sobrevive hasta
+ * el final del request. Entonces la primera llamada a db() abre la conexion y
+ * todas las siguientes devuelven esa misma. Sin esto, cada consulta abriria
+ * una conexion TCP nueva a MySQL: lentisimo y para nada necesario.
+ *
+ * Las tres opciones del final valen la pena entenderlas:
+ *  - ERRMODE_EXCEPTION: si una consulta falla, PDO TIRA una excepcion en vez de
+ *    devolver false en silencio. Asi el try/catch de cada endpoint se entera de
+ *    verdad y puedo responder un JSON de error en lugar de una pagina en blanco.
+ *  - FETCH_ASSOC: los resultados vienen como array asociativo ($fila['score'])
+ *    y no duplicados tambien por indice numerico, que es el default y solo
+ *    gasta memoria.
+ *  - EMULATE_PREPARES => false: obliga a usar sentencias preparadas REALES del
+ *    motor. Con la emulacion, PHP arma el SQL como string antes de mandarlo;
+ *    con esto apagado, la consulta y los datos viajan por separado y la
+ *    inyeccion SQL se vuelve imposible por diseno, no por escaparse bien.
+ */
 function db(): PDO
 {
     static $pdo = null;
@@ -18,6 +39,7 @@ function db(): PDO
         return $pdo;
     }
 
+    // DSN = "Data Source Name": la cadena que describe a que base me conecto
     $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
     $pdo = new PDO($dsn, DB_USER, DB_PASS, [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -27,6 +49,17 @@ function db(): PDO
     return $pdo;
 }
 
+/**
+ * Responde JSON y CORTA la ejecucion (ese exit del final no es opcional: si
+ * siguiera, PHP podria mandar mas texto despues del JSON y el fetch del
+ * navegador no lo podria parsear).
+ *
+ * Los headers Access-Control-Allow-* son CORS: el permiso que el navegador le
+ * pide al servidor para dejar que una pagina de un origen consulte a otro.
+ * Los necesito porque el juego se puede abrir desde file:// o desde otro
+ * puerto. El '*' acepta cualquier origen: para un TP local esta bien, pero si
+ * esto saliera a produccion habria que limitarlo al dominio propio.
+ */
 function json_out(array $data, int $code = 200): void
 {
     http_response_code($code);
@@ -43,6 +76,15 @@ function json_error(string $message, int $code = 400): void
     json_out(['ok' => false, 'error' => $message], $code);
 }
 
+/**
+ * Lee el cuerpo de un POST en JSON.
+ * php://input es el flujo crudo del pedido. Hace falta porque $_POST SOLO se
+ * llena cuando el cuerpo viene como formulario (application/x-www-form-
+ * urlencoded o multipart). Como desde el JS mando JSON, $_POST llega vacio y
+ * tengo que leer y decodificar a mano.
+ * El "is_array" del final es defensivo: si llega basura, json_decode devuelve
+ * null y prefiero seguir con un array vacio antes que reventar.
+ */
 function read_json_body(): array
 {
     $raw = file_get_contents('php://input');
@@ -53,7 +95,9 @@ function read_json_body(): array
     return is_array($data) ? $data : [];
 }
 
-// Preflight CORS
+/* PREFLIGHT de CORS: antes de un POST con Content-Type: application/json, el
+   navegador manda solo un OPTIONS para preguntar "¿me dejas?". Si no le
+   contesto, el POST real ni siquiera sale. Respondo que si y termino aca. */
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     json_out(['ok' => true]);
 }

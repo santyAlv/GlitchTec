@@ -36,6 +36,20 @@
      costo    pesos que le cuesta al taller (repuestos)
      exige    falla que DEBE estar resuelta antes de ejecutar el paso
      ============================================================ */
+  /* EL CATALOGO DE PASOS ES UN DICCIONARIO COMPARTIDO POR TODOS LOS CASOS.
+     Esto es lo mas importante del diseno de este modo: los pasos se definen
+     UNA vez y cada orden de trabajo elige cuales ofrece (su array "pasos").
+     Por eso "abrir el gabinete" o "cambiar la fuente" aparecen en varios casos
+     sin estar duplicados, y por eso puedo ofrecer acciones INUTILES para el
+     caso actual: son las que hacen que el jugador tenga que pensar en vez de
+     apretar el unico boton disponible.
+
+     La relacion entre los tres campos clave es la que arma todo el juego:
+       detecta  (inspeccion) -> pone la falla en "encontrada"
+       arregla  (accion)     -> pone la falla en "reparada"
+       fallas   (del caso)   -> que fallas tiene ESTE equipo
+     Un paso resuelve algo solo si su "arregla" esta en las "fallas" del caso.
+     Si no, es una pieza sana que cambiaste al pedo: plata y reputacion. */
   var STEPS = {
 
     /* ---------------- Inspección: alimentación ---------------- */
@@ -230,6 +244,11 @@
       hecho: 'Traés otro monitor del depósito.',
       nada: 'El monitor andaba: el problema nunca estuvo ahí.'
     },
+    /* El unico paso con "exige": es LA leccion del caso 4. Cambiar el disco
+       antes de respaldar deja el equipo andando pero le borra diez anos de
+       datos al cliente. Tecnicamente lo "arreglaste"; profesionalmente lo
+       arruinaste. Por eso el castigo de ese camino es el mas grande de todo
+       el modo (-300 puntos y -30 de reputacion). */
     cambiar_disco: {
       g: 'accion', label: 'Cambiar el disco por un SSD', min: 25, parte: 'disco',
       req: 'abrir', costo: 55000, arregla: 'disco', exige: 'respaldo',
@@ -249,6 +268,18 @@
   /* ============================================================
      Casos (órdenes de trabajo)
      ============================================================ */
+  /* LAS ORDENES DE TRABAJO. Cada una es puro dato:
+       fallas     -> que esta roto de verdad (puede ser mas de una cosa; el
+                     caso 3 tiene polvo Y pasta termica: arreglar una sola no
+                     alcanza, el equipo sigue fallando pero con otro sintoma)
+       sintomas   -> que muestra el equipo segun la falla PENDIENTE. Este es el
+                     detalle lindo del modo: el sintoma cambia a medida que vas
+                     resolviendo, igual que en el taller de verdad.
+       pasos      -> que botones ofrezco (mezclo los utiles con los inutiles)
+       diagnostico-> la pregunta de cierre: no alcanza con que ande, hay que
+                     saber POR QUE andaba mal.
+     El orden de "fallas" importa: define en que secuencia se van revelando
+     los sintomas (ver currentSymptom). */
   var CASES = [
 
     /* ---------------- CASO 1 ---------------- */
@@ -467,16 +498,27 @@
   /* ============================================================
      Estado del modo
      ============================================================ */
+  /* ESTADO DE LA ORDEN EN CURSO. Uso objetos como "conjuntos": en vez de
+     arrays con indexOf, hago  fixed['cable'] = true  y despues pregunto
+     if (fixed['cable']). Es mas rapido de leer y de escribir.
+
+     Fijate que "found" (detectada) y "fixed" (reparada) son cosas DISTINTAS, y
+     esa distincion es justamente lo que el modo quiere ensenar: se puede
+     arreglar algo sin haberlo diagnosticado —sale bien, pero fue suerte y da
+     menos puntos— y se puede diagnosticar sin arreglar. */
   var caseIdx = 0;
   var cur = null;              // caso actual
   var fixed = {};              // fallas ya reparadas
   var found = {};              // fallas ya detectadas
-  var doneSteps = {};          // pasos ejecutados
+  var doneSteps = {};          // pasos ejecutados (para no cobrarlos dos veces)
   var wasted = 0;              // acciones inútiles del caso
-  var phase = 'trabajo';       // 'trabajo' | 'diagnostico' | 'cerrado'
+  /* La fase es una maquina de estados chiquita y evita todo tipo de trampas:
+     trabajo -> se puede tocar el equipo; diagnostico -> ya anda, falta
+     explicar que era; cerrado -> terminado, no se toca mas nada. */
+  var phase = 'trabajo';
   var running = false;
-  var caseMinutes = 0;
-  var dataLost = false;
+  var caseMinutes = 0;         // minutos gastados en ESTA orden
+  var dataLost = false;        // ¿se perdieron los datos del cliente?
 
   /* ============================================================
      Arranque
@@ -527,7 +569,13 @@
 
   function pad3(n) { return (n < 100 ? '0' : '') + (n < 10 ? '0' : '') + n; }
 
-  /** Síntoma que muestra el equipo según la primera falla pendiente. */
+  /** Síntoma que muestra el equipo según la primera falla pendiente.
+      Recorro las fallas EN ORDEN y devuelvo el sintoma de la primera que
+      todavia no este reparada. Si no queda ninguna, devuelvo el texto de
+      exito. Con esas tres lineas consigo el efecto de "capas": en el caso 3,
+      mientras haya polvo el equipo se apaga a los 4 minutos; cuando lo limpias
+      el sintoma cambia (ahora aguanta 15 minutos, pero sigue fallando por la
+      pasta termica). El jugador siente que avanzo sin haber terminado. */
   function currentSymptom() {
     for (var i = 0; i < cur.fallas.length; i++) {
       if (!fixed[cur.fallas[i]]) return cur.sintomas[cur.fallas[i]];
@@ -640,6 +688,16 @@
   /* ============================================================
      Ejecutar un paso
      ============================================================ */
+  /* PUNTO DE ENTRADA de cualquier boton del taller. El orden de los chequeos
+     es el importante:
+       1. ¿estoy en fase de trabajo?        (si ya cerre, no se toca nada)
+       2. ¿cumplo el requisito previo?      (no puedo tocar la RAM con el
+                                             gabinete cerrado: eso es realismo,
+                                             no burocracia)
+       3. ¿ya lo hice?                      (revisar dos veces no cobra tiempo)
+       4. cobro los minutos y despacho a inspect() o act() segun el grupo.
+     Los minutos se cobran ANTES de saber el resultado, como en la vida real:
+     el tiempo se gasta aunque no encuentres nada. */
   function doStep(id, btn) {
     if (phase !== 'trabajo' || GT.state.finished) return;
     var st = STEPS[id];
@@ -671,6 +729,15 @@
   }
 
   /* ---------------- Inspección ---------------- */
+  /* INSPECCIONAR: mirar sin tocar. Nunca cuesta plata, siempre cuesta tiempo,
+     y hasta descartar suma un poquito de puntaje (+4): descartar tambien es
+     diagnosticar, no quiero premiar solo al que acierta de una.
+
+     La condicion de tres partes se lee asi:
+       st.detecta                        -> este paso revisa algo concreto
+       cur.fallas.indexOf(...) !== -1    -> ese algo esta roto EN ESTE equipo
+       !fixed[st.detecta]                -> y todavia no lo arregle
+     Las tres tienen que dar true para que la inspeccion encuentre la falla. */
   function inspect(id, st) {
     var esFalla = st.detecta && cur.fallas.indexOf(st.detecta) !== -1 && !fixed[st.detecta];
 
@@ -693,6 +760,14 @@
   }
 
   /* ---------------- Acción ---------------- */
+  /* ACTUAR: meter mano. Aca esta el nucleo del modo, con cuatro finales
+     posibles para un mismo click:
+       a) arregla una falla que YA habias diagnosticado  -> +180, el ideal
+       b) arregla una falla que NO habias diagnosticado  -> +60, "fue suerte"
+       c) no arregla nada y era un repuesto caro         -> -120 y reputacion
+       d) no arregla nada y era gratis                   -> -25, solo tiempo
+     Esa diferencia entre (a) y (b) es todo el mensaje del modo: el trabajo del
+     tecnico es el DIAGNOSTICO; el destornillador viene despues. */
   function act(id, st) {
     logLine('<b>› ' + st.label + '</b> <i>(' + st.min + ' min' +
             (st.costo ? ' · $' + money(st.costo) : '') + ')</i>', 'step');
@@ -703,7 +778,12 @@
 
     var arregla = st.arregla && cur.fallas.indexOf(st.arregla) !== -1 && !fixed[st.arregla];
 
-    /* Maniobra peligrosa: hacerla antes de otro paso obligatorio */
+    /* Maniobra peligrosa: hacerla antes de otro paso obligatorio.
+       Ojo con el detalle del final: marco  fixed[st.exige] = true  aunque el
+       respaldo NUNCA se hizo. Es la unica forma de representar lo que pasa de
+       verdad: ya no queda nada que respaldar, los datos se fueron con el disco
+       viejo. El equipo va a quedar andando y la orden se va a poder cerrar,
+       pero el castigo ya esta aplicado y queda escrito en el resumen final. */
     if (arregla && st.exige && cur.fallas.indexOf(st.exige) !== -1 && !fixed[st.exige]) {
       dataLost = true;
       logLine('☠ ' + st.exigeTexto, 'bad');
@@ -735,6 +815,10 @@
     }
 
     /* La acción no resolvió nada */
+    /* Distingo la chapuza CARA de la barata: formatear sin diagnosticar
+       (arregla === 'so') o cambiar una pieza de mas de $30.000 le cuesta plata
+       real al cliente y reputacion al taller. Cambiar un cable de $2.500 al
+       pedo es solo tiempo perdido y un tironcito de orejas. */
     if (st.arregla === 'so' || st.costo >= 30000) {
       wasted++;
       GT.state.mistakes++;
@@ -755,6 +839,11 @@
   /* ============================================================
      Probar el equipo
      ============================================================ */
+  /* PROBAR EL EQUIPO: el momento de la verdad. No le digo al jugador cuantas
+     fallas faltan; simplemente le muestro el sintoma que queda. Si quedan
+     fallas pendientes, el equipo sigue roto (y el sintoma puede haber CAMBIADO,
+     que es lo que lo obliga a volver a inspeccionar en vez de adivinar).
+     Cuando no queda ninguna, paso a la fase de diagnostico. */
   function testEquipment() {
     if (phase !== 'trabajo' || GT.state.finished) return;
 
@@ -839,7 +928,14 @@
       fb.innerHTML = '<b>✘ NO ERA ESO.</b><br>' + d.porque;
     }
 
-    /* Balance del caso: tiempo, repuestos y prolijidad */
+    /* BALANCE DEL CASO. El diagnostico es solo una parte de la nota: tambien
+       cuentan el tiempo y la prolijidad, porque un taller que tarda el triple
+       o cambia piezas sanas pierde clientes aunque acierte.
+
+         extra   = minutos por encima del presupuesto de la orden
+         castigo = 1 de reputacion cada 6 minutos de exceso (Math.ceil para que
+                   pasarse 1 solo minuto ya cueste algo), topeado en 18 con
+                   Math.min para que un descuido no te funda de una. */
     var extra = Math.max(0, caseMinutes - cur.presupuesto);
     var resumen = [];
 

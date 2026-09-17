@@ -9,8 +9,18 @@
   var GT = window.GlitchTec;
   var ui = GT.ui = {};
 
-  var windows = {};        // id -> objeto ventana
+  /* EL REGISTRO DE VENTANAS. Es la pieza central de todo este archivo:
+     un objeto que mapea  id -> { el, body, bar, taskBtn, onClose, ... }.
+     Tenerlas indexadas por id me deja preguntar "¿ya esta abierta la
+     terminal?" en O(1) (windows['terminal']) en vez de andar buscando en el
+     DOM con querySelector. */
+  var windows = {};
+  /* zTop: el z-index mas alto entregado hasta ahora. Cada vez que enfoco una
+     ventana le doy ++zTop, asi queda arriba de todas sin tener que reordenar
+     nada. Crece para siempre, pero un entero no se agota nunca en una partida. */
   var zTop = 100;
+  /* cascade: contador para que las ventanas nuevas no se apilen exactamente
+     una encima de otra. Va de 0 a 5 y vuelve a empezar (modulo 6). */
   var cascade = 0;
 
   /* ============================================================
@@ -83,6 +93,11 @@
   /* ============================================================
      Pantallas
      ============================================================ */
+  /* Navegacion entre pantallas (menu, boot, escritorio, taller, victoria...).
+     Estan TODAS en el index.html al mismo tiempo; la que se ve es la que tiene
+     la clase is-active, el resto las esconde el CSS. Cambiar de pantalla es
+     entonces sacarle la clase a todas y ponersela a una: no recargo nada, no
+     pierdo estado y la transicion la anima el CSS. */
   ui.setScreen = function (id) {
     var all = document.querySelectorAll('.screen');
     for (var i = 0; i < all.length; i++) all[i].classList.remove('is-active');
@@ -109,6 +124,14 @@
   var crt = null;
   function getCrt() { return crt || (crt = document.getElementById('crt')); }
 
+  /* TRUCO IMPORTANTE (lo repito en varios lados del proyecto, conviene que lo
+     entienda bien): para re-disparar una animacion CSS no alcanza con sacar y
+     volver a poner la clase en la misma linea, porque el navegador agrupa los
+     cambios y al final ve que la clase sigue puesta -> no reinicia nada.
+     Leer una propiedad de layout como offsetWidth lo obliga a recalcular el
+     estilo AHORA (se llama "reflow forzado"), y ahi si registra que la clase
+     estuvo ausente un instante. El "void" es solo para dejar claro que leo la
+     propiedad por su efecto y tiro el valor. */
   ui.shake = function () {
     var c = getCrt();
     c.classList.remove('shake');
@@ -125,6 +148,11 @@
     setTimeout(function () { f.className = ''; }, 320);
   };
 
+  /* Puente JS -> CSS: en vez de tocar diez propiedades desde JavaScript,
+     escribo UNA variable CSS (--glitch) y el archivo .css se encarga de todo
+     lo demas (opacidad de la estatica, intensidad del temblor, etc.).
+     Asi el efecto visual se ajusta en el CSS, que es donde corresponde, y
+     desde el JS solo mando un numero de 0 a 1. */
   ui.setGlitch = function (level0to1) {
     var c = getCrt();
     c.style.setProperty('--glitch', level0to1.toFixed(2));
@@ -138,6 +166,10 @@
      ============================================================ */
   function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
+  /* Enfocar = apagar visualmente a todas y prender esta, mas subirla al tope
+     del z-index. Recorro TODAS en lugar de acordarme de cual estaba activa
+     antes: son 5 o 6 ventanas como mucho, y asi no puedo quedar en un estado
+     inconsistente con dos barras de titulo en azul. */
   ui.focusWindow = function (id) {
     var w = windows[id];
     if (!w) return;
@@ -158,6 +190,10 @@
   ui.closeWindow = function (id) {
     var w = windows[id];
     if (!w) return;
+    /* Le doy derecho a veto al que creo la ventana: si su onClose devuelve
+       exactamente false, cancelo el cierre. Lo uso para ventanas de las que no
+       se puede escapar (el jefe final). Comparo con === false para que una
+       funcion que no devuelve nada (undefined) NO cuente como veto. */
     if (typeof w.onClose === 'function' && w.onClose() === false) return;
     if (w.el.parentNode) w.el.parentNode.removeChild(w.el);
     if (w.taskBtn && w.taskBtn.parentNode) w.taskBtn.parentNode.removeChild(w.taskBtn);
@@ -183,6 +219,12 @@
     var w = Math.min(opts.width || 560, deskW - 20);
     var h = Math.min(opts.height || 380, deskH - 20);
 
+    /* Posicion: si el que abre la ventana no me dice donde, la centro y le
+       sumo un desplazamiento en cascada (26px a la derecha y 24 abajo por cada
+       ventana nueva) para que no queden perfectamente superpuestas, igual que
+       Windows. El clamp la mantiene siempre dentro del escritorio.
+       El "% 6" hace que la cascada vuelva a empezar cada 6 ventanas y no se
+       me escape para abajo infinitamente. */
     var x = opts.x;
     var y = opts.y;
     if (x === undefined) x = clamp(Math.round((deskW - w) / 2) - 90 + cascade * 26, 8, deskW - w - 8);
@@ -208,6 +250,11 @@
         (opts.noClose ? '' : '<button class="wb-close" title="Cerrar">X</button>') +
       '</div>';
 
+    /* El contenido puede venir de dos formas y acepto las dos:
+         - un nodo del DOM ya armado (lo mas comun: asi el modulo que lo creo
+           se queda con la referencia y puede seguir actualizandolo);
+         - un string de HTML, para contenidos simples y fijos.
+       instanceof HTMLElement es la forma de distinguirlas. */
     var body = document.createElement('div');
     body.className = 'win-body';
     if (opts.body instanceof window.HTMLElement) body.appendChild(opts.body);
@@ -269,19 +316,38 @@
     return winObj;
   };
 
+  /* ARRASTRAR UNA VENTANA — el patron es siempre el mismo y conviene tenerlo
+     claro porque lo repito en popups.js y en el panel del hacker:
+
+       1. mousedown SOBRE LA BARRA: enciendo la bandera "dragging" y guardo el
+          OFFSET, o sea en que parte de la barra agarre (distancia entre el
+          mouse y la esquina de la ventana). Sin ese offset, la ventana saltaria
+          poniendo su esquina superior izquierda bajo el cursor.
+       2. mousemove EN EL DOCUMENT (no en la barra): la nueva posicion es
+          mouse - offset. Va en el document porque si el mouse se adelanta a la
+          ventana y sale de la barra, el evento se perderia y el arrastre se
+          cortaria solo.
+       3. mouseup EN EL DOCUMENT: apago la bandera. Tambien va en document por
+          si el jugador suelta el boton fuera de la ventana (o fuera de la
+          pagina). */
   function makeDraggable(el, handle, bounds) {
     var dragging = false, offX = 0, offY = 0;
 
     handle.addEventListener('mousedown', function (e) {
-      if (e.target.closest('button')) return;
+      if (e.target.closest('button')) return;   // no arrastrar desde minimizar/cerrar
       dragging = true;
       offX = e.clientX - el.offsetLeft;
       offY = e.clientY - el.offsetTop;
+      /* preventDefault mata la seleccion de texto del navegador: sin esto,
+         arrastrar la barra pinta de azul medio escritorio. */
       e.preventDefault();
     });
 
     document.addEventListener('mousemove', function (e) {
-      if (!dragging) return;
+      if (!dragging) return;                    // salida rapida: no estoy arrastrando
+      /* Limites: dejo que la ventana se vaya bastante para afuera (hasta que
+         solo queden 60px visibles) porque es comodo, pero nunca del todo:
+         si se fuera entera, no habria barra de donde volver a agarrarla. */
       var maxX = bounds.clientWidth - 60;
       var maxY = bounds.clientHeight - 30;
       el.style.left = clamp(e.clientX - offX, -el.offsetWidth + 80, maxX) + 'px';
@@ -304,6 +370,10 @@
   /* ============================================================
      Iconos del escritorio
      ============================================================ */
+  /* Los iconos NO estan escritos en el index.html: cada uno se registra desde
+     JS con su etiqueta, su SVG y —clave— la funcion onOpen que hay que llamar
+     al abrirlo. Como el escritorio se arma desde datos, agregar un programa
+     nuevo es agregar un objeto a esta lista y nada mas. */
   var iconDefs = [];
 
   ui.registerIcon = function (def) {
@@ -341,6 +411,10 @@
         b.classList.add('selected');
       });
 
+      /* Doble click para abrir (como en Windows). "def" queda capturado en la
+         CLAUSURA de esta funcion: aunque renderIcons ya haya terminado hace
+         rato, cuando el jugador haga doble click dentro de dos minutos este
+         callback va a seguir teniendo SU definicion, la correcta. */
       b.addEventListener('dblclick', function () {
         if (def.locked) {
           GT.audio.error();
@@ -393,6 +467,15 @@
   /* ============================================================
      Dialogos narrativos (con efecto maquina de escribir)
      ============================================================ */
+  /* DIALOGOS TIPO MAQUINA DE ESCRIBIR. El estado es minimo pero cada variable
+     cumple una funcion:
+       dlgQueue  = las lineas que faltan mostrar. Siempre trabajo con la [0] y
+                   cuando termina la saco con shift(): la cola se vacia sola.
+       dlgTimer  = el id del setInterval que va escupiendo letra por letra.
+                   Lo guardo para poder cortarlo (clearInterval).
+       dlgDone   = callback para avisar cuando se termino TODO el dialogo.
+       dlgTyping = si en este momento se esta tipeando. Lo necesito para que el
+                   primer click complete el texto y el segundo pase de linea. */
   var dlgQueue = [];
   var dlgTimer = null;
   var dlgDone = null;
@@ -411,6 +494,11 @@
     av.textContent = line.friendly ? '>' : '☠';
     next.textContent = 'CONTINUAR ▸';
 
+    /* El efecto maquina de escribir: un setInterval que agrega UN caracter
+       cada 17ms. clearInterval ANTES de crear el nuevo es obligatorio: si una
+       linea empieza mientras la anterior seguia tipeando, quedarian dos
+       intervalos escribiendo sobre el mismo elemento y saldria todo mezclado.
+       El sonidito cada 3 letras (i % 3) es para que no sature el oido. */
     var full = line.text;
     var i = 0;
     txt.textContent = '';
@@ -429,6 +517,11 @@
     }, 17);
   }
 
+  /* El boton CONTINUAR hace dos cosas distintas segun el momento, igual que
+     en cualquier juego con dialogos: si todavia esta escribiendo, el primer
+     click COMPLETA la linea de golpe (para el que no quiere esperar); si ya
+     esta completa, el click PASA a la siguiente. Cuando la cola queda vacia,
+     escondo el cuadro y recien ahi disparo el callback final. */
   function advanceDialog() {
     var txt = document.getElementById('dialog-text');
 
@@ -444,6 +537,10 @@
       renderDialogLine(dlgQueue[0]);
     } else {
       document.getElementById('dialog').classList.add('hidden');
+      /* Copio el callback a una variable local y LIMPIO dlgDone ANTES de
+         llamarlo. Parece un detalle al pedo pero no lo es: ese callback suele
+         arrancar el nivel siguiente, que puede abrir otro dialogo enseguida.
+         Si limpiara despues, le estaria pisando el callback nuevo al viejo. */
       var cb = dlgDone;
       dlgDone = null;
       if (cb) cb();
@@ -493,6 +590,9 @@
       muteBtn.textContent = m ? '×' : '♪';
     });
 
+    /* Reloj de la barra de tareas. Chequeo cada segundo aunque el minuto
+       cambie cada 60: es mas barato preguntar la hora que calcular cuanto
+       falta para el proximo minuto, y asi no se desfasa nunca. */
     setInterval(function () {
       var d = new Date();
       var h = d.getHours(), m = d.getMinutes();

@@ -10,10 +10,10 @@
   var GT = window.GlitchTec;
   var pop = GT.popups = {};
 
-  var running = false;
-  var timer = 0;
-  var openList = [];
-  var seq = 0;
+  var running = false;     // ¿estoy generando pop-ups? (nivel 1 en adelante)
+  var timer = 0;           // acumulador de segundos hasta el proximo pop-up
+  var openList = [];       // los que estan abiertos AHORA: [{ el, tpl }, ...]
+  var seq = 0;             // contador para el z-index (el ultimo tocado va arriba)
 
   var TEMPLATES = [
     {
@@ -82,7 +82,19 @@
     seq = 0;
   };
 
-  /** Intervalo entre pop-ups: baja a medida que sube la infeccion. */
+  /** Intervalo entre pop-ups: baja a medida que sube la infeccion.
+      Esta funcioncita es la que hace que el juego se ponga cada vez mas
+      agobiante sin que yo tenga que scriptear nada:
+
+        base = 17 - (inf/100)*9   con 0% de infeccion sale un pop-up cada 17s,
+                                  con 100% cada 8s.
+        lvl  = 1.2s menos por cada nivel superado (el -1 es porque el nivel 1
+               todavia no tiene que descontar nada).
+        Math.max(6, ...) es el piso: nunca menos de 6 segundos, porque abajo de
+        eso el juego deja de ser dificil y pasa a ser injugable.
+
+      Es un BUCLE DE REALIMENTACION: mas pop-ups abiertos -> mas dano -> mas
+      infeccion -> aparecen mas seguido. Por eso el piso no es opcional. */
   function interval() {
     var inf = GT.getInfection();
     var base = 17 - (inf / 100) * 9;             // de 17s a 8s
@@ -93,11 +105,17 @@
   pop.tick = function (dt) {
     if (!running || GT.state.finished) return;
 
-    // Los pop-ups abiertos drenan integridad
+    /* Dano por segundo, multiplicado por la CANTIDAD de ventanas abiertas: dos
+       pop-ups duelen el doble que uno. Multiplicar por dt es lo que hace que
+       el dano sea por segundo real y no por frame (si fuera por frame, en una
+       PC rapida perderias el triple de vida que en una lenta). */
     if (openList.length) {
       GT.damage(GT.CONFIG.POPUP_DRAIN_PER_SEC * openList.length * dt, 'pop-ups abiertos');
     }
 
+    /* Acumulador de tiempo: sumo los dt hasta pasar el umbral, disparo y
+       vuelvo a cero. Es un "temporizador" hecho a mano, mas controlable que
+       un setInterval porque se frena solo cuando el juego se frena. */
     timer += dt;
     if (timer >= interval()) {
       timer = 0;
@@ -116,11 +134,15 @@
     var el = document.createElement('div');
     el.className = 'popup' + (t.evil ? ' leaking' : '');
 
+    /* Posicion al azar, pero descontando el tamano del pop-up (330x220) para
+       que no nazca mitad afuera de la pantalla. El Math.max(10, ...) cubre el
+       caso de una ventana del navegador chiquita, donde esa resta podria dar
+       negativo y romper el rand. */
     var maxX = Math.max(10, layer.clientWidth - 330);
     var maxY = Math.max(10, layer.clientHeight - 220);
     el.style.left = GT.rand(20, maxX) + 'px';
     el.style.top = GT.rand(20, maxY) + 'px';
-    el.style.zIndex = 320 + (seq++);
+    el.style.zIndex = 320 + (seq++);         // el mas nuevo, arriba de todo
 
     el.innerHTML =
       '<div class="popup-bar"><span>' + GT.escapeHtml(t.title) + '</span>' +
@@ -137,9 +159,17 @@
 
     layer.appendChild(el);
 
+    /* "entry" ata el nodo del DOM con la plantilla que lo genero. Guardo ese
+       par en la lista para despues poder, desde el nodo, llegar a la leccion
+       educativa sin tener que volver a buscar cual plantilla era. */
     var entry = { el: el, tpl: t };
     openList.push(entry);
 
+    /* Los tres botones cierran la ventana, pero NO son lo mismo:
+         X y "safe"  -> dismiss   (+10 puntos: hiciste lo correcto)
+         "bait"      -> takeBait  (-40 y dano: picaste)
+       Cada callback se queda con SU entry por clausura, asi que aunque haya
+       seis pop-ups en pantalla cada boton sabe exactamente cual cerrar. */
     el.querySelector('.popup-x').addEventListener('click', function () { dismiss(entry); });
     el.querySelector('[data-p="safe"]').addEventListener('click', function () { dismiss(entry); });
     el.querySelector('[data-p="bait"]').addEventListener('click', function () { takeBait(entry); });
@@ -165,6 +195,10 @@
     GT.emit('hud');
   }
 
+  /* El jugador apreto el boton trampa. Esta es la parte mas "educativa" del
+     modulo: el castigo no es solo mecanico (dano y puntos), tambien le muestro
+     POR QUE estaba mal, y encima aparece otro pop-up 700ms despues. Eso imita
+     el comportamiento real del adware: aceptar uno te trae mas. */
   function takeBait(entry) {
     removePopup(entry, true);
     GT.state.mistakes++;
@@ -181,6 +215,12 @@
     GT.emit('hud');
   }
 
+  /* Sacar un pop-up son SIEMPRE dos pasos y hay que hacer los dos:
+       1. sacarlo de openList (mi lista logica) -> deja de drenar integridad;
+       2. sacar el nodo del DOM               -> deja de verse.
+     Si me olvidara del 1, el jugador seguiria perdiendo vida por una ventana
+     que ya cerro. Si me olvidara del 2, quedaria una ventana fantasma clickeable.
+     indexOf + splice es la forma clasica de borrar por valor en un array. */
   function removePopup(entry, animate) {
     var i = openList.indexOf(entry);
     if (i !== -1) openList.splice(i, 1);
@@ -205,7 +245,17 @@
     document.addEventListener('mouseup', function () { dragging = false; });
   }
 
-  /** Rafaga de pop-ups (la usa el jefe final cuando fallas). */
+  /** Rafaga de pop-ups (la usa el jefe final cuando fallas).
+      Los escalono de a 220ms para que "lluevan" en vez de aparecer todos
+      juntos de golpe: se siente mucho peor, que es la idea.
+
+      El (function (d) { ... })(i) de adentro del for es el patron clasico para
+      CAPTURAR el valor de i. Con "var", la variable del for es una sola y
+      compartida: para cuando los setTimeout se ejecuten, i ya vale n en todos,
+      y los tres pop-ups saldrian a la vez. Al pasar i como argumento de una
+      funcion, cada vuelta se queda con su propia copia (d). Con "let" en vez
+      de "var" esto no haria falta, pero mantengo var en todo el proyecto para
+      que ande en navegadores viejos. */
   pop.burst = function (n) {
     for (var i = 0; i < n; i++) {
       (function (d) { setTimeout(function () { pop.spawn(); }, d * 220); })(i);

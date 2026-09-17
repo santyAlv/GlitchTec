@@ -10,12 +10,34 @@
   var GT = window.GlitchTec;
   var fs = GT.fs = {};
 
+  /* COMO ESTA ARMADO EL ARBOL (me lo anoto porque toda la terminal depende
+     de entender esta forma):
+
+       nodo carpeta = { type:'dir',  name, children: { 'nombre': nodo, ... } }
+       nodo archivo = { type:'file', name, size, content, ... }
+
+     Es un objeto dentro de otro objeto dentro de otro: la misma estructura
+     recursiva de un disco real. Una RUTA la represento como un array de
+     nombres: ['Sistema','cuarentena'] es C:\Sistema\cuarentena. Elegi array
+     y no string porque asi "subir un nivel" es un pop() y "entrar" es un
+     push(), sin andar cortando strings con split cada dos lineas.
+
+     Las banderas que le cuelgo a los nodos son las que mueven el juego:
+       locked/password -> carpeta con clave (nivel 1)
+       malicious/threat -> lo que encuentra el comando scan
+       signed           -> firma digital, la pista educativa real
+       scanned          -> ya lo analice (cambia el icono en el explorador)   */
   fs.ROOT_NAME = 'C:';
 
   /* Clave del directorio en cuarentena: 101101 binario = 45 decimal */
   fs.QUARANTINE_PASSWORD = '45';
 
-  /** Construye un arbol nuevo (se llama en cada partida). */
+  /** Construye un arbol NUEVO en cada partida.
+      Es una funcion y no una constante a proposito: el juego MODIFICA el arbol
+      mientras se juega (desbloquea la cuarentena, marca archivos escaneados).
+      Si fuera un objeto fijo compartido, la segunda partida arrancaria con la
+      carpeta ya desbloqueada de la partida anterior. Devolviendo un objeto
+      recien creado cada vez, cada partida empieza realmente de cero. */
   fs.create = function () {
     return {
       type: 'dir', name: 'C:',
@@ -188,7 +210,11 @@
     return fs.ROOT_NAME + (pathArr.length ? '\\' + pathArr.join('\\') : '\\');
   };
 
-  /** Devuelve el nodo en la ruta indicada (o null). */
+  /** Devuelve el nodo en la ruta indicada (o null).
+      Camina el arbol de a un escalon: arranco en la raiz y en cada vuelta me
+      "meto" un nivel mas adentro reasignando node. Si en el camino falta un
+      hijo, corto y devuelvo null (ruta invalida). Es la version iterativa de
+      lo que uno escribiria como recursion. */
   fs.getNode = function (root, pathArr) {
     var node = root;
     for (var i = 0; i < pathArr.length; i++) {
@@ -198,7 +224,13 @@
     return node;
   };
 
-  /** Busca un hijo sin distinguir mayusculas. Devuelve el nombre real o null. */
+  /** Busca un hijo sin distinguir mayusculas. Devuelve el nombre real o null.
+      ¿Por que existe esta funcion pudiendo hacer children[name] directo?
+      Porque las claves de un objeto JS SI distinguen mayusculas, pero la
+      consola de Windows NO: el jugador escribe "type LEEME.TXT" y tiene que
+      andar igual. Entonces recorro las claves comparando todo en minuscula y
+      devuelvo el nombre REAL (con sus mayusculas originales), que es el que
+      despues uso para indexar el objeto y para mostrar en pantalla. */
   fs.findChildName = function (dirNode, name) {
     if (!dirNode || !dirNode.children) return null;
     var target = String(name).toLowerCase();
@@ -213,10 +245,30 @@
    * Resuelve un argumento de `cd`. Soporta ".", "..", "\", rutas con "\"
    * y nombres sueltos. Devuelve { path } o { error }.
    */
+  /* EL ALGORITMO MAS FINO DEL ARCHIVO: interpretar lo que el jugador escribe
+     despues de "cd". Tiene que bancar   cd Documentos  /  cd ..  /  cd .  /
+     cd \Sistema\cuarentena  /  cd C:\Descargas  /  cd Sistema/cuarentena.
+
+     La idea: no valido el string entero de una, lo parto en pedazos y proceso
+     un pedazo por vez sobre una copia de la ruta actual. Si algo falla, no
+     toco nada y devuelvo el error; la ruta real del jugador solo cambia si
+     TODO el recorrido salio bien (o sea: la operacion es atomica).
+
+     Devuelve  { path: [...] }  si anduvo, o  { error: '...', name: '...' }
+     con el motivo. Es el patron "en vez de tirar excepcion, devuelvo un objeto
+     que dice que paso": la terminal despues traduce cada error a su mensaje. */
   fs.resolvePath = function (root, current, arg) {
+    /* Normalizo las barras: acepto / como \ para que no sea una trampa boba,
+       y parto en segmentos. "Sistema\cuarentena" -> ['Sistema','cuarentena'] */
     var parts = String(arg).replace(/\//g, '\\').split('\\');
+    /* .slice() = COPIA del array. Trabajo sobre la copia justamente para poder
+       abandonar sin haber roto nada si aparece un error a mitad de camino. */
     var path = current.slice();
 
+    /* ¿Es ruta absoluta? Dos casos: empieza con \ (y entonces el primer
+       segmento queda vacio) o empieza con "C:" (el /i del regex hace que
+       tambien valga "c:"). En los dos casos vuelvo a la raiz y descarto ese
+       primer pedazo con shift(). Si no, es relativa y sigo desde donde estoy. */
     if (parts[0] === '' || /^c:$/i.test(parts[0])) {   // ruta absoluta
       path = [];
       parts.shift();
@@ -224,22 +276,27 @@
 
     for (var i = 0; i < parts.length; i++) {
       var p = parts[i];
-      if (p === '' || p === '.') continue;
+      if (p === '' || p === '.') continue;     // "." o barras dobles: no mueven
 
-      if (p === '..') {
-        if (path.length) path.pop();
+      if (p === '..') {                        // subir un nivel...
+        if (path.length) path.pop();           // ...salvo que ya este en C:\
         continue;
       }
 
+      /* Bajar un nivel: releo el nodo donde estoy parado AHORA (ojo: "path"
+         cambio en las vueltas anteriores del for, por eso lo recalculo cada
+         vez en lugar de guardarlo afuera). */
       var node = fs.getNode(root, path);
       var real = fs.findChildName(node, p);
       if (!real) return { error: 'no-existe', name: p };
 
       var child = node.children[real];
       if (child.type !== 'dir') return { error: 'no-es-dir', name: real };
+      /* La carpeta con clave: devuelvo tambien el nodo para que la terminal
+         pueda mostrar su pista sin tener que ir a buscarlo de nuevo. */
       if (child.locked) return { error: 'bloqueado', name: real, node: child };
 
-      path.push(real);
+      path.push(real);                         // recien aca "entro" de verdad
     }
 
     return { path: path };
@@ -252,7 +309,14 @@
     return (bytes / 1048576).toFixed(1) + ' MB';
   };
 
-  /** Busca recursivamente todos los archivos maliciosos (para verificaciones). */
+  /** Busca recursivamente todos los archivos maliciosos (para verificaciones).
+      Recorrido en profundidad clasico sobre el arbol:
+        - CASO BASE: si el nodo es un archivo, lo evaluo y corto.
+        - CASO RECURSIVO: si es carpeta, me llamo a mi mismo por cada hijo.
+      "acc" es el acumulador: el mismo array viaja por toda la recursion y cada
+      llamada le agrega lo que encuentra. El  acc = acc || []  del principio
+      permite invocarla de afuera sin pasarle nada (la primera llamada lo crea,
+      las internas lo reciben ya hecho). */
   fs.findMalicious = function (node, path, acc) {
     acc = acc || [];
     path = path || [];
@@ -266,7 +330,22 @@
     return acc;
   };
 
-  /** Detecta doble extension: nombre con dos puntos y final ejecutable. */
+  /** Detecta doble extension: nombre con dos puntos y final ejecutable.
+      Esta es LA funcion educativa del nivel 1, asi que desarmo el regex:
+
+        /\.([a-z0-9]+)\.([a-z0-9]+)$/
+          \.          un punto literal (con \ porque el punto pelado significa
+                      "cualquier caracter")
+          ([a-z0-9]+) grupo 1: la extension FALSA, la que ve el usuario (jpg)
+          \.          otro punto
+          ([a-z0-9]+) grupo 2: la extension REAL, la que ejecuta Windows (exe)
+          $           anclado al final del nombre
+
+      En "foto_vacaciones.jpg.exe" -> m[1]='jpg', m[2]='exe'.
+      Pero no alcanza con tener dos puntos ("apuntes.v2.pdf" es inofensivo):
+      lo peligroso es que la extension REAL sea ejecutable, por eso despues
+      pregunto si m[2] esta en la lista negra. indexOf devuelve -1 cuando no
+      encontro nada, de ahi el "!== -1" para leerlo como booleano. */
   fs.hasDoubleExtension = function (name) {
     var m = name.toLowerCase().match(/\.([a-z0-9]+)\.([a-z0-9]+)$/);
     if (!m) return false;
