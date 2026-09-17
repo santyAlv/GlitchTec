@@ -10,9 +10,15 @@
   var GT = window.GlitchTec || (window.GlitchTec = {});
   var api = GT.api = {};
 
-  var BASE = 'api';
-  var matchId = null;
-  var offline = false;
+  /* LA IDEA DE ESTE ARCHIVO: el juego NO tiene que saber si hay un servidor
+     PHP atras o no. Llama siempre a los mismos metodos (startMatch,
+     finishMatch...) y este modulo decide por dentro si va a la base MySQL o
+     al localStorage del navegador. Eso me deja abrir index.html con doble
+     click en cualquier maquina y que igual funcione, que es clave para poder
+     mostrar el TP sin depender de que ande XAMPP. */
+  var BASE = 'api';           // carpeta de los endpoints PHP
+  var matchId = null;         // id que me devuelve la base al abrir la partida
+  var offline = false;        // bandera: ¿hay backend o no?
   var playerName = 'estudiante';
 
   function storageKey() { return 'glitchtec_scores'; }
@@ -32,6 +38,14 @@
     catch (e) { /* ignore */ }
   }
 
+  /* Envoltorio de fetch para no repetir la configuracion en cada llamada.
+     Dos cosas para acordarme:
+       - el body de un POST JSON tiene que ir como STRING (JSON.stringify) y
+         con el header Content-Type: application/json, si no PHP no sabe que
+         le estoy mandando y file_get_contents('php://input') me llega crudo;
+       - fetch NO tira error con un 404 o un 500: la promesa se cumple igual.
+         Por eso chequeo r.ok a mano y lanzo la excepcion yo, para que el
+         .catch() de mas abajo se entere. */
   function post(path, body) {
     return fetch(BASE + '/' + path, {
       method: 'POST',
@@ -50,7 +64,10 @@
     });
   }
 
-  /** Comprueba si el backend PHP responde. */
+  /** Comprueba si el backend PHP responde. Lo llamo una vez al cargar la
+      pagina: si contesta, juego online; si falla (porque abri el archivo con
+      file:// o porque Apache no esta prendido), levanto la bandera offline y
+      de ahi en mas ni intento conectarme. */
   api.ping = function () {
     return get('ping.php').then(function (data) {
       offline = !(data && data.ok);
@@ -67,7 +84,11 @@
     playerName = String(name || 'estudiante').slice(0, 40);
   };
 
-  /** Abre una partida nueva (al iniciar el juego). */
+  /** Abre una partida nueva (al iniciar el juego).
+      Guardo el id que devuelve la base porque todo lo que venga despues
+      (eventos y cierre) tiene que apuntar a ESA fila. En modo offline me
+      invento un id local con el timestamp, asi el resto del codigo no tiene
+      que preguntar nunca si estoy online: siempre hay un matchId. */
   api.startMatch = function () {
     matchId = null;
     var payload = {
@@ -81,6 +102,10 @@
       return Promise.resolve({ id: matchId, offline: true });
     }
 
+    /* El .catch() es la red de seguridad: si el servidor se cae EN EL MEDIO de
+       la partida (o nunca estuvo), no quiero un error rojo en consola ni que
+       se corte el juego. Paso a offline y devuelvo un resultado valido, como
+       si nada hubiera pasado. El jugador no se entera. */
     return post('partida_start.php', payload).then(function (data) {
       matchId = data.id;
       return data;
@@ -122,7 +147,10 @@
       finished_at: new Date().toISOString()
     };
 
-    // Siempre guarda en local como respaldo
+    /* Guardo SIEMPRE en localStorage, incluso estando online. Es a proposito:
+       el ranking local funciona como respaldo si la base se cae, y ademas me
+       deja probar la pantalla de puntajes sin levantar XAMPP. Cuesta
+       practicamente nada (unos kilobytes de JSON). */
     var local = loadLocal();
     local.unshift({
       player: row.player_name,

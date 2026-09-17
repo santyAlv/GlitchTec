@@ -10,11 +10,21 @@
   var exp = GT.explorer = {};
 
   var WIN_ID = 'explorer';
+  /* OJO: el explorador tiene su PROPIA ruta, separada del cwd de la terminal.
+     Es a proposito y es como funciona en un sistema real: puedo estar parado
+     en C:\Descargas en la consola y mirando C:\Sistema en la ventana. Lo que
+     SI comparten es el arbol de datos (GT.state.fsRoot), asi que si desbloqueo
+     la cuarentena por terminal, el explorador la ve desbloqueada. */
   var path = [];
   var selected = null;
 
   function root() { return GT.state.fsRoot; }
 
+  /* Elige el icono segun el nodo. El ORDEN de los if importa, es una cadena
+     de prioridades: primero carpetas (con o sin candado), despues el de
+     peligro —pero SOLO si ya lo escanearon: el juego no le regala al jugador
+     cual es el archivo malo antes de que lo analice—, despues ejecutables y
+     por ultimo el documento generico como caso por defecto. */
   function iconFor(node, name) {
     if (node.type === 'dir') return node.locked ? GT.ui.icons.folderLock : GT.ui.icons.folder;
     if (node.scanned && node.malicious) return GT.ui.icons.danger;
@@ -104,6 +114,10 @@
     statusEl.textContent = names.length + ' elemento(s)';
     renderSide();
 
+    /* renderSide esta declarada ADENTRO de refresh a proposito: necesita ver
+       la variable "node" de esta ejecucion y la puede usar libremente gracias
+       a la clausura. Ademas, al ser funcion declarada (no una var), el hoisting
+       me permite llamarla arriba aunque este escrita aca abajo. */
     function renderSide() {
       var html = '';
       if (selected && node.children[selected.name]) {
@@ -141,6 +155,10 @@
       return;
     }
 
+    /* Doble click sobre un ejecutable: NUNCA lo "ejecuto". Este es el momento
+       educativo del explorador —es literalmente el error que cometio el
+       personaje de la historia para infectarse—, asi que lo castigo con dano
+       si el archivo era malicioso y lo explico con un aviso. */
     if (child.kind === 'exe' || child.kind === 'bin') {
       GT.audio.error();
       GT.ui.toast('Nunca ejecutes un archivo sospechoso. Analizalo primero.', 'bad');
@@ -156,6 +174,13 @@
     openViewer(name, child);
   }
 
+  /* Abre un archivo de texto en una "ventana de bloc de notas".
+     El id se arma sacandole al nombre todo lo que no sea letra o numero
+     (el regex /[^a-z0-9]/gi: ^ adentro de los corchetes significa "cualquier
+     cosa MENOS esto", g = todos, i = sin importar mayusculas). Asi
+     "leeme.txt" -> "viewer-leemetxt": un id valido y, sobre todo, ESTABLE, de
+     modo que abrir dos veces el mismo archivo reusa la ventana en vez de
+     apilar copias. */
   function openViewer(name, child) {
     var id = 'viewer-' + name.replace(/[^a-z0-9]/gi, '');
     var pre = document.createElement('div');

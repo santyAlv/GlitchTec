@@ -46,7 +46,11 @@
     COLOR_DAMAGE: 4
   };
 
-  /* Teclas candidatas: todas se usan al escribir comandos reales. */
+  /* Teclas candidatas: todas se usan al escribir comandos reales.
+     No es una lista al azar: son las letras de dir, cd, type, scan, unlock,
+     kill, purge... Si bloqueara la W o la Z el ataque no se sentiria. Tampoco
+     meto numeros, porque la clave de la cuarentena (45) se escribe con ellos y
+     seria bloquear el progreso en vez de molestar. */
   var KEY_POOL = ['a', 'c', 'd', 'e', 'i', 'k', 'l', 'n', 'o', 'p', 'r', 's', 't', 'u'];
 
   /* ============================================================
@@ -237,29 +241,38 @@
   /* ============================================================
      Estado interno
      ============================================================ */
+  /* --- Referencias al DOM (se crean una vez en init) --- */
   var layer = null;         // capa donde vive el personaje
   var fig = null;           // el personaje en si
   var bubble = null;        // globo de dialogo
   var badge = null;         // cartel de "vista corrompida"
   var modal = null;         // panel de rescate del teclado
 
+  /* --- Tres relojes independientes ---
+     Este modulo es basicamente una MAQUINA DE ESTADOS con tres contadores que
+     bajan solos en el tick: uno para moverse, uno para el ataque de teclado y
+     uno para el de colores. Cuando alguno llega a cero, dispara su ataque y se
+     vuelve a cargar con un valor aleatorio. Al ser independientes, el jugador
+     no puede aprenderse el patron. */
   var running = false;
   var moveTimer = 0;
   var lockTimer = 0;
   var colorTimer = 0;
 
-  var locked = false;
-  var lockedKeys = [];
-  var lockQuestion = null;
-  var lockAsked = [];
-  var lastBlockFeedback = 0;
+  /* --- Estado del ataque 1: secuestro de teclado --- */
+  var locked = false;       // ¿hay teclas bloqueadas ahora mismo?
+  var lockedKeys = [];      // cuales
+  var lockQuestion = null;  // la pregunta que tiene que responder para liberarlas
+  var lockAsked = [];       // indices ya preguntados, para no repetir
+  var lastBlockFeedback = 0;// timestamp: evita spamear el aviso de tecla muerta
 
+  /* --- Estado del ataque 2: colores invertidos --- */
   var colorActive = false;
-  var colorLeft = 0;
+  var colorLeft = 0;        // segundos que faltan (cuenta regresiva a la vista)
 
-  var clickCooldown = 0;
+  var clickCooldown = 0;    // para que no lo puedan clickear 20 veces seguidas
   var bubbleTimer = null;
-  var bound = false;
+  var bound = false;        // ¿ya enganche los listeners globales? (una sola vez)
 
   /* ============================================================
      Personaje (SVG): capucha violeta, ojos encendidos, notebook.
@@ -311,6 +324,11 @@
   /* ============================================================
      Construccion del DOM
      ============================================================ */
+  /* Creo el personaje UNA sola vez en toda la vida de la pagina (el "if
+     (layer) return" lo garantiza). Despues, entre partida y partida, solo lo
+     muestro u oculto con una clase: recrear los nodos en cada partida seria
+     tirar trabajo al pedo y, peor, me obligaria a re-enganchar los listeners
+     y arriesgarme a dejar duplicados. */
   hacker.init = function () {
     if (layer) return;
 
@@ -330,6 +348,22 @@
 
     fig.addEventListener('click', onFigClick);
 
+    /* EL FILTRO GLOBAL DE TECLADO. Este es el corazon del ataque 1 y el
+       tercer parametro (true) es lo que lo hace posible:
+
+         addEventListener(evento, fn, true)  ->  fase de CAPTURA
+
+       Un evento de teclado viaja primero de la raiz del documento HACIA ABAJO
+       (captura) y recien despues vuelve hacia arriba (burbujeo). Los listeners
+       normales escuchan en el burbujeo, o sea DESPUES de que el <input> de la
+       terminal ya recibio la letra. Escuchando en captura me pongo PRIMERO en
+       la fila: intercepto la tecla antes que nadie y, si esta bloqueada, la
+       mato con preventDefault. Por eso el bloqueo funciona en todo el sistema
+       y no solo en la terminal.
+
+       "bound" me asegura enganchar esto una sola vez: como init() se puede
+       llamar varias veces, sin esa bandera acumularia un listener por partida
+       y la misma tecla se bloquearia (y sonaria) N veces. */
     if (!bound) {
       document.addEventListener('keydown', onKeyCapture, true);
       window.addEventListener('resize', clampToScreen);
@@ -378,6 +412,11 @@
   /* ============================================================
      Tick (lo llama el loop principal de game.js)
      ============================================================ */
+  /* EL TICK: se llama ~60 veces por segundo desde el loop de game.js con el
+     dt en segundos. Todo lo que hace es restar dt a los tres relojes y actuar
+     cuando alguno llega a cero. Trabajar con dt (y no con "cada N frames")
+     hace que los tiempos sean reales: LOCK_FIRST = 38 son 38 segundos de
+     verdad en cualquier maquina. */
   hacker.tick = function (dt) {
     if (!running || !GT.state.running || GT.state.finished) return;
 
@@ -409,6 +448,10 @@
     } else {
       lockTimer -= dt;
       if (lockTimer <= 0) {
+        /* Recargo el reloj ANTES de atacar: si canLock() dice que no es
+           momento (por ejemplo, porque esta corriendo el jefe final), lo piso
+           con 12 segundos y vuelvo a intentar pronto. Asi el ataque queda
+           "pendiente" en vez de perderse hasta el proximo ciclo largo. */
         lockTimer = randf(CFG.LOCK_MIN, CFG.LOCK_MAX);
         if (canLock()) startLock();
         else lockTimer = 12;               // reintenta pronto si no era momento
@@ -433,14 +476,25 @@
     };
   }
 
-  /** Coloca al personaje usando fracciones (0..1) del alto/ancho. */
+  /** Coloca al personaje usando fracciones (0..1) del alto/ancho.
+      Trabajo con fracciones y no con pixeles fijos para que el hacker caiga en
+      el mismo lugar RELATIVO en cualquier resolucion: 0.5 es siempre el medio,
+      tenga la pantalla 1920 o 1280 de ancho.
+      Despues convierto a pixeles y encierro el resultado entre 8 y (borde - 8)
+      para que nunca quede medio cuerpo afuera. El -52 extra en la Y es para no
+      taparle la barra de tareas. */
   function moveTo(fx, fy, instant) {
     if (!fig) return;
     var b = bounds();
-    var w = 108, h = 118;
+    var w = 108, h = 118;                   // tamano aproximado del personaje
     var x = Math.round(Math.max(8, Math.min(b.w - w - 8, fx * (b.w - w))));
     var y = Math.round(Math.max(8, Math.min(b.h - h - 52, fy * (b.h - h - 52))));
 
+    /* El CSS anima los cambios de left/top (por eso "salta" suave de un lugar
+       a otro). Cuando quiero que aparezca YA en un lugar —al empezar la
+       partida— le pongo la clase no-anim, muevo, fuerzo el reflow con
+       offsetWidth para que el navegador aplique la posicion sin transicion, y
+       recien ahi le devuelvo la animacion. */
     if (instant) fig.classList.add('no-anim');
     fig.style.left = x + 'px';
     fig.style.top = y + 'px';
@@ -461,7 +515,11 @@
     placeBubble(x, y, 108);
   }
 
-  /** Salto a un punto aleatorio + amenaza. Evita quedar sobre el HUD. */
+  /** Salto a un punto aleatorio + amenaza. Evita quedar sobre el HUD.
+      No uso random puro: elijo una de estas 7 zonas y le sumo un desvio chico
+      (+-0.06). Con random puro terminaria tapando el HUD o quedandose siempre
+      en el medio; con zonas fijas + ruido consigo variedad pero controlada.
+      Es el mismo criterio que se usa para spawnear enemigos en un mapa. */
   function wander() {
     var zones = [
       [0.05, 0.55], [0.30, 0.10], [0.62, 0.62],
@@ -516,7 +574,11 @@
   }
   hacker.say = say;
 
-  /** Click del jugador: lo espanta y le retrasa el proximo ataque. */
+  /** Click del jugador: lo espanta y le retrasa el proximo ataque.
+      Le doy al jugador algo que HACER contra el hacker, aunque sea chico: si
+      no, el personaje seria solo un castigo que llega y no se puede evitar.
+      El cooldown de 2.5s existe para que no se pueda farmear puntos a fuerza
+      de clicks: sin el, alcanzaria con clickearlo sin parar para ganar. */
   function onFigClick() {
     if (!running || clickCooldown > 0) return;
     clickCooldown = 2.5;
@@ -538,6 +600,11 @@
   /* ============================================================
      ATAQUE 1 — Secuestro de teclado
      ============================================================ */
+  /* Elige 3 a 5 teclas SIN repetir. El truco esta en trabajar sobre una copia
+     del pool (.slice()) y usar splice, que saca el elemento elegido del array:
+     como ya no esta, no lo puedo volver a sacar. Es "sacar bolillas de una
+     bolsa" en vez de "tirar un dado varias veces".
+     splice(i, 1) devuelve un ARRAY con lo que saco, por eso el [0] del final. */
   function pickKeys() {
     var pool = KEY_POOL.slice();
     var n = GT.rand(CFG.LOCK_KEYS_MIN, CFG.LOCK_KEYS_MAX);
@@ -548,6 +615,10 @@
     return out;
   }
 
+  /* Elige una pregunta que todavia no haya salido en esta partida. Armo la
+     lista de candidatos (los indices que NO estan en lockAsked) y sorteo entre
+     esos. Cuando ya salieron todas, vacio lockAsked y vuelve a empezar la
+     ronda: asi nunca repito una pregunta antes de haber pasado por las 12. */
   function pickQuestion() {
     if (lockAsked.length >= QUESTIONS.length) lockAsked = [];
     var candidates = [];
@@ -559,6 +630,11 @@
     return { idx: idx, data: QUESTIONS[idx] };
   }
 
+  /* DISPARO DEL ATAQUE 1. Ojo con el orden: primero dejo el estado consistente
+     (locked, teclas, pregunta) y RECIEN DESPUES aviso por pantalla y sonido.
+     Si lo hiciera al reves, entre el aviso y el seteo habria un instante en el
+     que el panel ya existe pero lockQuestion todavia es null -> click a
+     destiempo y error de null. */
   function startLock() {
     locked = true;
     lockedKeys = pickKeys();
@@ -592,6 +668,10 @@
           '<span class="hk-modal-name">TECLADO SECUESTRADO — keylock.sys</span>' +
           '<button class="hk-fold" title="Plegar / desplegar">▬</button>' +
         '</div>' +
+        /* El panel se puede PLEGAR y ARRASTRAR a proposito: el ataque tiene
+           que molestar, no trabar el juego. El jugador puede correrlo, seguir
+           leyendo la terminal y responder cuando quiera (mientras tanto sigue
+           perdiendo integridad, que es el verdadero apuro). */
         '<div class="hk-modal-body">' +
           '<p class="hk-modal-lead">Te bloqueé estas teclas. Están muertas en todo el sistema ' +
              'hasta que demuestres que entendés algo de lo que estás usando. ' +
@@ -618,7 +698,12 @@
     q.options.forEach(function (opt, i) {
       var b = document.createElement('button');
       b.className = 'hk-opt';
+      /* String.fromCharCode(65 + i) convierte 0,1,2,3 en A,B,C,D: 65 es el
+         codigo ASCII de la "A", asi que sumandole el indice recorro el
+         abecedario. Mucho mejor que escribir un array ['A','B','C','D'] a mano. */
       b.innerHTML = '<b>' + String.fromCharCode(65 + i) + ')</b> ' + opt;
+      /* Cada boton se lleva SU indice i por clausura: cuando el jugador
+         clickee, este callback va a saber exactamente que opcion era. */
       b.addEventListener('click', function () { answerLock(i, b); });
       opts.appendChild(b);
     });
@@ -686,6 +771,11 @@
       fb.innerHTML = '<b>✔ CORRECTO.</b> Teclado liberado.<br>' + q.why;
 
       GT.addScore(CFG.LOCK_REWARD, 'teclado recuperado');
+      /* Guardo la explicacion en la lista de "conceptos aprendidos" que se
+         muestra al ganar, pero SIN las etiquetas HTML: el replace con el regex
+         /<[^>]+>/g borra todo lo que este entre < y > (el /g es para que los
+         saque todos, no solo el primero). Si no lo limpiara, en la pantalla
+         final se leerian los <b> literales. */
       GT.learn(q.why.replace(/<[^>]+>/g, ''));
       GT.audio.ok();
       GT.ui.flash('gain');
@@ -729,16 +819,32 @@
     modal = null;
   }
 
-  /** Filtro global: mata las pulsaciones de las teclas secuestradas. */
+  /** Filtro global: mata las pulsaciones de las teclas secuestradas.
+      Corre en fase de captura (ver init), o sea ANTES que cualquier otro
+      listener de la pagina. Esta funcion se ejecuta con CADA tecla que se
+      apriete en todo el juego, asi que las salidas rapidas de arriba tienen
+      que ser lo primero: si no hay bloqueo activo, no hago absolutamente nada. */
   function onKeyCapture(e) {
     if (!locked || !lockedKeys.length) return;
     var k = (e.key || '').toLowerCase();
-    if (k.length !== 1) return;                    // deja pasar Enter, Tab, flechas...
-    if (lockedKeys.indexOf(k) === -1) return;
+    /* e.key de una letra es un string de 1 caracter ("a"); el de una tecla
+       especial es una palabra ("Enter", "ArrowUp", "Backspace"). Con esa
+       comparacion de longitud dejo pasar todas las especiales sin tener que
+       listarlas: nunca bloqueo Enter ni Backspace, asi el jugador siempre
+       puede borrar y ejecutar. */
+    if (k.length !== 1) return;
+    if (lockedKeys.indexOf(k) === -1) return;      // no es una de las secuestradas
 
+    /* Las dos lineas que MATAN la tecla:
+         preventDefault  -> cancela el efecto por defecto (escribir la letra)
+         stopPropagation -> corta el viaje del evento: no llega a nadie mas  */
     e.preventDefault();
     e.stopPropagation();
 
+    /* THROTTLE: si el jugador mantiene apretada la tecla, el navegador repite
+       el evento decenas de veces por segundo. Sin este freno sonarian 30
+       errores por segundo y se llenaria la pantalla de avisos. Guardo el
+       momento del ultimo aviso y solo dejo pasar uno cada 420ms. */
     var now = Date.now();
     if (now - lastBlockFeedback > 420) {
       lastBlockFeedback = now;
@@ -755,6 +861,13 @@
   /* ============================================================
      ATAQUE 2 — Corrupcion de colores (20 segundos)
      ============================================================ */
+  /* ATAQUE 2 — invertir los colores durante 20 segundos.
+     Todo el efecto es UNA clase CSS: .color-hijack aplica un filter con
+     invert() + hue-rotate() sobre el contenedor principal, asi que con una
+     sola linea de JS se corrompe toda la pantalla de golpe (el CSS lo resuelve
+     por GPU, no tengo que redibujar nada).
+     La cuenta regresiva la lleva el tick restando dt a colorLeft; cuando llega
+     a cero llama a stopColors y se saca la clase. */
   function startColors() {
     if (colorActive || GT.state.finished) return;
 
@@ -806,7 +919,9 @@
     GT.audio.ok();
   }
 
-  /* Ganchos para depurar / disparar a mano desde la consola */
+  /* Ganchos para depurar / disparar a mano desde la consola del navegador.
+     Sin esto, para probar un ataque tendria que jugar 38 segundos cada vez.
+     Con esto escribo GlitchTec.hacker.forceLock() en la consola y listo. */
   hacker.forceLock = function () { if (canLock()) startLock(); };
   hacker.forceColors = startColors;
   hacker.forceMove = wander;

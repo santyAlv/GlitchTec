@@ -119,8 +119,19 @@
     }
   ];
 
-  var answers = [];   // null | 'right' | 'wrong'
+  /* answers[i] guarda como le fue al jugador con el correo i:
+       null    = todavia no lo clasifico
+       'right' = acerto
+       'wrong' = erro
+     Es un array "paralelo" a EMAILS: misma longitud, mismos indices. Podria
+     guardar el resultado adentro de cada correo, pero entonces estaria
+     ensuciando los DATOS con el estado de la partida y tendria que limpiarlos
+     a mano en cada reinicio. */
+  var answers = [];
 
+  /* map() sobre EMAILS me da un array de la misma longitud lleno de null, sin
+     tener que escribir la cantidad a mano: si manana agrego un sexto correo,
+     esto se ajusta solo. */
   mail.init = function () {
     answers = EMAILS.map(function () { return null; });
     current = 0;
@@ -128,6 +139,8 @@
 
   mail.reset = function () { answers = []; current = 0; };
 
+  /* filter() devuelve un array nuevo solo con los que cumplen la condicion;
+     su .length es el conteo. Es la forma corta de un for con contador. */
   mail.correctCount = function () {
     return answers.filter(function (a) { return a === 'right'; }).length;
   };
@@ -263,6 +276,21 @@
     if (report) report.addEventListener('click', function () { decide(true); });
   }
 
+  /* LA LINEA CLAVE DEL NIVEL 3, y es mas sutil de lo que parece:
+
+       right = (reportedAsPhishing === m.phishing)
+
+     No estoy preguntando "¿es phishing?", estoy comparando lo que DIJO el
+     jugador contra lo que ES el correo. Los cuatro casos salen de una sola
+     comparacion:
+       reporto phishing (true)  y era phishing (true)   -> true   ACIERTO
+       confio          (false) y era legitimo (false)   -> true   ACIERTO
+       reporto phishing (true)  y era legitimo (false)  -> false  ERROR
+       confio          (false) y era phishing (true)    -> false  ERROR
+
+     Es importante que los DOS errores cuenten como error: reportar un correo
+     legitimo tambien es un problema real (bloqueas comunicacion de verdad),
+     aunque duela menos —abajo le doy 6 de dano en vez de 12—. */
   function decide(reportedAsPhishing) {
     var m = EMAILS[current];
     var right = (reportedAsPhishing === m.phishing);
@@ -273,6 +301,9 @@
       GT.addScore(140, 'correo clasificado correctamente');
       GT.ui.flash('gain');
       GT.ui.toast('✔ Correcto: ' + (m.phishing ? 'era phishing' : 'era legítimo'), 'info');
+      /* Guardo las senales como "conceptos aprendidos" para la pantalla final,
+         sacandoles el HTML con el regex /<[^>]+>/g (todo lo que este entre
+         < y >, el /g para que los saque todos y no solo el primero). */
       m.reasons.forEach(function (r) {
         GT.learn(r.replace(/<[^>]+>/g, ''));
       });

@@ -15,19 +15,34 @@
   var input = null;
   var promptEl = null;
 
-  var cwd = [];              // ruta actual como array de segmentos
+  /* cwd = "current working directory", el mismo nombre que usa el sistema
+     operativo de verdad. Lo guardo como array de segmentos (['Sistema']) y no
+     como string, porque asi entrar es push y salir es pop. Ver filesystem.js. */
+  var cwd = [];
+  /* history guarda los comandos escritos y histIdx es el "cursor" con el que
+     me muevo entre ellos con las flechas. histIdx = -1 significa "no estoy
+     navegando el historial, estoy escribiendo un comando nuevo". */
   var history = [];
   var histIdx = -1;
 
   /* ============================================================
      Salida
      ============================================================ */
+  /* Escribe UNA linea en la salida. Todo lo que muestra la terminal pasa por
+     aca, asi el estilo es siempre consistente y el autoscroll esta en un solo
+     lugar. La clase opcional ('err', 'ok', 'warn'...) la convierto en 'l-err',
+     'l-ok', etc., y el color lo pone el CSS. */
   function print(text, cls) {
-    if (!out) return;
+    if (!out) return;                       // la ventana esta cerrada
     var line = document.createElement('span');
     line.className = 'term-line ' + (cls ? 'l-' + cls : '');
+    /* textContent, nunca innerHTML: el jugador escribe lo que quiere y yo se
+       lo devuelvo en pantalla. Si usara innerHTML, escribir <b>hola</b> en la
+       terminal inyectaria HTML de verdad. */
     line.textContent = (text === undefined ? '' : text);
     out.appendChild(line);
+    /* Autoscroll al fondo: scrollHeight es el alto TOTAL del contenido (con lo
+       que no se ve), scrollTop es cuanto scrollee. Igualarlos = ir al final. */
     out.scrollTop = out.scrollHeight;
   }
   term.print = print;
@@ -45,8 +60,23 @@
   /* ============================================================
      Comandos
      ============================================================ */
+  /* TABLA DE DESPACHO: en vez de un switch gigante con 20 casos, cada comando
+     es una propiedad de este objeto:
+
+        COMMANDS['dir'] = { desc: '...', run: function (args) { ... } }
+
+     Ejecutar un comando es entonces buscar COMMANDS[loQueEscribio] y llamar a
+     su .run(). Ventajas: agregar un comando nuevo no toca NADA del motor (solo
+     agrego una propiedad mas), y los alias salen gratis haciendo que dos
+     claves apunten al mismo objeto (ver COMMANDS.ls = COMMANDS.dir).
+     Que un objeto guarde funciones no tiene nada de raro en JS: las funciones
+     son valores como cualquier otro. */
   var COMMANDS = {};
 
+  /* Atajo: la raiz del sistema de archivos vive en el estado de la partida, y
+     cambia en cada partida nueva. Por eso es una funcion y no una variable
+     guardada: si la cacheara, despues de reiniciar seguiria apuntando al arbol
+     viejo. */
   function root() { return GT.state.fsRoot; }
 
   /* ---------- help ---------- */
@@ -78,9 +108,17 @@
       GT.levels.complete('l1_help');
     }
   };
+  /* ALIAS: las tres claves apuntan al MISMO objeto en memoria, no a copias.
+     Es solo una referencia mas, no gasta nada, y el jugador puede escribir en
+     castellano o en ingles. Uso COMMANDS['?'] con corchetes porque "?" no es
+     un nombre valido para la notacion con punto. */
   COMMANDS.ayuda = COMMANDS.help;
   COMMANDS['?'] = COMMANDS.help;
 
+  /* Rellena con espacios a la derecha hasta llegar a n caracteres. Es mi
+     "columna" para alinear las tablas de texto: como la terminal usa fuente
+     monoespaciada, todos los caracteres miden lo mismo y alcanza con contar
+     letras para que las columnas queden derechas. */
   function pad(s, n) {
     s = String(s);
     while (s.length < n) s += ' ';
@@ -98,9 +136,16 @@
       print(' Directorio de ' + GT.fs.pathString(cwd));
       print('');
 
+      /* Object.keys() me devuelve los nombres de los hijos como array.
+         El "|| {}" es por si el nodo no tuviera children: Object.keys(undefined)
+         tira error, Object.keys({}) devuelve [] y sigue todo tranquilo. */
       var names = Object.keys(node.children || {});
+      // El ".." solo tiene sentido si NO estoy parado en la raiz
       if (cwd.length) print(' ' + pad('<DIR>', 14) + '..', 'dim');
 
+      /* Dos recorridas sobre el mismo array (primero carpetas, despues
+         archivos) en lugar de una sola con un if adentro: asi la salida sale
+         ordenada como en la consola de Windows, sin tener que ordenar nada. */
       var dirs = 0, files = 0;
       names.forEach(function (n) {
         var c = node.children[n];
@@ -246,6 +291,11 @@
   };
   COMMANDS.analizar = COMMANDS.scan;
 
+  /* Devuelve la extension REAL, y si detecta doble extension lo dice.
+     La regla que quiero ensenar: la extension que manda es SIEMPRE la ultima,
+     lo de antes es parte del nombre. Primero saco la ultima ($ = final del
+     string) y despues pruebo el patron de dos extensiones para poder mostrar
+     el "aparenta ser". */
   function realExtension(name) {
     var m = name.toLowerCase().match(/\.([a-z0-9]+)$/);
     if (!m) return 'sin extension';
@@ -254,7 +304,11 @@
     return '.' + m[1];
   }
 
-  /** Busca un archivo por nombre en el directorio actual e informa el error. */
+  /** Busca un archivo por nombre en el directorio actual e informa el error.
+      La escribi una vez y la usan type y scan: las dos necesitan exactamente
+      lo mismo (encontrar el archivo, avisar si no existe, avisar si en realidad
+      es una carpeta). Devuelve null cuando algo fallo —y YA imprimio el error—
+      asi el que la llama solo tiene que hacer  if (!found) return;  */
   function locateFile(name) {
     var node = GT.fs.getNode(root(), cwd);
     var real = GT.fs.findChildName(node, name);
@@ -295,6 +349,9 @@
         return;
       }
 
+      /* Comparo como STRING y no como numero a proposito: si el jugador
+         escribe "45" entra, pero si escribe "101101" (el binario sin convertir)
+         no, que es justo el error que el ejercicio quiere provocar. */
       var attempt = args[0].trim();
       if (attempt === node.children[lockedName].password) {
         node.children[lockedName].locked = false;
@@ -462,15 +519,28 @@
   /* ============================================================
      Ejecucion
      ============================================================ */
+  /* EL INTERPRETE. Toda linea que el jugador escribe entra por aca.
+     Pasos: 1) hago eco de lo escrito, 2) lo guardo en el historial,
+            3) lo parseo en comando + argumentos, 4) lo busco y lo ejecuto. */
   term.run = function (raw) {
     var line = String(raw).trim();
-    print(GT.fs.pathString(cwd) + '>' + line, 'cmd');
-    if (!line) return;
+    print(GT.fs.pathString(cwd) + '>' + line, 'cmd');   // eco, como la consola real
+    if (!line) return;                                  // Enter en vacio: nada
 
+    /* unshift mete al PRINCIPIO del array: asi history[0] siempre es el
+       comando mas reciente y la flecha ARRIBA es simplemente avanzar el
+       indice. El pop() de la punta mantiene el historial en 40 y evita que
+       crezca para siempre. */
     history.unshift(line);
     if (history.length > 40) history.pop();
-    histIdx = -1;
+    histIdx = -1;                                        // reseteo el cursor
 
+    /* Parseo minimo: corto por espacios (el regex \s+ agrupa varios espacios
+       seguidos como uno, asi "dir     algo" no genera argumentos vacios).
+         parts[0]        -> el comando, siempre en minuscula
+         parts.slice(1)  -> el resto, los argumentos
+       No implemento comillas ni escapes: para el alcance del juego, los
+       argumentos que necesitan espacios los vuelvo a unir con args.join(' '). */
     var parts = line.split(/\s+/);
     var name = parts[0].toLowerCase();
     var args = parts.slice(1);
@@ -515,6 +585,9 @@
       }
     });
 
+    /* Recien DESPUES de que openWindow inserto el body en el DOM puedo pedir
+       los elementos por id: antes de eso todavia no existen en el documento y
+       getElementById devolveria null. */
     out = document.getElementById('term-out');
     input = document.getElementById('term-input');
     promptEl = document.getElementById('term-prompt');
@@ -523,6 +596,13 @@
     banner();
 
     input.addEventListener('keydown', onKey);
+    /* Click en cualquier parte de la ventana = foco al input, como en una
+       consola de verdad. Dos detalles finos:
+         - si hay texto seleccionado me abstengo, porque robar el foco le
+           cancelaria la seleccion al que esta copiando;
+         - el setTimeout(...,0) posterga el focus al final de la cola de
+           eventos: si lo hiciera ya mismo, el mousedown todavia en curso me
+           sacaria el foco inmediatamente despues. */
     body.addEventListener('mousedown', function (e) {
       if (window.getSelection().toString()) return;   // no robar el foco al copiar
       setTimeout(focusInput, 0);
@@ -533,6 +613,12 @@
 
   function focusInput() { if (input) input.focus(); }
 
+  /* Teclado del input. Enter ejecuta; las flechas navegan el historial.
+     Recordar: history[0] es lo MAS reciente, entonces
+       ARRIBA  = histIdx++ (voy hacia comandos mas viejos)
+       ABAJO   = histIdx-- (vuelvo hacia los mas nuevos, hasta -1 = input vacio)
+     El preventDefault en las flechas evita el comportamiento por defecto del
+     input, que es mandar el cursor al principio/final del texto. */
   function onKey(e) {
     if (e.key === 'Enter') {
       var v = input.value;
@@ -570,7 +656,11 @@
     out = null; input = null; promptEl = null;
   };
 
-  /** Permite que otros modulos escriban en la terminal si esta abierta. */
+  /** Permite que otros modulos escriban en la terminal si esta abierta.
+      Lo usan el hacker y el malware para "hablar" desde adentro de la consola.
+      Si la ventana esta cerrada, out es null y el mensaje se descarta en
+      silencio: prefiero perder una linea de ambientacion antes que romper el
+      juego con un error de null. */
   term.notify = function (text, cls) {
     if (out) print(text, cls || 'evil');
   };

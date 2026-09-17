@@ -13,13 +13,17 @@
   var WIN_ID = 'boss';
 
   var TIME_LIMIT = 120;          // segundos para completar la purga
-  var DAMAGE_PER_HIT = 20;       // % de nucleo destruido por acierto
+  /* 20% por acierto x 5 preguntas = 100%. Los dos numeros estan atados: si
+     alguna vez agrego una sexta pregunta tengo que repartir de nuevo el dano
+     (o calcularlo como 100 / QUESTIONS.length). Lo dejo anotado para no
+     olvidarme. */
+  var DAMAGE_PER_HIT = 20;
 
-  var hp = 100;
+  var hp = 100;                  // "vida" del nucleo
   var timeLeft = TIME_LIMIT;
-  var idx = 0;
-  var answered = false;
-  var active = false;
+  var idx = 0;                   // en que pregunta voy
+  var answered = false;          // ¿ya conteste la actual? (evita doble click)
+  var active = false;            // ¿el jefe esta en curso? (lo mira el reloj)
 
   var QUESTIONS = [
     {
@@ -122,7 +126,10 @@
       width: 660, height: 470,
       x: 130, y: 20,
       body: body,
-      noClose: true                   // no se puede escapar del jefe final
+      /* noClose: la ventana no tiene boton de cerrar. Es la unica del juego
+         asi. Si se pudiera cerrar, el jugador esquivaria el enfrentamiento
+         final y el reloj seguiria corriendo sin que pueda hacer nada. */
+      noClose: true
     });
 
     document.getElementById('boss-next').addEventListener('click', next);
@@ -176,6 +183,9 @@
       'Pregunta ' + (idx + 1) + ' de ' + QUESTIONS.length;
   }
 
+  /* Procesa la respuesta. La bandera "answered" es importante: sin ella, dos
+     clicks rapidos sobre la misma opcion contarian doble (doble dano al nucleo
+     o doble castigo). La levanto ANTES de hacer cualquier otra cosa. */
   function answer(choice) {
     if (answered) return;
     answered = true;
@@ -184,6 +194,9 @@
     var right = (choice === q.correct);
 
     var box = document.getElementById('boss-body');
+    /* Deshabilito TODAS las opciones y las pinto: en verde la correcta y en
+       rojo la que eligio (si erro). Marcar siempre la correcta, aunque haya
+       fallado, es a proposito: la idea es que aprenda, no solo que pierda. */
     var btns = box.querySelectorAll('.boss-opt');
     for (var i = 0; i < btns.length; i++) {
       btns[i].disabled = true;
@@ -219,6 +232,8 @@
 
     renderHeader();
 
+    /* Si con este acierto el nucleo llego a 0, no espero a que apriete
+       SIGUIENTE: termino ya. Por eso el chequeo va aca y no solo en next(). */
     if (hp <= 0) {
       finish();
       return;
@@ -238,6 +253,14 @@
     finish();
   }
 
+  /* Cierre del enfrentamiento. Hay DOS finales posibles y por eso esta funcion
+     se llama tanto desde answer() como desde next():
+       - nucleo en 0  -> victoria, dialogo final y GT.emit('victory') via levels
+       - quedan restos -> el jefe sobrevivio: castigo, rafaga de pop-ups y
+                          VUELVE A EMPEZAR el cuestionario desde idx = 0.
+     Esa segunda rama es la que hace que no se pueda ganar clickeando a lo loco:
+     hay que acertar las 5, no importa cuantas vueltas te lleve (mientras el
+     reloj y la integridad aguanten). */
   function finish() {
     active = false;
 
@@ -266,6 +289,11 @@
   /* ============================================================
      Reloj del jefe
      ============================================================ */
+  /* El reloj del jefe. Lo llama el loop principal de game.js, igual que a
+     todos los demas: no uso un setInterval propio justamente para que, si el
+     juego se frena o el jugador cambia de pestana, el tiempo del jefe se frene
+     tambien. Un setInterval seguiria corriendo por su cuenta y lo mataria
+     mientras no esta mirando. */
   boss.tick = function (dt) {
     if (!active || GT.state.finished) return;
     timeLeft -= dt;
@@ -274,6 +302,9 @@
     if (timeLeft <= 0) {
       active = false;
       GT.ui.toast('Se acabó el tiempo: el malware tomó el control total', 'bad');
+      /* 999 de dano = muerte segura, sea cual sea la integridad que le
+         quedara. Es mas claro que llamar a gameover por otro lado: el camino
+         es el mismo que el de cualquier otra derrota y no duplico logica. */
       GT.damage(999, 'tiempo agotado en la purga');
     }
   };

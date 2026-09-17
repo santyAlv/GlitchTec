@@ -14,6 +14,26 @@
 </head>
 <body>
 
+<!-- ============================================================
+     ESTRUCTURA GENERAL (nota para mi mismo)
+
+     Todo el juego es UNA SOLA pagina: nunca cambio de archivo HTML.
+     Las 8 pantallas (<section class="screen">) estan todas cargadas al
+     mismo tiempo y solo se ve la que tenga la clase "is-active"; el CSS
+     esconde el resto. Cambiar de pantalla = mover esa clase, y de eso se
+     encarga GT.ui.setScreen() en js/ui.js.
+
+     #crt es el contenedor de TODO: sobre el se aplican el temblor, el
+     glitch y la inversion de colores del hacker, asi un solo cambio de
+     clase afecta al juego entero.
+
+     Los divs vacios (#icon-layer, #window-layer, #popup-layer,
+     #toast-layer) son CAPAS: estan vacios a proposito porque su contenido
+     lo genera el JavaScript. Separarlos me deja controlar que va arriba de
+     que sin pelear con el z-index: los iconos abajo, las ventanas encima,
+     los pop-ups del malware por arriba de las ventanas y los avisos por
+     encima de todo.
+     ============================================================ -->
 <div id="crt">
 
   <!-- ============ PANTALLA 1: TITULO / INICIO ============ -->
@@ -380,6 +400,29 @@
   <div id="flash"></div>
 </div>
 
+<!-- ============================================================
+     EL ORDEN DE LOS SCRIPTS IMPORTA Y NO ES CAPRICHOSO.
+
+     Cada archivo hace  GT.loQueSea = {}  apenas se carga, asi que un
+     archivo solo puede usar a otro si ese otro ya se cargo antes. La
+     dependencia real es:
+
+       state.js   PRIMERO SIEMPRE: crea window.GlitchTec, el estado y el
+                  bus de eventos. Sin el, todos los demas explotan.
+       audio/engine/ui   servicios base que usa todo el resto
+       filesystem        lo necesitan terminal y explorador
+       modulos de juego  terminal, explorador, procesos, mail, pop-ups,
+                         hacker, niveles, jefe, taller
+       api.js            cliente del backend
+       game.js    ULTIMO SIEMPRE: es el orquestador y necesita que TODOS
+                  los modulos existan para poder resetearlos y tickearlos.
+                  Ademas es el que engancha el DOMContentLoaded que arranca
+                  todo.
+
+     Los scripts van al final del <body> (y no en el <head>) para que el
+     HTML ya este parseado cuando corren: si no, los getElementById
+     devolverian null.
+     ============================================================ -->
 <script src="js/vendor/p5.min.js"></script>
 <script src="js/state.js"></script>
 <script src="js/audio.js"></script>

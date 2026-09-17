@@ -9,8 +9,8 @@
   var GT = window.GlitchTec;
   var game = GT.game = {};
 
-  var loopId = null;
-  var lastTs = 0;
+  var loopId = null;       // id que devuelve requestAnimationFrame (para cancelarlo)
+  var lastTs = 0;          // timestamp del frame anterior, para calcular el dt
 
   /* ============================================================
      Secuencia de arranque
@@ -55,23 +55,43 @@
     { t: '', d: 200 }
   ];
 
+  /* Escribe el boot linea por linea, cada una con SU propia demora (el campo
+     "d" de arriba). Eso es lo que le da ritmo: las lineas de error tardan mas
+     y pegan mas fuerte.
+
+     ¿Por que no un for con sleep? Porque en JavaScript NO existe el sleep:
+     si bloqueo el hilo, se congela toda la pagina. La solucion es una funcion
+     que se llama a si misma con setTimeout: dibuja UNA linea, agenda la
+     siguiente y devuelve el control al navegador mientras tanto. Es una
+     recursion "en el tiempo", no en la pila (cada llamada arranca limpia, asi
+     que no hay riesgo de desbordar la pila por mas lineas que tenga).
+
+     El (function step(){...})() es un IIFE con nombre: lo defino y lo ejecuto
+     en el acto, pero como tiene nombre puede volver a llamarse desde adentro.
+
+     "done" es un CALLBACK: lo que hay que hacer cuando termine el boot. Lo
+     recibo por parametro porque el boot del modo virus y el del taller siguen
+     caminos distintos, y asi esta funcion no necesita saber cual es cual. */
   function runBoot(lines, done) {
     var log = document.getElementById('boot-log');
-    log.innerHTML = '';
+    log.innerHTML = '';                     // limpio por si es un reintento
     GT.ui.setScreen('screen-boot');
     GT.audio.boot();
 
     var i = 0;
     (function step() {
+      // Corte de la recursion: se acabaron las lineas -> aviso y me voy
       if (i >= lines.length) { setTimeout(done, 320); return; }
       var line = lines[i++];
       var span = document.createElement('span');
       span.className = line.c || '';
+      /* textContent y NO innerHTML: estas lineas tienen backslashes y signos
+         raros ("C:\Sistema", "[!]"), no quiero que se interpreten como HTML. */
       span.textContent = line.t + '\n';
       log.appendChild(span);
       if (line.c === 'err') { GT.audio.glitch(); GT.ui.shake(); }
       else if (line.t) GT.audio.key();
-      setTimeout(step, line.d || 120);
+      setTimeout(step, line.d || 120);      // <- aca se encadena la siguiente
     })();
   }
 
@@ -163,9 +183,15 @@
   /* ============================================================
      Inicio de partida
      ============================================================ */
+  /* PUNTO DE ENTRADA de una partida. Todo lo que sigue depende de que este
+     orden se respete: primero freno lo viejo, despues reseteo, despues arranco.
+     Si arrancara sin frenar el loop anterior tendria DOS loops corriendo, el
+     tiempo avanzaria al doble y los pop-ups saldrian de a pares. */
   game.start = function (mode) {
     stopLoop();
 
+    /* Normalizo el modo: cualquier cosa que no sea exactamente 'tecnico' cae
+       en 'virus'. Nunca confio en el string que me llega del dataset del HTML. */
     mode = (mode === 'tecnico') ? 'tecnico' : 'virus';
 
     GT.resetState();
@@ -173,6 +199,10 @@
     GT.state.fsRoot = GT.fs.create();
     GT.state.running = true;
 
+    /* Cada modulo sabe como limpiarse a si mismo; yo solo les aviso. Este es
+       el beneficio de haber separado todo en modulos con la misma interfaz
+       (reset / start / tick / stop): agregar una mecanica nueva manana es
+       agregar una linea mas a esta lista, y nada mas. */
     GT.terminal.reset();
     GT.explorer.reset();
     GT.procs.reset();
@@ -214,6 +244,12 @@
   /* ============================================================
      Loop principal
      ============================================================ */
+  /* EL CORAZON DEL JUEGO: el game loop.
+
+     Uso requestAnimationFrame y no setInterval porque rAF lo maneja el
+     navegador: lo sincroniza con el refresco de la pantalla (~60 veces por
+     segundo) y lo PAUSA solo cuando la pestana no esta visible. setInterval
+     seguiria disparando en segundo plano y acumularia trabajo atrasado. */
   function startLoop() {
     lastTs = performance.now();
     loopId = requestAnimationFrame(frame);
@@ -225,12 +261,25 @@
   }
 
   function frame(ts) {
-    var dt = Math.min(0.25, (ts - lastTs) / 1000);   // evita saltos al cambiar de pestaña
+    /* dt = "delta time": cuantos SEGUNDOS pasaron desde el frame anterior.
+       Todo el juego se mueve en funcion del tiempo real y no de los frames,
+       asi el ritmo es el mismo en una maquina de 144Hz que en una de 30fps
+       (el que va a 144 recibe dt chiquitos y muchos; el otro, pocos y grandes,
+       pero el total del segundo es el mismo).
+
+       El Math.min(0.25, ...) es un "tope de seguridad": si el jugador se va a
+       otra pestana 5 minutos, rAF se pausa y al volver el primer dt valdria
+       300 segundos de golpe. Sin el tope, en UN frame se le drenaria toda la
+       integridad y perderia sin tocar nada. Con el tope, lo peor que puede
+       pasar es un salto de un cuarto de segundo. */
+    var dt = Math.min(0.25, (ts - lastTs) / 1000);
     lastTs = ts;
 
     if (GT.state.running && !GT.state.finished) {
       GT.state.elapsed += dt;
 
+      /* Cada modulo tiene su tick(dt) y se ocupa de lo suyo: yo desde aca no
+         se ni me importa que hace adentro. El loop solo reparte el tiempo. */
       if (GT.state.mode === 'tecnico') {
         GT.tech.tick(dt);
       } else {
@@ -242,14 +291,22 @@
       }
     }
 
+    /* Me re-agendo SIEMPRE, aunque la partida este frenada: asi el loop sigue
+       vivo y listo para cuando se reanude. Quien lo corta de verdad es
+       stopLoop() con cancelAnimationFrame. */
     loopId = requestAnimationFrame(frame);
   }
 
   /* ============================================================
      HUD
      ============================================================ */
+  /* Refresca la barra superior. La llamo desde dos lados: desde el loop (60
+     veces por segundo) y por el bus de eventos cuando algo cambia de golpe
+     (ver el GT.on('hud', ...) de mas abajo). Es barato porque solo toca texto
+     y anchos en %, no reconstruye nodos del DOM. */
   function updateHud() {
     var s = GT.state;
+    // En modo taller el HUD es otro; lo dibuja tech.js y me borro de aca
     if (s.mode === 'tecnico') { GT.tech.tick(0); return; }
 
     var def = GT.levels.DEFS[s.level];
@@ -260,6 +317,9 @@
     var integ = Math.max(0, Math.round(s.integrity));
     var barI = document.getElementById('bar-integrity');
     barI.style.width = integ + '%';
+    /* El color de la barra lo decide el CSS, yo solo le pongo la clase. Ese
+       "a ? x : b ? y : z" son dos ternarios encadenados y se lee como un
+       if/else if/else:  <=25 critico, <=55 advertencia, si no normal. */
     barI.parentNode.className = 'bar' + (integ <= 25 ? ' crit' : integ <= 55 ? ' warn' : '');
     document.getElementById('val-integrity').textContent = integ + '%';
 
@@ -274,11 +334,25 @@
     GT.ui.setGlitch(Math.min(1, inf / 100));
   }
 
+  /* Me suscribo al bus: cualquier modulo que llame a GT.emit('hud') hace que
+     el HUD se refresque al instante, sin tener que conocerme ni importarme. */
   GT.on('hud', updateHud);
 
   /* ============================================================
      Final de partida
      ============================================================ */
+  /* Arma el resumen final. Separo el calculo del dibujado a proposito: esta
+     funcion no toca el DOM, solo devuelve numeros, asi la puedo reusar para
+     mandarsela a la API (partida_end.php) y para pintar la pantalla.
+
+     La formula de los bonus:
+       timeBonus      = 600 menos 1.2 puntos por segundo jugado. O sea: a los
+                        500 segundos (8 min) el bonus ya es cero. El Math.max
+                        evita que quede NEGATIVO y te descuente por tardar.
+       integrityBonus = la integridad que te quedo x6. Terminar con 80% da
+                        480 puntos: premia jugar prolijo, no solo rapido.
+     Los dos bonus son cero si perdiste ("won ? ... : 0"): solo se premia al
+     que llega al final. */
   function computeSummary(won) {
     var s = GT.state;
     var timeBonus = won ? Math.max(0, Math.round(600 - s.elapsed * 1.2)) : 0;
@@ -301,10 +375,20 @@
       mistakes: s.mistakes,
       hints: s.hintsUsed,
       popupsClosed: s.popupsClosed,
+      /* .slice() sin argumentos = copia del array. Devuelvo una COPIA y no el
+         array original para que el que reciba el resumen no pueda modificar
+         por accidente el estado del juego. */
       learned: s.learned.slice()
     };
   }
 
+  /* DERROTA. Se dispara desde GT.damage() cuando la integridad toca 0, pero
+     cualquiera puede emitirlo (el reloj del jefe final, por ejemplo).
+
+     El "if (finished) return" es un candado de reentrada: si dos cosas me
+     matan en el mismo frame (un pop-up drenando + el teclado secuestrado),
+     el evento llega dos veces y sin este corte mostraria el BSOD dos veces y
+     guardaria la partida repetida en la base. */
   GT.on('gameover', function () {
     if (GT.state.finished) return;
     GT.state.finished = true;
@@ -424,6 +508,16 @@
   /* ============================================================
      Menus y navegacion
      ============================================================ */
+  /* DELEGACION DE EVENTOS: en vez de ponerle un addEventListener a cada boton
+     del menu, pongo UN solo listener en todo el document y despues pregunto
+     quien fue el que recibio el click. Ventajas: un listener en lugar de
+     quince, y funciona tambien con botones que todavia no existen cuando corre
+     este codigo (los que creo despues por JS).
+
+     e.target es el nodo exacto que se clickeo (puede ser el <span> de adentro
+     del boton); .closest('[data-action]') sube por los padres hasta encontrar
+     el elemento que tiene ese atributo. Si no encuentra nada, devuelve null y
+     significa que el click fue en cualquier otro lado: me voy. */
   function bindMenus() {
     document.addEventListener('click', function (e) {
       var btn = e.target.closest('[data-action]');
@@ -442,7 +536,11 @@
       if (action === 'restart') { var m = GT.state.mode; hardStop(); game.start(m); }
     });
 
-    // Las tarjetas de modo son divs con rol de boton: hay que darles teclado
+    /* ACCESIBILIDAD: las tarjetas de seleccion de modo son <div>, no <button>,
+       asi que el navegador NO les da el comportamiento de teclado gratis. Un
+       boton de verdad se activa con Enter y con Espacio; aca lo replico a mano
+       para que se pueda jugar sin mouse. El preventDefault es para que la
+       barra espaciadora no scrollee la pagina. */
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Enter' && e.key !== ' ') return;
       var card = e.target.closest && e.target.closest('.mode-card[data-action="play"]');
@@ -461,6 +559,11 @@
     });
   }
 
+  /* Frenada de emergencia: la llamo cuando el jugador se va al menu o
+     reinicia en el medio de una partida. Es distinto de 'gameover': aca no
+     hay pantalla de derrota ni se guarda nada, solo apago todo lo que estaba
+     corriendo (timers, procesos, el hacker) para que no quede nada zombi
+     molestando en la partida siguiente. */
   function hardStop() {
     stopLoop();
     GT.state.running = false;
@@ -476,6 +579,10 @@
   /* ============================================================
      Init
      ============================================================ */
+  /* DOMContentLoaded = "el HTML ya esta parseado y puedo tocar el DOM".
+     Si corriera esto antes, todos los getElementById devolverian null porque
+     los elementos todavia no existen. No uso window.onload porque ese espera
+     ademas a imagenes y fuentes: tardaria de mas sin necesidad. */
   document.addEventListener('DOMContentLoaded', function () {
     GT.ui.init();
     GT.hacker.init();
