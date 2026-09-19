@@ -23,6 +23,7 @@
   var timeLeft = TIME_LIMIT;
   var idx = 0;                   // en que pregunta voy
   var answered = false;          // ¿ya conteste la actual? (evita doble click)
+  var askedAt = 0;               // elapsed en que aparecio la pregunta (para el bonus por velocidad)
   var active = false;            // ¿el jefe esta en curso? (lo mira el reloj)
 
   var QUESTIONS = [
@@ -91,6 +92,12 @@
   };
 
   boss.isActive = function () { return active; };
+
+  /* Premio de racha "tiempo extra": lo llama state.js si el jefe esta activo. */
+  boss.addTime = function (secs) {
+    timeLeft += secs;
+    renderHeader();
+  };
   boss.getHp = function () { return hp; };
 
   boss.open = function () {
@@ -161,6 +168,7 @@
 
     var q = QUESTIONS[idx];
     answered = false;
+    askedAt = GT.state.elapsed;
 
     var html = '<p class="boss-q"><span class="idx">[' + (idx + 1) + '/' + QUESTIONS.length + ']</span> ' +
                q.q + '</p><div class="boss-opts">';
@@ -209,7 +217,7 @@
 
     if (right) {
       hp = Math.max(0, hp - DAMAGE_PER_HIT);
-      GT.addScore(200, 'respuesta correcta');
+      GT.correct(200, 'respuesta correcta', askedAt);
       GT.audio.ok();
       GT.ui.flash('gain');
       GT.levels.progress('l4_boss', 1);
@@ -217,9 +225,8 @@
       fb.innerHTML = '<b>✔ CORRECTO.</b> Núcleo dañado −' + DAMAGE_PER_HIT + '%.<br>' + q.why;
       if (GT.engine && GT.engine.hitCore) GT.engine.hitCore();
     } else {
-      GT.state.mistakes++;
+      GT.wrong(70, 'respuesta incorrecta');
       GT.damage(14, 'respuesta incorrecta en la purga');
-      GT.addScore(-70, 'respuesta incorrecta');
       GT.audio.hurt();
       GT.ui.shake();
       GT.ui.flash('hit');

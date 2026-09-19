@@ -556,6 +556,7 @@
     phase = 'trabajo';
 
     GT.state.level = i + 1;
+    GT.startPuzzle();
 
     renderCase();
     renderHud();
@@ -657,6 +658,8 @@
 
     document.getElementById('tech-val-cost').textContent = '$' + money(GT.state.techCost || 0);
     document.getElementById('tech-val-score').textContent = GT.state.score;
+    document.getElementById('tech-val-streak').textContent =
+      GT.state.streak + ' · x' + GT.getMultiplier() + (GT.state.shieldLeft > 0 ? ' · ESCUDO' : '');
     document.getElementById('tech-val-solved').textContent = (GT.state.techSolved || 0) + ' / ' + CASES.length;
   }
 
@@ -787,9 +790,8 @@
     if (arregla && st.exige && cur.fallas.indexOf(st.exige) !== -1 && !fixed[st.exige]) {
       dataLost = true;
       logLine('☠ ' + st.exigeTexto, 'bad');
-      GT.state.mistakes++;
+      GT.wrong(300, 'datos del cliente perdidos');
       GT.damage(30, 'perdiste los datos del cliente');
-      GT.addScore(-300, 'datos del cliente perdidos');
       GT.audio.hurt();
       GT.ui.shake();
       GT.ui.flash('hit');
@@ -807,7 +809,7 @@
         logLine('Lo arreglaste sin haberlo diagnosticado. Salió bien, pero fue suerte.', 'warn');
         GT.addScore(60, 'reparación a ciegas');
       } else {
-        GT.addScore(180, 'reparación correcta');
+        GT.correct(180, 'reparación correcta');
         GT.ui.flash('gain');
       }
       refreshSymptom();
@@ -821,10 +823,9 @@
        pedo es solo tiempo perdido y un tironcito de orejas. */
     if (st.arregla === 'so' || st.costo >= 30000) {
       wasted++;
-      GT.state.mistakes++;
       logLine('✘ ' + (st.nada || 'No cambió nada.'), 'bad');
+      GT.wrong(120, 'repuesto innecesario');
       GT.damage(st.costo >= 90000 ? 14 : 9, 'cambiaste una pieza sana');
-      GT.addScore(-120, 'repuesto innecesario');
       GT.audio.hurt();
       GT.ui.toast('✘ Cambiaste una pieza que funcionaba', 'bad');
     } else {
@@ -916,13 +917,12 @@
     fb.className = 'td-fb ' + (right ? 'ok' : 'bad');
 
     if (right) {
-      GT.addScore(250, 'diagnóstico correcto');
+      GT.correct(250, 'diagnóstico correcto');
       GT.audio.ok();
       GT.learn(cur.leccion);
       fb.innerHTML = '<b>✔ DIAGNÓSTICO CORRECTO.</b><br>' + d.porque;
     } else {
-      GT.state.mistakes++;
-      GT.addScore(-120, 'diagnóstico incorrecto');
+      GT.wrong(120, 'diagnóstico incorrecto');
       GT.damage(6, 'diagnóstico mal asentado en la ficha');
       GT.audio.hurt();
       fb.innerHTML = '<b>✘ NO ERA ESO.</b><br>' + d.porque;

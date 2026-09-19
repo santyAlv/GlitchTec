@@ -269,6 +269,7 @@
 .bar.warn i  { background: linear-gradient(90deg, #b07a12, var(--amber)); }
 .bar.crit i  { background: linear-gradient(90deg, var(--red-dim), var(--red)); animation: critBlink .7s infinite; }
 .bar-bad i   { background: linear-gradient(90deg, #6d1030, #ff4d6d); }
+.bar-streak i { background: linear-gradient(90deg, #6b3aa8, var(--violet)); }
 @keyframes critBlink { 50% { opacity: .42; } }
 
 .hud-stats {
@@ -294,6 +295,9 @@
   border-top: 1px solid var(--line);
   padding-top: 9px;
 }
+/* Escudo de la racha activo: el panel entero se marca en celeste */
+#hud.shielded { border-color: var(--cyan); box-shadow: 0 0 0 1px rgba(86,216,255,.35), 0 6px 26px rgba(0,0,0,.6); }
+
 #objective-list { list-style: none; margin: 0; padding: 0; }
 #objective-list li {
   display: flex;
@@ -403,6 +407,7 @@
 .toast.bad  { border-left-color: var(--red); color: #ffd7dd; }
 .toast.warn { border-left-color: var(--amber); color: #ffeec2; }
 .toast.info { border-left-color: var(--cyan); color: #d6f3ff; }
+.toast.streak { border-left-color: var(--violet); color: #ecdcff; }
 @keyframes toastIn  { from { opacity: 0; transform: translateY(-12px); } }
 @keyframes toastOut { to { opacity: 0; transform: translateY(-12px); } }
 

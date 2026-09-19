@@ -360,6 +360,7 @@
         print('  Carpeta "' + lockedName + '" desbloqueada.', 'ok');
         print('');
         GT.audio.ok();
+        GT.correct(60, 'clave correcta');
         GT.levels.complete('l1_unlock');
         GT.learn('Conversión binario → decimal: 101101₂ = 45₁₀.');
         if (GT.explorer) GT.explorer.refresh();
@@ -367,6 +368,7 @@
         print('Clave incorrecta: "' + attempt + '"', 'err');
         print('Cada intento fallido activa el bloqueo del sistema (-3 integridad).', 'warn');
         GT.audio.error();
+        GT.wrong(0, 'clave incorrecta');
         GT.damage(3, 'clave incorrecta');
       }
     }

@@ -263,6 +263,7 @@
   var locked = false;       // ¿hay teclas bloqueadas ahora mismo?
   var lockedKeys = [];      // cuales
   var lockQuestion = null;  // la pregunta que tiene que responder para liberarlas
+  var lockedAt = 0;         // elapsed en que bloqueo el teclado (bonus por velocidad)
   var lockAsked = [];       // indices ya preguntados, para no repetir
   var lastBlockFeedback = 0;// timestamp: evita spamear el aviso de tecla muerta
 
@@ -639,6 +640,7 @@
     locked = true;
     lockedKeys = pickKeys();
     lockQuestion = pickQuestion();
+    lockedAt = GT.state.elapsed;
 
     fig.classList.add('is-attacking');
     say(GT.pick(LOCK_TAUNTS), 4200);
@@ -770,7 +772,7 @@
       fb.className = 'hk-feedback ok';
       fb.innerHTML = '<b>✔ CORRECTO.</b> Teclado liberado.<br>' + q.why;
 
-      GT.addScore(CFG.LOCK_REWARD, 'teclado recuperado');
+      GT.correct(CFG.LOCK_REWARD, 'teclado recuperado', lockedAt);
       /* Guardo la explicacion en la lista de "conceptos aprendidos" que se
          muestra al ganar, pero SIN las etiquetas HTML: el replace con el regex
          /<[^>]+>/g borra todo lo que este entre < y > (el /g es para que los
@@ -791,9 +793,8 @@
     fb.className = 'hk-feedback bad';
     fb.innerHTML = '<b>✘ NO.</b> El bloqueo sigue. Probá de nuevo.';
 
-    GT.state.mistakes++;
+    GT.wrong(40, 'respuesta incorrecta');
     GT.damage(CFG.LOCK_PENALTY, 'respuesta incorrecta con el teclado secuestrado');
-    GT.addScore(-40, 'respuesta incorrecta');
     GT.audio.hurt();
     GT.ui.shake();
     say(GT.pick(['jaja', 'no sabés', 'seguí adivinando']), 2000);

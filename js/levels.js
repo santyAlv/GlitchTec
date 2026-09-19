@@ -168,6 +168,7 @@
 
     advancing = false;
     GT.state.level = n;
+    GT.startPuzzle();
     /* COPIO los objetivos de la definicion en vez de usarlos directo. Es
        obligatorio: el juego les va a escribir encima (done, count), y si
        escribiera sobre DEFS quedarian marcados como cumplidos para siempre;
