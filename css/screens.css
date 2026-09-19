@@ -212,6 +212,73 @@
 .credits span { color: #e6fff2; font-size: 15px; }
 .credits em { color: var(--green); font-style: normal; font-size: 12px; letter-spacing: 1px; }
 
+/* ---------- ranking ---------- */
+.rk-filters { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-bottom: 14px; }
+.rk-group { display: flex; flex-wrap: wrap; gap: 6px; }
+.rk-btn {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 1px;
+  padding: 8px 12px;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+.rk-btn:hover { color: var(--text); background: #1b2630; }
+.rk-btn.is-on { color: var(--green); border-color: var(--green-dim); background: rgba(53,255,122,.06); }
+
+.rk-note { margin: 0 0 12px; font-size: 12.5px; color: var(--text-dim); }
+.rk-note.warn { color: var(--amber); }
+
+.rk-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 3px; }
+.rk-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 13px; }
+.rk-table th {
+  text-align: left;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  font-weight: normal;
+  color: var(--text-dim);
+  background: var(--bg-panel);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.rk-table td { padding: 10px 12px; border-bottom: 1px dashed var(--line); color: #a9c6bd; white-space: nowrap; }
+.rk-table tr:last-child td { border-bottom: 0; }
+.rk-table td:nth-child(1) { color: var(--text-dim); width: 1%; }
+.rk-table td:nth-child(2) { color: #e6fff2; }
+.rk-table td:nth-child(4) { color: var(--amber); }
+.rk-table tr:nth-child(1) td:nth-child(1) { color: var(--amber); }
+.rk-table tr.is-me td { background: rgba(53,255,122,.07); }
+.rk-table tr.is-me td:nth-child(2) { color: var(--green); }
+.rk-table .rk-empty { text-align: center; color: var(--text-dim); padding: 26px 12px; white-space: normal; }
+
+/* ---------- nombre del jugador (pantalla de modos) ---------- */
+.player-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  margin: -14px 0 26px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+}
+.player-field input {
+  width: min(300px, 80vw);
+  padding: 9px 12px;
+  font-family: var(--mono);
+  font-size: 14px;
+  text-align: center;
+  color: var(--green);
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+.player-field input:focus { outline: none; border-color: var(--green-dim); box-shadow: 0 0 0 2px rgba(53,255,122,.15); }
+
 /* ================= BOOT ================= */
 #screen-boot { background: #000; }
 #screen-boot::before { display: none; }

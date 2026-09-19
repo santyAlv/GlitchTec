@@ -1,6 +1,6 @@
 <?php
 /**
- * Glitch.TEC — ranking de mejores puntajes
+ * Glitch.TEC — ranking de mejores puntajes (solo partidas ganadas)
  * GET api/ranking.php?limit=10[&modo=virus|tecnico]
  */
 declare(strict_types=1);
@@ -31,9 +31,10 @@ try {
                 won,
                 level_reached AS level,
                 elapsed_sec AS time,
+                best_streak AS streak,
                 finished_at AS at
          FROM partidas
-         WHERE finished_at IS NOT NULL'
+         WHERE status = \'won\''
         . ($filtraModo ? ' AND modo = :modo' : '') .
         ' ORDER BY score DESC, finished_at ASC
          LIMIT :lim'
@@ -62,6 +63,7 @@ try {
         $r['won']   = (bool)$r['won'];
         $r['level'] = (int)$r['level'];
         $r['time']  = (int)$r['time'];
+        $r['streak'] = (int)$r['streak'];
     }
     unset($r);
 
