@@ -256,7 +256,7 @@
 
     if (p.malicious) {
       GT.audio.kill();
-      GT.addScore(120, 'proceso hostil eliminado');
+      GT.correct(120, 'proceso hostil eliminado');
       GT.ui.flash('gain');
       GT.ui.toast('✔ ' + p.name + ' terminado — ' + p.family, 'info');
       GT.learn(p.family + ': ' + p.lesson);
@@ -267,9 +267,8 @@
 
     // Error: era legitimo
     GT.audio.hurt();
-    GT.state.mistakes++;
+    GT.wrong(60, 'proceso legítimo eliminado');
     GT.damage(9, 'mataste un proceso legítimo');
-    GT.addScore(-60, 'proceso legítimo eliminado');
     GT.ui.shake();
     GT.ui.flash('hit');
     GT.ui.toast('✘ ' + p.name + ' era legítimo. Revisá la firma digital.', 'bad');

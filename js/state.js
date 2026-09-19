@@ -26,7 +26,16 @@
     POPUP_DRAIN_PER_SEC: 0.55,   // integridad que roba cada pop-up abierto
     POPUP_MAX_ON_SCREEN: 6,
     HINT_COST: 40,
-    TICK_MS: 250
+    TICK_MS: 250,
+
+    /* Puntaje por velocidad y rachas (ver GT.correct mas abajo) */
+    SPEED_WINDOW: 30,         // segundos: si respondes antes, cobras bonus por agilidad
+    STREAK_STEP: 3,           // cada 3 aciertos seguidos sube el multiplicador...
+    STREAK_MULT_STEP: 0.5,    // ...medio punto: x1 -> x1.5 -> x2 -> x2.5 -> x3
+    STREAK_MULT_MAX: 3,
+    SHIELD_SECONDS: 20,       // premio de racha: el dano entra a la mitad
+    SHIELD_FACTOR: 0.5,
+    EXTRA_TIME: 15            // premio de racha: segundos de regalo
   };
 
   /* ---------------- Bus de eventos minimo ----------------
@@ -91,6 +100,12 @@
       flags: {},                // marcas de progreso libres (ej. archivo escaneado)
       learned: [],              // conceptos educativos desbloqueados
 
+      /* Rachas */
+      streak: 0,                // aciertos seguidos (un error la corta)
+      bestStreak: 0,            // la mejor de la partida, va al ranking
+      puzzleStart: 0,           // segundo (de elapsed) en que arranco el acertijo actual
+      shieldLeft: 0,            // segundos que le quedan al escudo de la racha
+
       /* Modo tecnico */
       techMinutes: 0,           // minutos de taller consumidos
       techCost: 0,              // plata gastada en repuestos
@@ -114,6 +129,10 @@
   GT.damage = function (amount, reason) {
     var s = GT.state;
     if (!s.running || s.finished) return;
+    /* Con el escudo de la racha activo el dano entra a la mitad. Lo aplico
+       aca y no en cada modulo: todo el dano del juego pasa por esta funcion,
+       asi que un solo if cubre pop-ups, procesos, correos, hacker y jefe. */
+    if (s.shieldLeft > 0) amount *= GT.CONFIG.SHIELD_FACTOR;
     s.integrity = Math.max(0, s.integrity - amount);
     GT.emit('damage', { amount: amount, reason: reason, integrity: s.integrity });
     GT.emit('hud');
@@ -126,6 +145,100 @@
     s.integrity = Math.min(GT.CONFIG.MAX_INTEGRITY, s.integrity + amount);
     GT.emit('heal', { amount: amount, reason: reason });
     GT.emit('hud');
+  };
+
+  /* ---------------- Aciertos, velocidad y rachas ----------------
+     Los acertijos (preguntas del jefe y del hacker, correos, procesos, el
+     diagnostico del taller) ya no suman un puntaje fijo: pasan por
+     GT.correct / GT.wrong, que calculan cuanto vale la respuesta.
+
+       puntos = base x factor de velocidad x multiplicador de racha
+
+     Velocidad: 1 + lo que sobro de la ventana de SPEED_WINDOW segundos.
+       Contestar al toque vale casi x2, a los 15 s x1.5, a los 30 s o mas x1.
+       Nunca baja de x1: tardar no castiga, solo deja de premiar.
+     Racha: cada STREAK_STEP aciertos seguidos el multiplicador sube medio
+       punto, hasta STREAK_MULT_MAX. Un error lo vuelve a x1. */
+
+  /* Marca el arranque de un acertijo (nivel nuevo, orden de trabajo nueva).
+     Si nadie lo llama, el tiempo se mide desde la ultima respuesta. */
+  GT.startPuzzle = function () { GT.state.puzzleStart = GT.state.elapsed; };
+
+  GT.getMultiplier = function () {
+    var c = GT.CONFIG;
+    var steps = Math.floor(GT.state.streak / c.STREAK_STEP);
+    return Math.min(c.STREAK_MULT_MAX, 1 + steps * c.STREAK_MULT_STEP);
+  };
+
+  GT.speedFactor = function (secs) {
+    return 1 + Math.max(0, Math.min(1, 1 - secs / GT.CONFIG.SPEED_WINDOW));
+  };
+
+  /* since: opcional, el elapsed en que aparecio ESTE acertijo (lo pasan el
+     jefe, el hacker y el correo, que saben cuando mostraron la pregunta). */
+  GT.correct = function (base, reason, since) {
+    var s = GT.state;
+    if (!s.running || s.finished) return 0;
+
+    var secs = s.elapsed - (typeof since === 'number' ? since : s.puzzleStart);
+    var speed = GT.speedFactor(secs);
+
+    s.streak++;
+    if (s.streak > s.bestStreak) s.bestStreak = s.streak;
+    var mult = GT.getMultiplier();
+
+    var points = Math.round(base * speed * mult);
+    s.puzzleStart = s.elapsed;
+    GT.addScore(points, reason);
+    GT.emit('streak', { streak: s.streak, mult: mult, speed: speed, points: points });
+    streakReward(s.streak);
+    return points;
+  };
+
+  GT.wrong = function (penalty, reason) {
+    var s = GT.state;
+    if (!s.running || s.finished) return;
+
+    var lost = s.streak;
+    s.streak = 0;
+    s.mistakes++;
+    s.puzzleStart = s.elapsed;
+    if (penalty) GT.addScore(-penalty, reason);
+    GT.emit('streak', { streak: 0, mult: 1, lost: lost });
+    GT.emit('hud');
+  };
+
+  /* Premios de la racha, alternados: a los 3 aciertos escudo, a los 5 tiempo
+     extra, a los 8 escudo, a los 10 tiempo... (n % 5 da 3, 0, 3, 0...).
+     El tiempo extra va al reloj que este apurando al jugador: si el jefe
+     esta activo se lo sumo a su cuenta regresiva; si no, le descuento esos
+     segundos al reloj de la partida, que es lo que mira el bonus por tiempo
+     del final. */
+  function streakReward(n) {
+    var c = GT.CONFIG;
+    var s = GT.state;
+
+    if (n % 5 === 3) {
+      s.shieldLeft = c.SHIELD_SECONDS;
+      GT.emit('bonus', { kind: 'shield', seconds: c.SHIELD_SECONDS, streak: n });
+    } else if (n % 5 === 0) {
+      if (GT.boss && GT.boss.isActive()) {
+        GT.boss.addTime(c.EXTRA_TIME);
+      } else {
+        s.elapsed = Math.max(0, s.elapsed - c.EXTRA_TIME);
+        s.puzzleStart = s.elapsed;
+      }
+      GT.emit('bonus', { kind: 'time', seconds: c.EXTRA_TIME, streak: n });
+    }
+  }
+
+  /* Lo llama el loop de game.js: el escudo se gasta con tiempo de juego, asi
+     que si la partida se frena, el escudo se frena tambien. */
+  GT.tickShield = function (dt) {
+    var s = GT.state;
+    if (s.shieldLeft <= 0) return;
+    s.shieldLeft = Math.max(0, s.shieldLeft - dt);
+    if (s.shieldLeft === 0) GT.emit('bonus', { kind: 'shield-end' });
   };
 
   /* La infeccion es el reverso de la integridad, con un piso por nivel:

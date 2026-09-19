@@ -201,9 +201,8 @@
      el comportamiento real del adware: aceptar uno te trae mas. */
   function takeBait(entry) {
     removePopup(entry, true);
-    GT.state.mistakes++;
+    GT.wrong(40, 'aceptaste un pop-up');
     GT.damage(10, 'aceptaste un pop-up del malware');
-    GT.addScore(-40, 'aceptaste un pop-up');
     GT.audio.hurt();
     GT.ui.shake();
     GT.ui.flash('hit');

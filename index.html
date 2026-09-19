@@ -193,6 +193,7 @@
       <p class="doc-foot">
         Puntaje = objetivos cumplidos + decisiones correctas + integridad restante.
         Las pistas y los errores restan.<br>
+        Responder rápido suma más, y cada 3 aciertos seguidos sube el multiplicador de la racha.<br>
         En el taller: diagnósticos correctos + trabajo eficiente. Los repuestos innecesarios restan.
       </p>
 
@@ -252,6 +253,12 @@
           <label>INFECCIÓN</label>
           <div class="bar bar-bad"><i id="bar-infection" style="width:8%"></i></div>
           <span class="val" id="val-infection">8%</span>
+        </div>
+
+        <div class="hud-row">
+          <label>RACHA</label>
+          <div class="bar bar-streak"><i id="bar-streak" style="width:0%"></i></div>
+          <span class="val" id="val-streak">x1</span>
         </div>
 
         <div class="hud-stats">
@@ -324,6 +331,10 @@
         <div class="tech-metric">
           <label>PUNTAJE</label>
           <span class="val" id="tech-val-score">0</span>
+        </div>
+        <div class="tech-metric">
+          <label>RACHA</label>
+          <span class="val" id="tech-val-streak">x1</span>
         </div>
         <div class="tech-metric">
           <label>ÓRDENES</label>
