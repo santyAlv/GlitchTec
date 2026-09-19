@@ -324,10 +324,13 @@
     var integ = Math.max(0, Math.round(s.integrity));
     var barI = document.getElementById('bar-integrity');
     barI.style.width = integ + '%';
-    /* El color de la barra lo decide el CSS, yo solo le pongo la clase. Ese
-       "a ? x : b ? y : z" son dos ternarios encadenados y se lee como un
-       if/else if/else:  <=25 critico, <=55 advertencia, si no normal. */
-    barI.parentNode.className = 'bar' + (integ <= 25 ? ' crit' : integ <= 55 ? ' warn' : '');
+    /* El color de la barra lo decide el CSS, yo solo le pongo la clase:
+       <=25 critico, <=55 advertencia, si no normal. Uso classList.toggle y no
+       className = '...' porque esto corre 60 veces por segundo y pisaria la
+       clase de la animacion de golpe (ver pulseLifeBar) antes de que se vea. */
+    barI.parentNode.classList.toggle('crit', integ <= 25);
+    barI.parentNode.classList.toggle('warn', integ > 25 && integ <= 55);
+    document.getElementById('hud').classList.toggle('critical', integ <= 25);
     document.getElementById('val-integrity').textContent = integ + '%';
 
     var inf = GT.getInfection();
@@ -353,6 +356,25 @@
   /* Me suscribo al bus: cualquier modulo que llame a GT.emit('hud') hace que
      el HUD se refresque al instante, sin tener que conocerme ni importarme. */
   GT.on('hud', updateHud);
+
+  /* Animacion de la barra de vida del jugador (la del HUD, la de reputacion
+     del taller o la de adentro de la ventana del jefe, la que este a la
+     vista). Solo para golpes de verdad: el drenaje de los pop-ups y del
+     teclado secuestrado llama a GT.damage en cada frame con valores de
+     centesimas, y si animara esos la barra temblaria sin parar. */
+  function pulseLifeBar(kind) {
+    ['bar-integrity', 'tech-bar-rep', 'boss-you-bar'].forEach(function (id) {
+      var bar = document.getElementById(id);
+      if (!bar) return;
+      var box = bar.parentNode;
+      box.classList.remove('hit', 'healed');
+      void box.offsetWidth;
+      box.classList.add(kind);
+    });
+  }
+
+  GT.on('damage', function (e) { if (e.amount >= 2) pulseLifeBar('hit'); });
+  GT.on('heal', function () { pulseLifeBar('healed'); });
 
   /* Avisos de la racha. Solo aviso cuando cambia algo que al jugador le
      conviene saber (sube el multiplicador, gana un premio, pierde una racha

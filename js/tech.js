@@ -648,7 +648,8 @@
     if (!bar) return;
 
     bar.style.width = rep + '%';
-    bar.parentNode.className = 'bar' + (rep <= 25 ? ' crit' : rep <= 55 ? ' warn' : '');
+    bar.parentNode.classList.toggle('crit', rep <= 25);
+    bar.parentNode.classList.toggle('warn', rep > 25 && rep <= 55);
     document.getElementById('tech-val-rep').textContent = rep + '%';
 
     var over = Math.max(0, caseMinutes - (cur ? cur.presupuesto : 0));

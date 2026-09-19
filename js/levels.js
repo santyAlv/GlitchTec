@@ -134,11 +134,11 @@
       bonus: 500,
       objectives: [
         { id: 'l4_open', text: 'Escribir "purge" en la Terminal' },
-        { id: 'l4_boss', text: 'Reducir la integridad del malware a 0', count: 0, total: 5 }
+        { id: 'l4_boss', text: 'Reducir la integridad del malware a 0' }
       ],
       intro: [
         { text: 'Estoy en el núcleo del sistema. Para sacarme tenés que demostrar que entendiste algo.' },
-        { text: 'Cinco preguntas. Cada respuesta correcta me borra un pedazo. Cada error, te borra a vos.' },
+        { text: 'Preguntas hasta que uno de los dos caiga. Cada acierto me borra un pedazo. Cada error me devuelve fuerzas y te borra a vos.' },
         { friendly: true, who: 'SISTEMA',
           text: 'Escribí  purge  en la Terminal para iniciar la secuencia final.' }
       ],

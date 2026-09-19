@@ -272,6 +272,21 @@
 .bar-streak i { background: linear-gradient(90deg, #6b3aa8, var(--violet)); }
 @keyframes critBlink { 50% { opacity: .42; } }
 
+/* Golpe y curacion de una barra de vida (las dispara game.js y boss.js) */
+.bar.hit, .boss-hp.hit { animation: barHit .35s ease; }
+.bar.healed, .boss-hp.healed { animation: barHeal .6s ease; }
+@keyframes barHit {
+  0%, 100% { transform: none; }
+  20% { transform: translateX(-3px); border-color: var(--red); box-shadow: 0 0 8px rgba(255,59,82,.7); }
+  45% { transform: translateX(3px); }
+  70% { transform: translateX(-2px); }
+}
+@keyframes barHeal { 40% { border-color: var(--green); box-shadow: 0 0 8px rgba(53,255,122,.6); } }
+
+/* Integridad critica: el panel entero late en rojo */
+#hud.critical { border-top-color: var(--red); animation: hudCrit 1s infinite; }
+@keyframes hudCrit { 50% { box-shadow: 0 0 0 1px rgba(255,59,82,.6), 0 6px 26px rgba(0,0,0,.6); } }
+
 .hud-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
