@@ -595,6 +595,7 @@
       if (action === 'start')   { game.start(GT.state.mode); }
       if (action === 'help')    { GT.ui.setScreen('screen-help'); }
       if (action === 'credits') { GT.ui.setScreen('screen-credits'); }
+      if (action === 'ranking') { GT.ranking.open(); }
       if (action === 'back')    { GT.ui.setScreen('screen-title'); }
       if (action === 'menu')    { hardStop(); GT.ui.setScreen('screen-title'); }
       if (action === 'restart') { var m = GT.state.mode; hardStop(); game.start(m); }

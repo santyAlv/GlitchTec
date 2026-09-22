@@ -77,6 +77,17 @@ function json_error(string $message, int $code = 400): void
 }
 
 /**
+ * Convierte a entero y lo encierra entre $min y $max.
+ * El (int) solo no alcanza: las columnas son TINYINT / INT UNSIGNED y MySQL
+ * en modo estricto rechaza un -5 o un 300 en integrity_end con un error, y la
+ * partida no se guardaria. Prefiero recortar el valor aca y seguir.
+ */
+function clamp_int($value, int $min, int $max): int
+{
+    return max($min, min($max, (int)$value));
+}
+
+/**
  * Lee el cuerpo de un POST en JSON.
  * php://input es el flujo crudo del pedido. Hace falta porque $_POST SOLO se
  * llena cuando el cuerpo viene como formulario (application/x-www-form-

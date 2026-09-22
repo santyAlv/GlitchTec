@@ -27,6 +27,10 @@ CREATE TABLE IF NOT EXISTS partidas (
                                   NOT NULL DEFAULT 'virus',
   status         ENUM('running','won','lost','abandoned')
                                   NOT NULL DEFAULT 'running',
+  -- Token secreto de la partida (32 caracteres hex). Lo genera
+  -- partida_start.php y solo lo conoce el navegador que abrio la partida:
+  -- partida_end.php no deja cerrarla sin el. NULL en los datos de ejemplo.
+  token          CHAR(32)         NULL,
   won            TINYINT(1)       NOT NULL DEFAULT 0,
   score          INT              NOT NULL DEFAULT 0,
   base_score     INT              NOT NULL DEFAULT 0,
@@ -36,6 +40,7 @@ CREATE TABLE IF NOT EXISTS partidas (
   mistakes       INT UNSIGNED     NOT NULL DEFAULT 0,
   hints_used     INT UNSIGNED     NOT NULL DEFAULT 0,
   popups_closed  INT UNSIGNED     NOT NULL DEFAULT 0,
+  best_streak    SMALLINT UNSIGNED NOT NULL DEFAULT 0,  -- mejor racha de aciertos
   started_at     DATETIME         NOT NULL,
   finished_at    DATETIME         NULL,
   PRIMARY KEY (id),
@@ -45,12 +50,17 @@ CREATE TABLE IF NOT EXISTS partidas (
   --   idx_score    -> el ranking hace ORDER BY score DESC
   --   idx_modo     -> el filtro ?modo=virus|tecnico
   --   idx_finished -> el WHERE finished_at IS NOT NULL
+  --   idx_ranking  -> el ranking: WHERE status = 'won' AND modo = ... ORDER BY
+  --                   score. Es compuesto y el orden de las columnas importa:
+  --                   primero las que filtro por igualdad, al final la que
+  --                   ordeno. Con el filtro de modo MySQL lo usa entero.
   -- No hay que indexar todo por las dudas: cada indice acelera las lecturas
   -- pero hace un poquito mas lenta cada escritura y ocupa lugar.
   KEY idx_score (score DESC),
   KEY idx_status (status),
   KEY idx_modo (modo),
-  KEY idx_finished (finished_at)
+  KEY idx_finished (finished_at),
+  KEY idx_ranking (status, modo, score)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
@@ -110,3 +120,9 @@ VALUES
 -- ALTER TABLE partidas
 --   ADD COLUMN modo ENUM('virus','tecnico') NOT NULL DEFAULT 'virus' AFTER player_name,
 --   ADD KEY idx_modo (modo);
+
+-- Migración para el ranking (token por partida y mejor racha)
+-- ALTER TABLE partidas
+--   ADD COLUMN token CHAR(32) NULL AFTER status,
+--   ADD COLUMN best_streak SMALLINT UNSIGNED NOT NULL DEFAULT 0 AFTER popups_closed,
+--   ADD KEY idx_ranking (status, modo, score);
