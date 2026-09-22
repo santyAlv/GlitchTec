@@ -48,6 +48,7 @@
 
       <nav class="main-menu">
         <button class="menu-btn" data-action="modes">ELEGIR MODO DE JUEGO</button>
+        <button class="menu-btn" data-action="ranking">RANKING</button>
         <button class="menu-btn" data-action="help">INSTRUCCIONES</button>
         <button class="menu-btn" data-action="credits">CRÉDITOS</button>
       </nav>
@@ -61,6 +62,11 @@
     <div class="modes-wrap">
       <h2 class="modes-title">// ELEGÍ TU MODO</h2>
       <p class="modes-lead">Dos formas distintas de pelearla contra una computadora.</p>
+
+      <label class="player-field">
+        <span>TU NOMBRE PARA EL RANKING</span>
+        <input id="player-name" type="text" maxlength="40" autocomplete="off" spellcheck="false" placeholder="estudiante">
+      </label>
 
       <div class="modes-grid">
 
@@ -193,6 +199,7 @@
       <p class="doc-foot">
         Puntaje = objetivos cumplidos + decisiones correctas + integridad restante.
         Las pistas y los errores restan.<br>
+        Responder rápido suma más, y cada 3 aciertos seguidos sube el multiplicador de la racha.<br>
         En el taller: diagnósticos correctos + trabajo eficiente. Los repuestos innecesarios restan.
       </p>
 
@@ -218,6 +225,41 @@
         Glitch.TEC — Videojuego educativo de simulación y puzzles sobre ciberseguridad.
       </p>
       <div class="doc-actions">
+        <button class="menu-btn ghost" data-action="back">VOLVER</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PANTALLA 3B: RANKING ============ -->
+  <section id="screen-ranking" class="screen">
+    <div class="doc">
+      <h2 class="doc-title">// RANKING</h2>
+
+      <div class="rk-filters">
+        <div class="rk-group" role="group" aria-label="Qué ranking ver">
+          <button class="rk-btn is-on" data-rk-scope="global" aria-pressed="true">GLOBAL</button>
+          <button class="rk-btn" data-rk-scope="local" aria-pressed="false">ESTA PC</button>
+        </div>
+        <div class="rk-group" role="group" aria-label="Modo de juego">
+          <button class="rk-btn is-on" data-rk-modo="" aria-pressed="true">TODOS</button>
+          <button class="rk-btn" data-rk-modo="virus" aria-pressed="false">PC CORROMPIDA</button>
+          <button class="rk-btn" data-rk-modo="tecnico" aria-pressed="false">SERVICIO TÉCNICO</button>
+        </div>
+      </div>
+
+      <p class="rk-note" id="rk-note" aria-live="polite"></p>
+
+      <div class="rk-wrap">
+        <table class="rk-table">
+          <thead>
+            <tr><th>#</th><th>Jugador</th><th>Modo</th><th>Puntaje</th><th>Racha</th><th>Tiempo</th><th>Fecha</th></tr>
+          </thead>
+          <tbody id="rk-body"></tbody>
+        </table>
+      </div>
+
+      <div class="doc-actions">
+        <button class="menu-btn" data-action="modes">JUGAR</button>
         <button class="menu-btn ghost" data-action="back">VOLVER</button>
       </div>
     </div>
@@ -252,6 +294,12 @@
           <label>INFECCIÓN</label>
           <div class="bar bar-bad"><i id="bar-infection" style="width:8%"></i></div>
           <span class="val" id="val-infection">8%</span>
+        </div>
+
+        <div class="hud-row">
+          <label>RACHA</label>
+          <div class="bar bar-streak"><i id="bar-streak" style="width:0%"></i></div>
+          <span class="val" id="val-streak">x1</span>
         </div>
 
         <div class="hud-stats">
@@ -326,6 +374,10 @@
           <span class="val" id="tech-val-score">0</span>
         </div>
         <div class="tech-metric">
+          <label>RACHA</label>
+          <span class="val" id="tech-val-streak">x1</span>
+        </div>
+        <div class="tech-metric">
           <label>ÓRDENES</label>
           <span class="val" id="tech-val-solved">0 / 4</span>
         </div>
@@ -387,6 +439,7 @@
       </div>
       <div class="doc-actions">
         <button class="menu-btn" data-action="restart">JUGAR DE NUEVO</button>
+        <button class="menu-btn ghost" data-action="ranking">VER RANKING</button>
         <button class="menu-btn ghost" data-action="menu">MENÚ PRINCIPAL</button>
       </div>
     </div>
@@ -414,6 +467,7 @@
        modulos de juego  terminal, explorador, procesos, mail, pop-ups,
                          hacker, niveles, jefe, taller
        api.js            cliente del backend
+       ranking.js        pantalla de posiciones (usa api.js)
        game.js    ULTIMO SIEMPRE: es el orquestador y necesita que TODOS
                   los modulos existan para poder resetearlos y tickearlos.
                   Ademas es el que engancha el DOMContentLoaded que arranca
@@ -439,6 +493,7 @@
 <script src="js/boss.js"></script>
 <script src="js/tech.js"></script>
 <script src="js/api.js"></script>
+<script src="js/ranking.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

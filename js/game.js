@@ -172,7 +172,13 @@
       '  +200  respuesta correcta en la purga\n' +
       '  +10   pop-up cerrado sin aceptar\n' +
       '  -40   aceptar un pop-up      -60  matar proceso legítimo\n' +
-      '  -50   clasificar mal un correo   -' + GT.CONFIG.HINT_COST + '  usar una pista\n';
+      '  -50   clasificar mal un correo   -' + GT.CONFIG.HINT_COST + '  usar una pista\n\n' +
+      'VELOCIDAD Y RACHAS\n' +
+      '  Responder rápido paga: hasta el doble si contestás enseguida.\n' +
+      '  Cada 3 aciertos seguidos el multiplicador sube (x1.5, x2... x3).\n' +
+      '  Un error corta la racha y vuelve a x1.\n' +
+      '  3 seguidos: ESCUDO, el daño entra a la mitad por 20 s.\n' +
+      '  5 seguidos: TIEMPO EXTRA, +15 s de reloj.\n';
 
     GT.ui.openWindow({
       id: 'manual', title: 'Manual de supervivencia', icon: GT.ui.icons.book,
@@ -277,6 +283,7 @@
 
     if (GT.state.running && !GT.state.finished) {
       GT.state.elapsed += dt;
+      GT.tickShield(dt);
 
       /* Cada modulo tiene su tick(dt) y se ocupa de lo suyo: yo desde aca no
          se ni me importa que hace adentro. El loop solo reparte el tiempo. */
@@ -317,10 +324,13 @@
     var integ = Math.max(0, Math.round(s.integrity));
     var barI = document.getElementById('bar-integrity');
     barI.style.width = integ + '%';
-    /* El color de la barra lo decide el CSS, yo solo le pongo la clase. Ese
-       "a ? x : b ? y : z" son dos ternarios encadenados y se lee como un
-       if/else if/else:  <=25 critico, <=55 advertencia, si no normal. */
-    barI.parentNode.className = 'bar' + (integ <= 25 ? ' crit' : integ <= 55 ? ' warn' : '');
+    /* El color de la barra lo decide el CSS, yo solo le pongo la clase:
+       <=25 critico, <=55 advertencia, si no normal. Uso classList.toggle y no
+       className = '...' porque esto corre 60 veces por segundo y pisaria la
+       clase de la animacion de golpe (ver pulseLifeBar) antes de que se vea. */
+    barI.parentNode.classList.toggle('crit', integ <= 25);
+    barI.parentNode.classList.toggle('warn', integ > 25 && integ <= 55);
+    document.getElementById('hud').classList.toggle('critical', integ <= 25);
     document.getElementById('val-integrity').textContent = integ + '%';
 
     var inf = GT.getInfection();
@@ -331,12 +341,64 @@
     document.getElementById('val-time').textContent = GT.formatTime(s.elapsed);
     document.getElementById('val-popups').textContent = GT.popups.count();
 
+    /* Racha: la barrita muestra cuanto falta para el proximo multiplicador
+       (1 de 3, 2 de 3...). Ya en el tope, queda llena. */
+    var step = GT.CONFIG.STREAK_STEP;
+    var mult = GT.getMultiplier();
+    var toNext = (mult >= GT.CONFIG.STREAK_MULT_MAX) ? step : s.streak % step;
+    document.getElementById('bar-streak').style.width = Math.round(toNext / step * 100) + '%';
+    document.getElementById('val-streak').textContent = 'x' + mult;
+    document.getElementById('hud').classList.toggle('shielded', s.shieldLeft > 0);
+
     GT.ui.setGlitch(Math.min(1, inf / 100));
   }
 
   /* Me suscribo al bus: cualquier modulo que llame a GT.emit('hud') hace que
      el HUD se refresque al instante, sin tener que conocerme ni importarme. */
   GT.on('hud', updateHud);
+
+  /* Animacion de la barra de vida del jugador (la del HUD, la de reputacion
+     del taller o la de adentro de la ventana del jefe, la que este a la
+     vista). Solo para golpes de verdad: el drenaje de los pop-ups y del
+     teclado secuestrado llama a GT.damage en cada frame con valores de
+     centesimas, y si animara esos la barra temblaria sin parar. */
+  function pulseLifeBar(kind) {
+    ['bar-integrity', 'tech-bar-rep', 'boss-you-bar'].forEach(function (id) {
+      var bar = document.getElementById(id);
+      if (!bar) return;
+      var box = bar.parentNode;
+      box.classList.remove('hit', 'healed');
+      void box.offsetWidth;
+      box.classList.add(kind);
+    });
+  }
+
+  GT.on('damage', function (e) { if (e.amount >= 2) pulseLifeBar('hit'); });
+  GT.on('heal', function () { pulseLifeBar('healed'); });
+
+  /* Avisos de la racha. Solo aviso cuando cambia algo que al jugador le
+     conviene saber (sube el multiplicador, gana un premio, pierde una racha
+     larga): si avisara cada acierto taparia los toasts de los otros modulos. */
+  GT.on('streak', function (e) {
+    var step = GT.CONFIG.STREAK_STEP;
+    if (e.streak === 0) {
+      if (e.lost >= step) GT.ui.toast('Se cortó la racha de ' + e.lost + ' aciertos. Multiplicador x1', 'warn');
+      return;
+    }
+    if (e.streak % step === 0) {
+      GT.ui.toast('RACHA DE ' + e.streak + ' · multiplicador x' + e.mult, 'streak');
+      GT.audio.levelUp();
+    } else if (e.speed >= 1.6) {
+      GT.ui.toast('Respuesta rápida: +' + e.points + ' puntos', 'streak');
+    }
+  });
+
+  GT.on('bonus', function (b) {
+    if (b.kind === 'shield') GT.ui.toast('ESCUDO: el daño entra a la mitad por ' + b.seconds + ' s', 'streak');
+    if (b.kind === 'shield-end') GT.ui.toast('Se terminó el escudo', 'info');
+    if (b.kind === 'time') GT.ui.toast('TIEMPO EXTRA: +' + b.seconds + ' s', 'streak');
+    GT.emit('hud');
+  });
 
   /* ============================================================
      Final de partida
@@ -375,6 +437,7 @@
       mistakes: s.mistakes,
       hints: s.hintsUsed,
       popupsClosed: s.popupsClosed,
+      bestStreak: s.bestStreak,
       /* .slice() sin argumentos = copia del array. Devuelvo una COPIA y no el
          array original para que el que reciba el resumen no pueda modificar
          por accidente el estado del juego. */
@@ -484,6 +547,7 @@
       row('Tiempo total', GT.formatTime(sum.elapsed)) +
       (tecnico ? row('Tiempo de taller', sum.techMinutes + ' min') +
                  row('Gastado en repuestos', '$' + money(sum.techCost)) : '') +
+      row('Mejor racha', sum.bestStreak) +
       row('Errores', sum.mistakes) +
       row('Pistas usadas', sum.hints);
 
@@ -531,6 +595,7 @@
       if (action === 'start')   { game.start(GT.state.mode); }
       if (action === 'help')    { GT.ui.setScreen('screen-help'); }
       if (action === 'credits') { GT.ui.setScreen('screen-credits'); }
+      if (action === 'ranking') { GT.ranking.open(); }
       if (action === 'back')    { GT.ui.setScreen('screen-title'); }
       if (action === 'menu')    { hardStop(); GT.ui.setScreen('screen-title'); }
       if (action === 'restart') { var m = GT.state.mode; hardStop(); game.start(m); }

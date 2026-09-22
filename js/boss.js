@@ -1,8 +1,9 @@
 /* ============================================================
    Glitch.TEC — Nivel 4: Purga (enfrentamiento final)
    El malware solo se borra si el jugador demuestra lo aprendido.
-   Cinco preguntas contra reloj: cada acierto destruye el 20% del
-   nucleo, cada error cuesta integridad y desata pop-ups.
+   Combate contra reloj, jugador vs. nucleo: cada acierto le saca
+   vida al nucleo (mas con racha), cada error se la devuelve y le
+   cuesta integridad al jugador. Termina cuando uno llega a 0.
    ============================================================ */
 (function (window, document) {
   'use strict';
@@ -13,16 +14,20 @@
   var WIN_ID = 'boss';
 
   var TIME_LIMIT = 120;          // segundos para completar la purga
-  /* 20% por acierto x 5 preguntas = 100%. Los dos numeros estan atados: si
-     alguna vez agrego una sexta pregunta tengo que repartir de nuevo el dano
-     (o calcularlo como 100 / QUESTIONS.length). Lo dejo anotado para no
-     olvidarme. */
+  var MAX_HP = 100;
+  /* 20 por acierto: sin errores ni racha son 5 respuestas, una vuelta justa
+     al cuestionario. El multiplicador de racha lo sube (x1.5 = 30, x2 = 40),
+     asi que jugar fino acorta la pelea. */
   var DAMAGE_PER_HIT = 20;
+  /* Cada error el nucleo se recupera. Sin esto, errar no le cambiaba nada al
+     jefe y el texto de "el malware recupera terreno" era mentira. */
+  var REGEN_PER_MISS = 10;
 
-  var hp = 100;                  // "vida" del nucleo
+  var hp = MAX_HP;               // "vida" del nucleo
   var timeLeft = TIME_LIMIT;
   var idx = 0;                   // en que pregunta voy
   var answered = false;          // ¿ya conteste la actual? (evita doble click)
+  var askedAt = 0;               // elapsed en que aparecio la pregunta (para el bonus por velocidad)
   var active = false;            // ¿el jefe esta en curso? (lo mira el reloj)
 
   var QUESTIONS = [
@@ -83,7 +88,7 @@
      Ciclo
      ============================================================ */
   boss.reset = function () {
-    hp = 100;
+    hp = MAX_HP;
     timeLeft = TIME_LIMIT;
     idx = 0;
     answered = false;
@@ -91,7 +96,27 @@
   };
 
   boss.isActive = function () { return active; };
+
+  /* Premio de racha "tiempo extra": lo llama state.js si el jefe esta activo. */
+  boss.addTime = function (secs) {
+    timeLeft += secs;
+    renderHeader();
+  };
   boss.getHp = function () { return hp; };
+
+  /* Las dos funciones que mueven la vida del nucleo. Van clampeadas entre 0 y
+     MAX_HP igual que la integridad del jugador en state.js: la barra es un
+     ancho en %, y un 110% o un -20% la romperian. */
+  boss.hit = function (amount) {
+    hp = Math.max(0, hp - amount);
+    renderHeader('hit');
+    if (GT.engine && GT.engine.hitCore) GT.engine.hitCore();
+  };
+
+  boss.heal = function (amount) {
+    hp = Math.min(MAX_HP, hp + amount);
+    renderHeader('healed');
+  };
 
   boss.open = function () {
     if (GT.ui.isOpen(WIN_ID)) { GT.ui.focusWindow(WIN_ID); return; }
@@ -106,9 +131,14 @@
         '<div class="who">NÚCLEO DEL MALWARE — GLITCH.CORE</div>' +
         '<div id="boss-canvas" style="height:74px;margin-bottom:9px;"></div>' +
         '<div class="boss-hpwrap">' +
-          '<span class="lbl">INTEGRIDAD</span>' +
-          '<div class="boss-hp"><i id="boss-hp-bar" style="width:100%"></i></div>' +
+          '<span class="lbl">MALWARE</span>' +
+          '<div class="boss-hp" id="boss-hp"><i id="boss-hp-bar" style="width:100%"></i></div>' +
           '<span class="pct" id="boss-hp-pct">100%</span>' +
+        '</div>' +
+        '<div class="boss-hpwrap you">' +
+          '<span class="lbl">VOS</span>' +
+          '<div class="boss-hp you" id="boss-you"><i id="boss-you-bar" style="width:100%"></i></div>' +
+          '<span class="pct" id="boss-you-pct">100%</span>' +
         '</div>' +
         '<div class="boss-timer" id="boss-timer">TIEMPO RESTANTE: 02:00</div>' +
       '</div>' +
@@ -144,11 +174,29 @@
   /* ============================================================
      Render
      ============================================================ */
-  function renderHeader() {
+  /* Dibuja las dos barras del combate. fx es opcional ('hit' o 'healed') y
+     re-dispara la animacion de la barra del nucleo con el truco del reflow
+     (ver ui.shake). La barra del jugador la anima game.js, que escucha los
+     eventos damage/heal de todo el juego. */
+  function renderHeader(fx) {
     var bar = document.getElementById('boss-hp-bar');
     if (!bar) return;
-    bar.style.width = hp + '%';
-    document.getElementById('boss-hp-pct').textContent = hp + '%';
+    var pct = Math.round(hp / MAX_HP * 100);
+    bar.style.width = pct + '%';
+    document.getElementById('boss-hp-pct').textContent = pct + '%';
+
+    var box = document.getElementById('boss-hp');
+    box.classList.toggle('crit', pct <= 25);
+    if (fx) {
+      box.classList.remove('hit', 'healed');
+      void box.offsetWidth;
+      box.classList.add(fx);
+    }
+
+    var you = Math.max(0, Math.round(GT.state.integrity));
+    document.getElementById('boss-you-bar').style.width = you + '%';
+    document.getElementById('boss-you-pct').textContent = you + '%';
+    document.getElementById('boss-you').classList.toggle('crit', you <= 25);
 
     var t = document.getElementById('boss-timer');
     t.textContent = 'TIEMPO RESTANTE: ' + GT.formatTime(Math.max(0, timeLeft));
@@ -161,6 +209,7 @@
 
     var q = QUESTIONS[idx];
     answered = false;
+    askedAt = GT.state.elapsed;
 
     var html = '<p class="boss-q"><span class="idx">[' + (idx + 1) + '/' + QUESTIONS.length + ']</span> ' +
                q.q + '</p><div class="boss-opts">';
@@ -208,23 +257,24 @@
     fb.className = 'boss-feedback';
 
     if (right) {
-      hp = Math.max(0, hp - DAMAGE_PER_HIT);
-      GT.addScore(200, 'respuesta correcta');
+      GT.correct(200, 'respuesta correcta', askedAt);
+      /* El dano sale DESPUES de GT.correct a proposito: asi este acierto ya
+         cuenta para la racha y, si con el sube el multiplicador, pega fuerte. */
+      var dmg = Math.round(DAMAGE_PER_HIT * GT.getMultiplier());
+      boss.hit(dmg);
       GT.audio.ok();
       GT.ui.flash('gain');
-      GT.levels.progress('l4_boss', 1);
       GT.learn(q.why.replace(/<[^>]+>/g, ''));
-      fb.innerHTML = '<b>✔ CORRECTO.</b> Núcleo dañado −' + DAMAGE_PER_HIT + '%.<br>' + q.why;
-      if (GT.engine && GT.engine.hitCore) GT.engine.hitCore();
+      fb.innerHTML = '<b>✔ CORRECTO.</b> Núcleo dañado −' + dmg + '%.<br>' + q.why;
     } else {
-      GT.state.mistakes++;
+      GT.wrong(70, 'respuesta incorrecta');
+      boss.heal(REGEN_PER_MISS);
       GT.damage(14, 'respuesta incorrecta en la purga');
-      GT.addScore(-70, 'respuesta incorrecta');
       GT.audio.hurt();
       GT.ui.shake();
       GT.ui.flash('hit');
       GT.popups.burst(2);
-      fb.innerHTML = '<b>✘ INCORRECTO.</b> El malware recupera terreno.<br>' + q.why;
+      fb.innerHTML = '<b>✘ INCORRECTO.</b> El malware recupera terreno (+' + REGEN_PER_MISS + '%).<br>' + q.why;
     }
 
     box.appendChild(fb);
@@ -233,34 +283,26 @@
     renderHeader();
 
     /* Si con este acierto el nucleo llego a 0, no espero a que apriete
-       SIGUIENTE: termino ya. Por eso el chequeo va aca y no solo en next(). */
+       SIGUIENTE: termino ya. */
     if (hp <= 0) {
       finish();
       return;
     }
 
-    var nextBtn = document.getElementById('boss-next');
-    nextBtn.disabled = false;
-    nextBtn.textContent = (idx >= QUESTIONS.length - 1) ? 'FINALIZAR PURGA ▸' : 'SIGUIENTE ▸';
+    document.getElementById('boss-next').disabled = false;
   }
 
+  /* Las preguntas dan la vuelta: despues de la ultima vuelve la primera. La
+     pelea no se termina por quedarse sin preguntas sino cuando alguno de los
+     dos llega a 0 (o se acaba el reloj, que es una derrota). */
   function next() {
-    if (idx < QUESTIONS.length - 1) {
-      idx++;
-      renderQuestion();
-      return;
-    }
-    finish();
+    idx = (idx + 1) % QUESTIONS.length;
+    renderQuestion();
   }
 
-  /* Cierre del enfrentamiento. Hay DOS finales posibles y por eso esta funcion
-     se llama tanto desde answer() como desde next():
-       - nucleo en 0  -> victoria, dialogo final y GT.emit('victory') via levels
-       - quedan restos -> el jefe sobrevivio: castigo, rafaga de pop-ups y
-                          VUELVE A EMPEZAR el cuestionario desde idx = 0.
-     Esa segunda rama es la que hace que no se pueda ganar clickeando a lo loco:
-     hay que acertar las 5, no importa cuantas vueltas te lleve (mientras el
-     reloj y la integridad aguanten). */
+  /* Victoria sobre el nucleo: dialogo final y GT.emit('victory') via levels.
+     La derrota no pasa por aca: si la integridad del jugador llega a 0,
+     GT.damage emite 'gameover' y game.js muestra el pantallazo azul. */
   function finish() {
     active = false;
 
@@ -274,16 +316,7 @@
         GT.levels.finishBoss();
       });
       GT.audio.victory();
-      return;
     }
-
-    // Quedaron preguntas sin acertar: el nucleo sobrevive y contraataca
-    GT.ui.toast('El núcleo sobrevivió al ' + hp + '%. Reintentando secuencia...', 'bad');
-    GT.damage(12, 'purga incompleta');
-    GT.popups.burst(3);
-    idx = 0;
-    renderQuestion();
-    active = true;
   }
 
   /* ============================================================
@@ -308,6 +341,10 @@
       GT.damage(999, 'tiempo agotado en la purga');
     }
   };
+
+  /* La barra "VOS" de la ventana del jefe tiene que moverse apenas el jugador
+     recibe un golpe, no recien en el proximo frame del reloj. */
+  GT.on('hud', function () { if (active) renderHeader(); });
 
   boss.totalQuestions = QUESTIONS.length;
 

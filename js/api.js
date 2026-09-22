@@ -18,10 +18,20 @@
      mostrar el TP sin depender de que ande XAMPP. */
   var BASE = 'api';           // carpeta de los endpoints PHP
   var matchId = null;         // id que me devuelve la base al abrir la partida
+  var matchToken = null;      // token secreto de esa partida (lo pide partida_end.php)
   var offline = false;        // bandera: ¿hay backend o no?
-  var playerName = 'estudiante';
+  var PLAYER_KEY = 'glitchtec_player';
+  var playerName = loadPlayerName();
 
   function storageKey() { return 'glitchtec_scores'; }
+
+  /* El nombre queda guardado en el navegador para no tener que escribirlo en
+     cada partida. try/catch porque localStorage puede estar bloqueado (modo
+     incognito estricto) y eso no puede romper el juego. */
+  function loadPlayerName() {
+    try { return localStorage.getItem(PLAYER_KEY) || 'estudiante'; }
+    catch (e) { return 'estudiante'; }
+  }
 
   /** Modo de juego actual: 'virus' (PC corrompida) o 'tecnico' (taller). */
   function currentMode() {
@@ -33,7 +43,10 @@
     catch (e) { return []; }
   }
 
+  /* Guardo ordenado de mayor a menor puntaje, asi el recorte a 50 tira los
+     peores y no los mas viejos: es un ranking, no un historial. */
   function saveLocal(rows) {
+    rows.sort(function (a, b) { return b.score - a.score; });
     try { localStorage.setItem(storageKey(), JSON.stringify(rows.slice(0, 50))); }
     catch (e) { /* ignore */ }
   }
@@ -81,8 +94,11 @@
   api.isOffline = function () { return offline; };
 
   api.setPlayerName = function (name) {
-    playerName = String(name || 'estudiante').slice(0, 40);
+    playerName = String(name || '').trim().slice(0, 40) || 'estudiante';
+    try { localStorage.setItem(PLAYER_KEY, playerName); } catch (e) { /* ignore */ }
   };
+
+  api.getPlayerName = function () { return playerName; };
 
   /** Abre una partida nueva (al iniciar el juego).
       Guardo el id que devuelve la base porque todo lo que venga despues
@@ -91,6 +107,7 @@
       que preguntar nunca si estoy online: siempre hay un matchId. */
   api.startMatch = function () {
     matchId = null;
+    matchToken = null;
     var payload = {
       player_name: playerName,
       mode: currentMode(),
@@ -108,6 +125,7 @@
        si nada hubiera pasado. El jugador no se entera. */
     return post('partida_start.php', payload).then(function (data) {
       matchId = data.id;
+      matchToken = data.token;
       return data;
     }).catch(function () {
       offline = true;
@@ -133,6 +151,7 @@
   api.finishMatch = function (summary) {
     var row = {
       match_id: matchId,
+      token: matchToken,
       player_name: playerName,
       mode: summary.mode || currentMode(),
       won: !!summary.won,
@@ -144,24 +163,28 @@
       mistakes: summary.mistakes || 0,
       hints: summary.hints || 0,
       popups_closed: summary.popupsClosed || 0,
+      best_streak: summary.bestStreak || 0,
       finished_at: new Date().toISOString()
     };
 
-    /* Guardo SIEMPRE en localStorage, incluso estando online. Es a proposito:
-       el ranking local funciona como respaldo si la base se cae, y ademas me
-       deja probar la pantalla de puntajes sin levantar XAMPP. Cuesta
-       practicamente nada (unos kilobytes de JSON). */
-    var local = loadLocal();
-    local.unshift({
-      player: row.player_name,
-      modo: row.mode,
-      score: row.score,
-      won: row.won,
-      level: row.level_reached,
-      time: row.elapsed_sec,
-      at: row.finished_at
-    });
-    saveLocal(local);
+    /* Las partidas GANADAS van SIEMPRE al localStorage, incluso estando
+       online. Es a proposito: ese es el ranking "local" (el de esta PC), y
+       ademas funciona de respaldo si la base se cae. Las perdidas no entran
+       porque el ranking es de partidas ganadas. */
+    if (row.won) {
+      var local = loadLocal();
+      local.push({
+        player: row.player_name,
+        modo: row.mode,
+        score: row.score,
+        won: true,
+        level: row.level_reached,
+        time: row.elapsed_sec,
+        streak: row.best_streak,
+        at: row.finished_at
+      });
+      saveLocal(local);
+    }
 
     if (offline) return Promise.resolve({ offline: true, saved: true });
 
@@ -171,17 +194,26 @@
     });
   };
 
-  /** Ranking (servidor o local). */
-  api.getRanking = function (limit, modo) {
+  /** Ranking. scope 'global' = la base MySQL (todos los jugadores),
+      'local' = lo guardado en este navegador. Si pido el global y no hay
+      servidor, devuelvo el local con offline: true para que la pantalla
+      pueda avisar que no es el global. */
+  api.getRanking = function (limit, modo, scope) {
     limit = limit || 10;
     var filtro = (modo === 'virus' || modo === 'tecnico') ? modo : null;
 
+    /* Filtro los won por las dudas: versiones viejas del juego guardaban
+       tambien las partidas perdidas en el localStorage. */
     function localRanking() {
-      var rows = loadLocal();
-      if (filtro) {
-        rows = rows.filter(function (r) { return (r.modo || 'virus') === filtro; });
-      }
+      var rows = loadLocal().filter(function (r) {
+        return r.won && (!filtro || (r.modo || 'virus') === filtro);
+      });
+      rows.sort(function (a, b) { return b.score - a.score; });
       return rows.slice(0, limit);
+    }
+
+    if (scope === 'local') {
+      return Promise.resolve({ offline: offline, scope: 'local', modo: filtro || 'todos', ranking: localRanking() });
     }
 
     if (offline) {

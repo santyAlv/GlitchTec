@@ -128,6 +128,7 @@
      ensuciando los DATOS con el estado de la partida y tendria que limpiarlos
      a mano en cada reinicio. */
   var answers = [];
+  var openedAt = 0;   // elapsed en que se abrio el correo actual (bonus por velocidad)
 
   /* map() sobre EMAILS me da un array de la misma longitud lleno de null, sin
      tener que escribir la cantidad a mano: si manana agrego un sexto correo,
@@ -135,6 +136,7 @@
   mail.init = function () {
     answers = EMAILS.map(function () { return null; });
     current = 0;
+    openedAt = GT.state.elapsed;
   };
 
   mail.reset = function () { answers = []; current = 0; };
@@ -217,6 +219,7 @@
 
       b.addEventListener('click', function () {
         current = i;
+        openedAt = GT.state.elapsed;
         GT.audio.click();
         render();
       });
@@ -298,7 +301,7 @@
 
     if (right) {
       GT.audio.ok();
-      GT.addScore(140, 'correo clasificado correctamente');
+      GT.correct(140, 'correo clasificado correctamente', openedAt);
       GT.ui.flash('gain');
       GT.ui.toast('✔ Correcto: ' + (m.phishing ? 'era phishing' : 'era legítimo'), 'info');
       /* Guardo las senales como "conceptos aprendidos" para la pantalla final,
@@ -309,10 +312,9 @@
       });
     } else {
       GT.audio.hurt();
-      GT.state.mistakes++;
+      GT.wrong(50, 'clasificación incorrecta');
       var dmg = m.phishing ? 12 : 6;   // confiar en un phishing duele mas
       GT.damage(dmg, m.phishing ? 'caíste en un phishing' : 'reportaste un correo legítimo');
-      GT.addScore(-50, 'clasificación incorrecta');
       GT.ui.shake();
       GT.ui.flash('hit');
       GT.ui.toast(m.phishing ? '✘ Era phishing: acabás de entregar tus datos'
