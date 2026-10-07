@@ -64,9 +64,11 @@ marco del sistema con otro color: parecen del sistema, pero no lo son.
    hacker, quiz final y diagnóstico de cada orden de trabajo.
 6. **Antagonista con presencia** — el hacker se mueve por la pantalla, amenaza, **bloquea teclas**
    y **corrompe los colores**.
-7. **Puntuación / vidas / tiempo / niveles** — integridad (o reputación), infección, puntaje,
-   reloj y 4 niveles por modo.
+7. **Puntuación / vidas / tiempo / niveles** — integridad (o reputación), infección, puntaje
+   por velocidad con **rachas y multiplicadores**, reloj y 4 niveles por modo.
+   En la purga final, **barra de vida del jugador contra la del malware**.
 8. **Victoria / derrota** — sistema restaurado / equipos entregados, o BSOD / taller cerrado.
+9. **Ranking** — tabla de posiciones global (MySQL) o local (esta PC), filtrable por modo.
 
 ---
 
@@ -123,6 +125,18 @@ con polvo, con sulfato o con humedad adentro.
 
 Las tres últimas son mantenimiento preventivo y correctivo: polvo, humedad y pasta térmica,
 que es por donde entra la mayoría de las fallas reales de un equipo de escritorio.
+
+### Puntaje, rachas y combate final
+
+- Cada acierto vale su puntaje base **x velocidad x racha**. Contestar enseguida paga hasta el
+  doble; a los 30 s ya no suma extra.
+- Cada 3 aciertos seguidos el multiplicador sube (x1.5, x2... hasta x3). Un error lo vuelve a x1.
+- Premios de racha: a los 3 aciertos **escudo** (el daño entra a la mitad por 20 s) y a los 5
+  **tiempo extra** (+15 s).
+- En la purga, cada acierto le saca vida al malware (más con racha) y cada error se la devuelve.
+  Gana el primero que deja al otro en 0.
+
+Los números están en `GT.CONFIG` (`js/state.js`).
 
 ---
 
@@ -224,6 +238,7 @@ glitch-tec/
 │   ├── bench3d.js          # Sketch p5 WEBGL: escritorio 3D (gabinete, monitor, herramientas)
 │   ├── tech.js             # Modo Servicio Técnico (7 órdenes de trabajo)
 │   ├── api.js              # Cliente PHP / fallback local
+│   ├── ranking.js          # Pantalla de ranking (global / local, por modo)
 │   └── ...
 ├── api/                    # Endpoints PHP
 │   ├── config.php
@@ -244,14 +259,19 @@ glitch-tec/
 | Endpoint | Método | Descripción |
 |---|---|---|
 | `api/ping.php` | GET | Healthcheck + estado de la BD |
-| `api/partida_start.php` | POST | Abre una partida (guarda el **modo** jugado) |
-| `api/partida_end.php` | POST | Cierra con puntaje y stats |
+| `api/partida_start.php` | POST | Abre una partida (guarda el **modo** jugado) y devuelve su **token** |
+| `api/partida_end.php` | POST | Cierra con puntaje y stats. Exige el token y que la partida siga abierta |
 | `api/evento.php` | POST | Log de eventos de gameplay |
-| `api/ranking.php?limit=10&modo=virus\|tecnico` | GET | Top puntajes, con filtro opcional por modo |
+| `api/ranking.php?limit=10&modo=virus\|tecnico` | GET | Top de partidas **ganadas**, con filtro opcional por modo |
 
 Como los dos modos puntúan distinto, `partidas` tiene una columna `modo`
-(`virus` / `tecnico`). Si ya tenías la base creada, corré el `ALTER TABLE`
-comentado al final de `sql/schema.sql`.
+(`virus` / `tecnico`).
+
+Cada partida recibe un token secreto al abrirse: sin él no se puede cerrar, y una partida ya
+cerrada no se puede volver a escribir. Así nadie puede pisar el puntaje de otro mandando
+`match_id` correlativos. Los valores numéricos se recortan a rangos válidos antes de guardarse.
+
+Si ya tenías la base creada, corré los `ALTER TABLE` comentados al final de `sql/schema.sql`.
 
 ---
 
@@ -282,7 +302,9 @@ git push -u origin main
 
 Implementado: selección de modo, escritorio WinTEC 95, Terminal, Explorador, pop-ups del malware,
 Administrador de tareas, TEC-Mail, purga final, **hacker con bloqueo de teclas y corrupción de
-colores**, **modo Servicio Técnico con 7 órdenes de trabajo**, puntuación/integridad/tiempo,
+colores**, **modo Servicio Técnico con 7 órdenes de trabajo** en un banco 3D,
+puntuación/integridad/tiempo, **rachas y multiplicadores**, **combate jugador vs. malware**,
+**ranking global y local**,
 p5.js, API PHP y esquema MySQL.
 
 Pendiente (post-alfa): módulos avanzados de ransomware/spyware, más narrativa, más órdenes de

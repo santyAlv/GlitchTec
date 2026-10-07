@@ -10,11 +10,29 @@
   var GT = window.GlitchTec;
   var levels = GT.levels = {};
 
+  /* Bandera anti-reentrada. Sin ella pasa esto: el ultimo objetivo se cumple,
+     arranco la transicion de nivel (que tiene un setTimeout de 700ms), y en
+     ese ratito otro modulo completa otro objetivo -> checkLevelDone corre de
+     nuevo, vuelve a ver todo completo y avanza DOS niveles de una. Con la
+     bandera, la primera vez que entro cierro la puerta hasta el nivel
+     siguiente. Es un "candado" clasico para procesos asincronicos. */
   var advancing = false;
 
   /* ============================================================
      Definicion de niveles
      ============================================================ */
+  /* NIVELES COMO DATOS, NO COMO CODIGO. Cada nivel es un objeto con:
+       name       nombre que muestra el HUD
+       bonus      puntos por completarlo
+       objectives lista de objetivos (con id; el id es el que usan los otros
+                  modulos para avisar "esto ya esta")
+       intro      dialogo de entrada  (el hacker + el sistema)
+       outro      dialogo de salida
+       hint       FUNCION, no texto: se evalua en el momento y devuelve la
+                  pista del primer objetivo que falte. Por eso la pista es
+                  siempre util y no un texto generico.
+     La ventaja de tenerlo asi: para agregar un nivel 5 agrego una clave "5"
+     aca y el motor de abajo no se entera. */
   var DEFS = {
 
     /* ---------------- NIVEL 1 ---------------- */
@@ -116,11 +134,11 @@
       bonus: 500,
       objectives: [
         { id: 'l4_open', text: 'Escribir "purge" en la Terminal' },
-        { id: 'l4_boss', text: 'Reducir la integridad del malware a 0', count: 0, total: 5 }
+        { id: 'l4_boss', text: 'Reducir la integridad del malware a 0' }
       ],
       intro: [
         { text: 'Estoy en el núcleo del sistema. Para sacarme tenés que demostrar que entendiste algo.' },
-        { text: 'Cinco preguntas. Cada respuesta correcta me borra un pedazo. Cada error, te borra a vos.' },
+        { text: 'Preguntas hasta que uno de los dos caiga. Cada acierto me borra un pedazo. Cada error me devuelve fuerzas y te borra a vos.' },
         { friendly: true, who: 'SISTEMA',
           text: 'Escribí  purge  en la Terminal para iniciar la secuencia final.' }
       ],
@@ -132,6 +150,9 @@
 
   levels.DEFS = DEFS;
 
+  /* Convierte la lista de objetivos en un objeto { id: true/false } para
+     poder preguntar  f.l1_help  en vez de recorrer el array cada vez. Lo usan
+     las funciones hint() de arriba, que son un encadenado de ifs. */
   function doneMap() {
     var m = {};
     GT.state.objectives.forEach(function (o) { m[o.id] = o.done; });
@@ -147,6 +168,12 @@
 
     advancing = false;
     GT.state.level = n;
+    GT.startPuzzle();
+    /* COPIO los objetivos de la definicion en vez de usarlos directo. Es
+       obligatorio: el juego les va a escribir encima (done, count), y si
+       escribiera sobre DEFS quedarian marcados como cumplidos para siempre;
+       la segunda partida arrancaria con el nivel 1 ya resuelto. map() me
+       devuelve un array nuevo con objetos nuevos. */
     GT.state.objectives = def.objectives.map(function (o) {
       return { id: o.id, text: o.text, done: false, count: o.count, total: o.total };
     });
@@ -154,7 +181,10 @@
     levels.renderObjectives();
     GT.emit('hud');
 
-    // Herramientas que se habilitan en cada nivel
+    /* DOSIFICACION: las herramientas se van desbloqueando de a una. No es
+       solo narrativo, es diseno: si el jugador tuviera todo disponible desde
+       el minuto cero no sabria por donde empezar. Uso >= y no === para que, si
+       alguna vez salteo un nivel por debug, no queden iconos trabados. */
     if (n >= 2) GT.ui.setIconLocked('taskmgr', false);
     if (n >= 3) GT.ui.setIconLocked('mail', false);
 
@@ -189,7 +219,16 @@
     return null;
   };
 
-  /** Marca un objetivo como cumplido (ignora ids desconocidos). */
+  /** Marca un objetivo como cumplido (ignora ids desconocidos).
+      Esta funcion es el PUNTO DE UNION entre todos los modulos: la terminal
+      llama a complete('l1_help'), el correo a complete('l3_open')... y ninguno
+      necesita saber en que nivel esta el jugador ni si ese objetivo existe.
+
+      El  if (!o || o.done) return  hace dos cosas de una:
+        !o      -> el id no pertenece al nivel actual: lo ignoro en silencio
+                   (asi la terminal puede cantar objetivos del nivel 1 aunque
+                   el jugador ya vaya por el 3, sin romper nada);
+        o.done  -> ya estaba cumplido: no sumo los puntos dos veces. */
   levels.complete = function (id) {
     var o = levels.find(id);
     if (!o || o.done) return;
@@ -204,19 +243,24 @@
     checkLevelDone();
   };
 
-  /** Suma progreso a un objetivo con contador. */
+  /** Suma progreso a un objetivo con contador (2 de 5, 3 de 5...). */
   levels.progress = function (id, amount) {
     var o = levels.find(id);
     if (!o || o.done) return;
 
     o.count = (o.count || 0) + (amount || 1);
 
+    /* CASO ESPECIAL del nivel 2. Ahi el total no es fijo: el malware puede
+       inyectar procesos nuevos mientras el jugador limpia, asi que "matar 4"
+       puede terminar siendo "matar 7". En vez de un total quemado, lo
+       recalculo como  ya matados + los que quedan vivos , y el objetivo se
+       cumple cuando no queda ninguno hostil. Asi la barra de progreso dice la
+       verdad en todo momento, aunque el total se mueva. */
     if (id === 'l2_kill') {
-      // El total crece si el malware reinyecta procesos
       o.total = o.count + GT.procs.remainingHostile();
       if (GT.procs.remainingHostile() === 0) { o.done = true; }
     } else if (o.total && o.count >= o.total) {
-      o.done = true;
+      o.done = true;                      // el resto: total fijo, comparacion normal
     }
 
     if (o.done) {
@@ -252,11 +296,18 @@
   /* ============================================================
      Avance
      ============================================================ */
+  /* every() devuelve true solo si TODOS los elementos cumplen la condicion.
+     Le agrego el  length > 0  adelante porque every() sobre un array vacio
+     devuelve true (verdad vacua), y sin ese chequeo un nivel sin objetivos
+     cargados se daria por completado apenas empieza. */
   function allDone() {
     return GT.state.objectives.length > 0 &&
            GT.state.objectives.every(function (o) { return o.done; });
   }
 
+  /* Se llama despues de CADA objetivo cumplido. Los tres cortes de la primera
+     linea, en orden: ya estoy avanzando / la partida termino / todavia falta
+     algo. Si pasa los tres, el nivel esta hecho de verdad. */
   function checkLevelDone() {
     if (advancing || GT.state.finished || !allDone()) return;
 
@@ -278,6 +329,13 @@
     // Recompensa de integridad por terminar limpio
     if (GT.state.integrity < 90) GT.heal(8, 'nivel completado');
 
+    /* Espero 700ms antes del dialogo de cierre para que el jugador alcance a
+       ver el aviso del ultimo objetivo y escuche el sonido de nivel superado.
+       Vuelvo a chequear "finished" adentro del setTimeout porque en esos 700ms
+       puede haber perdido (un pop-up drenando la ultima integridad): sin ese
+       segundo chequeo se le abriria el dialogo de victoria de nivel encima del
+       pantallazo azul. Regla general: despues de un await/timeout, lo que
+       creias del estado puede haber cambiado. */
     setTimeout(function () {
       if (GT.state.finished) return;
 
@@ -289,6 +347,9 @@
     }, 700);
   }
 
+  /* Avanza al nivel siguiente o, si no hay siguiente, gana la partida.
+     Fijate que no hay ningun "4" escrito aca: pregunto si existe DEFS[n+1].
+     Si manana agrego un nivel 5, esto sigue andando sin tocar una linea. */
   function goNext(n) {
     if (GT.state.finished) return;
     if (DEFS[n + 1]) {

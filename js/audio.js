@@ -10,17 +10,43 @@
   var ctx = null;
   var muted = false;
 
+  /* Devuelve el AudioContext, creandolo la primera vez (patron "lazy": no lo
+     creo hasta que hace falta de verdad).
+
+     El  window.AudioContext || window.webkitAudioContext  es compatibilidad:
+     Safari y los navegadores viejos lo exponen con el prefijo webkit.
+
+     El resume() del final resuelve un problema muy comun: los navegadores
+     BLOQUEAN el audio hasta que el usuario interactua con la pagina (para que
+     ningun sitio te meta ruido al entrar). El contexto nace "suspended" y si
+     no lo reanudo no suena nada. Como todos mis sonidos salen de clicks y
+     teclas, para cuando llega el primero ya hubo interaccion y el resume
+     funciona. */
   function ac() {
     if (!ctx) {
       var Ctor = window.AudioContext || window.webkitAudioContext;
-      if (!Ctor) return null;
+      if (!Ctor) return null;              // navegador sin WebAudio: juego mudo
       ctx = new Ctor();
     }
     if (ctx.state === 'suspended') ctx.resume();
     return ctx;
   }
 
-  /* Un tono simple con envolvente para evitar clicks */
+  /* UN TONO. Toda la sintesis del juego se arma con este ladrillo:
+     TODOS los efectos de sonido estan GENERADOS por codigo, no hay un solo
+     archivo .mp3 en el proyecto. Eso significa cero descargas y que el juego
+     suena igual aunque lo abra sin internet.
+
+     La cadena de audio es siempre la misma:
+        oscilador (genera la onda)  ->  gain (volumen)  ->  destino (parlantes)
+
+     El "type" es la forma de onda y define el caracter del sonido:
+       square   -> aspero, tipo consola de 8 bits (clicks, teclas)
+       sawtooth -> agresivo (alarmas, dano)
+       triangle -> suave y redondeado (abrir ventanas, victoria)
+     El "delay" me deja encadenar varios tonos y armar una melodia sin
+     setTimeout: el audio se agenda en el reloj interno del AudioContext, que
+     es mucho mas preciso que los timers de JavaScript. */
   function tone(freq, duration, type, volume, delay) {
     if (muted) return;
     var a = ac();
@@ -33,6 +59,17 @@
     osc.type = type || 'square';
     osc.frequency.setValueAtTime(freq, t0);
 
+    /* LA ENVOLVENTE (el "sobre" del sonido). Si prendiera y apagara el
+       oscilador de golpe se escucharia un CLIC feo en cada nota: ese chasquido
+       es el salto brusco de la onda. Entonces subo el volumen muy rapido
+       (8ms) y despues lo bajo suave hasta el final.
+
+       ¿Por que 0.0001 y no 0? Porque exponentialRampToValueAtTime trabaja con
+       multiplicaciones y no puede llegar nunca a cero (matematicamente el cero
+       no existe en una escala exponencial): si le paso 0, tira error. 0.0001
+       es silencio a efectos practicos. Uso rampa exponencial y no lineal
+       porque el oido percibe el volumen de forma logaritmica, asi que suena
+       mucho mas natural. */
     var v = (volume === undefined ? 0.08 : volume);
     gain.gain.setValueAtTime(0.0001, t0);
     gain.gain.exponentialRampToValueAtTime(v, t0 + 0.008);
@@ -65,7 +102,14 @@
     osc.stop(t0 + duration + 0.02);
   }
 
-  /* Ruido blanco corto: estatica / corrupcion */
+  /* RUIDO BLANCO: es la estatica del televisor, y no hay oscilador que lo
+     genere. Lo armo a mano llenando un buffer de audio con numeros al azar
+     entre -1 y 1 (que es exactamente lo que significa "ruido": ninguna
+     frecuencia predomina).
+
+     El  * (1 - i / frames)  es el desvanecido: i/frames va de 0 a 1 a lo largo
+     del buffer, asi que ese factor va de 1 a 0 y el ruido se apaga solo hacia
+     el final en vez de cortarse de golpe. */
   function noise(duration, volume) {
     if (muted) return;
     var a = ac();

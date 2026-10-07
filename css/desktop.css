@@ -294,10 +294,27 @@
   background: repeating-linear-gradient(90deg, #12833c 0 5px, transparent 5px 7px);
   transition: width .35s steps(6);
 }
-.bar.warn i  { background: repeating-linear-gradient(90deg, #c98f10 0 5px, transparent 5px 7px); }
-.bar.crit i  { background: repeating-linear-gradient(90deg, #b5121b 0 5px, transparent 5px 7px); animation: critBlink .7s steps(2) infinite; }
-.bar-bad i   { background: repeating-linear-gradient(90deg, #a1153a 0 5px, transparent 5px 7px); }
+.bar.warn i   { background: repeating-linear-gradient(90deg, #c98f10 0 5px, transparent 5px 7px); }
+.bar.crit i   { background: repeating-linear-gradient(90deg, #b5121b 0 5px, transparent 5px 7px); animation: critBlink .7s steps(2) infinite; }
+.bar-bad i    { background: repeating-linear-gradient(90deg, #a1153a 0 5px, transparent 5px 7px); }
+/* Barra de racha: el mismo medidor del sistema, en violeta */
+.bar-streak i { background: repeating-linear-gradient(90deg, #6b3aa8 0 5px, transparent 5px 7px); }
 @keyframes critBlink { 50% { opacity: .35; } }
+
+/* Golpe y curacion de una barra de vida (las dispara game.js y boss.js) */
+.bar.hit, .boss-hp.hit { animation: barHit .35s ease; }
+.bar.healed, .boss-hp.healed { animation: barHeal .6s ease; }
+@keyframes barHit {
+  0%, 100% { transform: none; }
+  20% { transform: translateX(-3px); border-color: var(--red); box-shadow: 0 0 8px rgba(255,59,82,.7); }
+  45% { transform: translateX(3px); }
+  70% { transform: translateX(-2px); }
+}
+@keyframes barHeal { 40% { border-color: var(--green); box-shadow: 0 0 8px rgba(53,255,122,.6); } }
+
+/* Integridad critica: el panel entero late en rojo */
+#hud.critical { border-top-color: var(--red); animation: hudCrit 1s infinite; }
+@keyframes hudCrit { 50% { box-shadow: 0 0 0 1px rgba(255,59,82,.6), 0 6px 26px rgba(0,0,0,.6); } }
 
 .hud-stats {
   display: grid;
@@ -333,6 +350,9 @@
   max-height: 148px;
   overflow: auto;
 }
+/* Escudo de la racha activo: el panel del sistema queda remarcado */
+#hud.shielded { box-shadow: var(--bevel-out), 0 0 0 2px #1d6f8c, 2px 2px 0 rgba(0,0,0,.3); }
+
 #objective-list li {
   display: flex;
   gap: 6px;
@@ -465,9 +485,10 @@
   border-left: 4px solid #12833c;
   animation: toastIn .12s steps(2), toastOut .3s steps(3) 2.3s forwards;
 }
-.toast.bad  { border-left-color: #a3121b; }
-.toast.warn { border-left-color: #c98f10; }
-.toast.info { border-left-color: var(--title-2); }
+.toast.bad    { border-left-color: #a3121b; }
+.toast.warn   { border-left-color: #c98f10; }
+.toast.info   { border-left-color: var(--title-2); }
+.toast.streak { border-left-color: #6b3aa8; }
 @keyframes toastIn  { from { opacity: 0; transform: translateY(-8px); } }
 @keyframes toastOut { to { opacity: 0; transform: translateY(-8px); } }
 

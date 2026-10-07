@@ -513,6 +513,10 @@ table.tm-table { width: 100%; border-collapse: collapse; font-size: 11px; }
   transition: width .4s steps(8);
 }
 .boss-hpwrap .pct { font-size: 11px; width: 42px; text-align: right; color: #ff6b8a; }
+.boss-hpwrap.you { margin-top: 5px; }
+.boss-hpwrap.you .pct { color: var(--green); }
+.boss-hp.you i { background: linear-gradient(90deg, var(--green-dim), var(--green)); }
+.boss-hp.crit i { animation: critBlink .7s infinite; }
 .boss-timer { margin-top: 7px; font-size: 11px; color: var(--amber); }
 
 .boss-body { flex: 1; overflow: auto; padding: 14px; }
