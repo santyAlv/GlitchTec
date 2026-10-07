@@ -102,32 +102,32 @@
     GT.ui.resetDesktop();
 
     GT.ui.registerIcon({
-      id: 'terminal', label: 'Terminal', icon: GT.ui.icons.terminal,
+      id: 'terminal', label: 'Terminal', icon: GT.ui.icons.terminal, asset: 'app.terminal',
       hint: 'Línea de comandos', onOpen: function () { GT.terminal.open(); }
     });
 
     GT.ui.registerIcon({
-      id: 'explorer', label: 'Mi PC', icon: GT.ui.icons.folder,
+      id: 'explorer', label: 'Mi PC', icon: GT.ui.icons.folder, asset: 'app.pc',
       hint: 'Explorador de archivos', onOpen: function () { GT.explorer.open(); }
     });
 
     GT.ui.registerIcon({
-      id: 'taskmgr', label: 'Administrador de tareas', icon: GT.ui.icons.taskmgr,
+      id: 'taskmgr', label: 'Administrador de tareas', icon: GT.ui.icons.taskmgr, asset: 'app.taskmgr',
       hint: 'Procesos y recursos', locked: true, onOpen: function () { GT.procs.open(); }
     });
 
     GT.ui.registerIcon({
-      id: 'mail', label: 'TEC-Mail', icon: GT.ui.icons.mail,
+      id: 'mail', label: 'TEC-Mail', icon: GT.ui.icons.mail, asset: 'app.mail',
       hint: 'Cliente de correo', locked: true, onOpen: function () { GT.mail.open(); }
     });
 
     GT.ui.registerIcon({
-      id: 'manual', label: 'Manual', icon: GT.ui.icons.book,
+      id: 'manual', label: 'Manual', icon: GT.ui.icons.book, asset: 'app.manual',
       hint: 'Ayuda y comandos', onOpen: openManual
     });
 
     GT.ui.registerIcon({
-      id: 'trash', label: 'Papelera', icon: GT.ui.icons.trash,
+      id: 'trash', label: 'Papelera', icon: GT.ui.icons.trash, asset: 'app.papelera',
       hint: 'Vacía', onOpen: function () {
         GT.ui.toast('La papelera está vacía. Borrar archivos no elimina procesos en memoria.', 'info');
       }
@@ -181,7 +181,7 @@
       '  5 seguidos: TIEMPO EXTRA, +15 s de reloj.\n';
 
     GT.ui.openWindow({
-      id: 'manual', title: 'Manual de supervivencia', icon: GT.ui.icons.book,
+      id: 'manual', title: 'Manual de supervivencia', icon: GT.ui.icons.book, asset: 'app.manual',
       width: 560, height: 420, body: el
     });
   }

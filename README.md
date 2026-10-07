@@ -42,7 +42,7 @@ JavaScript): no hay imágenes, ni fuentes externas, ni librerías de UI.
 | **Paleta** | Gris de sistema (`--face`), azul de barra de título, verde azulado de escritorio y el fósforo del monitor (verde, ámbar, rojo, cian) para terminal, boot y HUD. |
 | **Relieve** | Tres variables de `box-shadow` (`--bevel-out`, `--bevel-in`, `--bevel-thin-in`) reemplazan a los bordes redondeados: lo que se aprieta sobresale, lo que muestra contenido está hundido. |
 | **Tipografía** | Sans de sistema sin suavizado (`-webkit-font-smoothing: none`) para la interfaz y monoespaciada para todo lo que "sale de la máquina". |
-| **Iconos** | SVG de 16×16 sobre rejilla entera con `shape-rendering="crispEdges"`, escalados a 32 px con `image-rendering: pixelated` (`js/ui.js`). |
+| **Iconos** | Cada icono es un *slot*: entra el arte final del equipo de diseño (PNG) y, si todavía no está, el SVG de 16×16 dibujado sobre rejilla entera con `shape-rendering="crispEdges"`. Ver **Recursos gráficos**. |
 | **Tramas** | El "dither" de un pixel de los fondos noventosos, hecho con dos degradés a 45° superpuestos. |
 | **Filtro CRT** | Líneas de barrido, máscara de fósforo RGB, viñeta, curvatura simulada y parpadeo del tubo, todo en `css/effects.css`. |
 
@@ -50,6 +50,54 @@ La corrupción del malware está construida sobre ese mismo sistema: cuando la
 infección sube, se desincroniza la imagen, se parten los canales de color y hasta
 las barras de título cambian de tono. Los pop-ups y el panel del hacker usan el
 marco del sistema con otro color: parecen del sistema, pero no lo son.
+
+---
+
+## Recursos gráficos (cómo enchufar el arte)
+
+La interfaz se maquetó sin imágenes, y meter PNG en una maqueta hecha para texto
+es la forma más fácil de desarmarla: el renglón crece cuando la imagen carga, el
+icono empuja al de al lado, la tipografía se corre. Por eso **ningún elemento
+gráfico se escribe suelto**: todos van adentro de un contenedor de medida
+reservada (`.asset`), que ocupa exactamente el mismo lugar tenga adentro lo que
+tenga.
+
+| Estado | Qué hay adentro | Cómo se ve |
+|---|---|---|
+| `is-final` | El PNG del equipo de diseño | El arte |
+| `is-draft` | El SVG provisional de la maqueta | El dibujo de siempre |
+| `is-pending` | Nada todavía | Un marcador gris tramado con las dos primeras letras de la pieza |
+
+Los tres miden igual, así que el arte se puede ir enchufando **de a una pieza**
+sin tocar la maqueta y sin que se mueva un pixel. Si un archivo falta o se
+renombra, el contenedor vuelve solo al marcador en vez de dejar el icono roto
+del navegador.
+
+**Para agregar arte** alcanza con una línea en el catálogo de `js/assets.js`:
+
+```js
+'fs.documento': 'documento.png',    // archivo dentro de EntidadesGraficas/Diseño/iconos/
+'sys.logo':     { src: '...', fit: 'cover' },   // si viene con margen de más
+```
+
+**Dónde van los gráficos** (las áreas del DOM preparadas):
+
+| Lugar | Slot | Medida |
+|---|---|---|
+| Iconos del escritorio | `app.*` | 32 px (24 en celular) |
+| Barra de tareas | `app.*` | 16 px |
+| Barra de título de ventana | `app.*` | 16 px |
+| Menú Inicio | `app.*` | 22 px |
+| Explorador de archivos | `fs.*` | 32 px |
+| Administrador de tareas | `proceso.firmado` / `proceso.sin-firma` | 16 px |
+| Pop-ups del malware | `aviso.alerta` / `aviso.malware` | 48 px |
+| Diálogos del sistema | `sys.usuario` / `aviso.malware` | 32 px |
+| Créditos | `sys.logo` | banner 300×130 |
+| Ventana de componentes (pendiente) | `hw.*` | — |
+
+Desde la consola del navegador, `GlitchTec.assets.revisar()` marca en pantalla lo
+que todavía no es arte final —magenta lo que no tiene nada, ámbar lo provisional—
+y devuelve la lista de piezas que faltan dibujar.
 
 ---
 
@@ -224,9 +272,11 @@ glitch-tec/
 │   ├── windows.css         # Chrome de ventanas y aplicaciones internas
 │   ├── effects.css         # Filtro CRT y corrupción
 │   ├── hacker.css          # Personaje, panel de rescate, corrupción de colores
-│   └── tech.css            # Banco de trabajo del modo técnico
+│   ├── tech.css            # Banco de trabajo del modo técnico
+│   └── assets.css          # Contenedores de imágenes, sprites y marcadores
 ├── js/
 │   ├── vendor/p5.min.js    # Motor Processing (p5.js)
+│   ├── assets.js           # Catálogo y contenedores de recursos gráficos
 │   ├── engine.js           # Sketches p5: CRT, CPU/RAM, núcleo
 │   ├── state.js            # Estado global + bus de eventos
 │   ├── game.js             # Orquestador / loop / selección de modo

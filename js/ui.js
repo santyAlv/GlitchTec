@@ -33,6 +33,15 @@
     return '<svg viewBox="0 0 16 16" shape-rendering="crispEdges">' + inner + '</svg>';
   }
 
+  /* Todo icono de la interfaz se entrega dentro de un contenedor de
+     medida reservada (ver js/assets.js). Así da igual si adentro hay
+     el arte final, el dibujo provisional o el marcador: el lugar que
+     ocupa es siempre el mismo y la maqueta no se mueve. */
+  ui.slot = function (nombre, svg, size, alt) {
+    if (GT.assets) return GT.assets.html(nombre, { size: size || 'md', fallback: svg, alt: alt });
+    return svg || '';                       // sin la capa de assets, el SVG pelado
+  };
+
   ui.icons = {
     terminal: pix(
       '<path d="M0 1h16v11H0z" fill="#5a625f"/>' +
@@ -260,11 +269,13 @@
     el.style.height = h + 'px';
 
     var iconSvg = opts.icon || ui.icons.doc;
+    var barIco  = ui.slot(opts.asset || 'app.ventana', iconSvg, 'xs', opts.title);
+    var taskIco = ui.slot(opts.asset || 'app.ventana', iconSvg, 'xs', opts.title);
 
     var bar = document.createElement('div');
     bar.className = 'win-bar';
     bar.innerHTML =
-      iconSvg +
+      barIco +
       '<div class="win-title">' + GT.escapeHtml(opts.title || 'Ventana') + '</div>' +
       '<div class="win-btns">' +
         '<button class="wb-min" title="Minimizar">_</button>' +
@@ -299,7 +310,7 @@
     /* --- Boton en la barra de tareas --- */
     var taskBtn = document.createElement('button');
     taskBtn.className = 'task-btn';
-    taskBtn.innerHTML = iconSvg + '<i>' + GT.escapeHtml(opts.title || 'Ventana') + '</i>';
+    taskBtn.innerHTML = taskIco + '<i>' + GT.escapeHtml(opts.title || 'Ventana') + '</i>';
     taskBtn.addEventListener('click', function () {
       if (el.classList.contains('minimized') || el.classList.contains('inactive')) {
         el.classList.remove('minimized');
@@ -424,7 +435,8 @@
       var b = document.createElement('button');
       b.className = 'desk-icon' + (def.locked ? ' locked' : '');
       b.dataset.id = def.id;
-      b.innerHTML = def.icon + '<span>' + GT.escapeHtml(def.label) + '</span>';
+      b.innerHTML = ui.slot(def.asset, def.icon, 'lg', def.label) +
+                    '<span>' + GT.escapeHtml(def.label) + '</span>';
 
       b.addEventListener('click', function () {
         var sel = layer.querySelector('.desk-icon.selected');
@@ -466,7 +478,8 @@
       var b = document.createElement('button');
       b.className = 'sm-item';
       b.disabled = !!def.locked;
-      b.innerHTML = def.icon + '<span>' + GT.escapeHtml(def.label) +
+      b.innerHTML = ui.slot(def.asset, def.icon, 'md', def.label) +
+                    '<span>' + GT.escapeHtml(def.label) +
                     (def.hint ? '<small>' + GT.escapeHtml(def.hint) + '</small>' : '') + '</span>';
       b.addEventListener('click', function () {
         ui.toggleStartMenu(false);
@@ -512,7 +525,11 @@
     box.classList.remove('hidden');
     box.classList.toggle('friendly', !!line.friendly);
     who.textContent = line.who || (line.friendly ? 'SISTEMA' : 'GLITCH');
-    av.textContent = line.friendly ? '>' : '☠';
+    /* El avatar es otro slot gráfico: hoy entra el glifo provisional y el
+       día que haya retrato del sistema o del hacker, entra solo. */
+    av.innerHTML = ui.slot(line.friendly ? 'sys.usuario' : 'aviso.malware',
+                           '<span class="ico-glifo">' + (line.friendly ? '>' : '☠') + '</span>',
+                           'lg', line.friendly ? 'Sistema' : 'GL1TCH-M4N');
     next.textContent = 'CONTINUAR ▸';
 
     /* El efecto maquina de escribir: un setInterval que agrega UN caracter

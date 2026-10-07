@@ -151,7 +151,7 @@
     GT.ui.openWindow({
       id: WIN_ID,
       title: 'purge.exe — secuencia de purga',
-      icon: GT.ui.icons.skull,
+      icon: GT.ui.icons.skull, asset: 'aviso.malware',
       className: 'win-terminal',
       width: 660, height: 470,
       x: 130, y: 20,

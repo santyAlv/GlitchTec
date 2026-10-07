@@ -176,7 +176,7 @@
     GT.ui.openWindow({
       id: WIN_ID,
       title: 'TEC-Mail — estudiante@tec.edu.ar',
-      icon: GT.ui.icons.mail,
+      icon: GT.ui.icons.mail, asset: 'app.mail',
       width: 720, height: 450,
       x: 70, y: 30,
       body: body

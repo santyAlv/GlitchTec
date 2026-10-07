@@ -1,0 +1,148 @@
+/* ============================================================
+   Glitch.TEC — CONTENEDORES DE RECURSOS GRÁFICOS
+   ------------------------------------------------------------
+   La regla de oro: un elemento gráfico nunca define el tamaño de
+   su lugar. El lugar está reservado de antemano y la imagen se
+   acomoda adentro. Por eso todos los contenedores tienen medida
+   fija y `flex: 0 0 auto`: cuando el PNG termina de cargar no
+   empuja el texto de al lado ni estira el renglón.
+
+   Tres estados, los tres del mismo tamaño:
+     .is-final    arte definitivo (PNG del equipo de diseño)
+     .is-draft    dibujo provisional (el SVG de la maqueta)
+     .is-pending  marcador: todavía no hay nada
+   ============================================================ */
+
+.asset {
+  --asset-size: 24px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;                 /* nunca se estira ni se encoge */
+  width: var(--asset-size);
+  height: var(--asset-size);
+  vertical-align: middle;
+  overflow: hidden;
+  line-height: 0;                 /* que no agrande el renglón */
+  user-select: none;
+}
+
+/* La imagen entra entera y queda nítida: el arte es pixel art,
+   suavizarlo lo arruina. */
+.asset img,
+.asset svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Medidas permitidas. Cualquier lugar de la interfaz usa una de estas. */
+.asset-xs   { --asset-size: 16px; }
+.asset-sm   { --asset-size: 20px; }
+.asset-md   { --asset-size: 24px; }
+.asset-lg   { --asset-size: 32px; }
+.asset-xl   { --asset-size: 48px; }
+.asset-xxl  { --asset-size: 64px; }
+.asset-hero { --asset-size: 96px; }
+
+/* Pieza apaisada (logotipos, cabeceras): el lugar sigue reservado de
+   antemano, sólo que no es cuadrado. */
+.asset-banner { width: 300px; height: 130px; max-width: 100%; }
+
+/* Encuadre: por defecto la pieza entra entera (nunca se recorta). Las
+   que vienen con margen transparente de más se encuadran llenando. */
+.asset.fit-cover img { object-fit: cover; }
+
+/* ---------------- Marcador ----------------
+   Lo que todavía no tiene arte: un cuadro hundido con trama, como
+   el relleno de una ventana vacía del sistema, y las dos primeras
+   letras de la pieza. Ocupa exactamente el mismo lugar que ocupará
+   el dibujo final. */
+.asset.is-pending {
+  background-color: var(--face-dim);
+  background-image: var(--dither);
+  background-size: 4px 4px;
+  box-shadow: var(--bevel-thin-in);
+}
+.asset-ph {
+  font-family: var(--mono);
+  font-size: calc(var(--asset-size) * 0.34);
+  line-height: 1;
+  letter-spacing: -.5px;
+  color: var(--ink-dim);
+  text-shadow: 1px 1px 0 var(--hi);
+}
+
+/* ---------------- Modo revisión ----------------
+   GlitchTec.assets.revisar() marca en pantalla lo que falta:
+   magenta lo que no tiene nada, ámbar lo provisional. */
+body.ver-assets .asset.is-pending { outline: 2px solid #ff3bd0; outline-offset: -2px; }
+body.ver-assets .asset.is-draft   { outline: 2px solid var(--amber); outline-offset: -2px; }
+
+/* ============================================================
+   DÓNDE VAN
+   Cada lugar de la interfaz que recibe gráficos, con su medida
+   reservada. Están todos acá juntos para que se vea de una el mapa
+   de slots y no haya dos reglas peleando por el mismo lugar.
+   ============================================================ */
+
+/* --- Escritorio: rejilla de iconos --- */
+.desk-icon .asset { --asset-size: 32px; margin-bottom: 5px; }
+
+/* --- Barra de tareas: botón de ventana abierta --- */
+.task-btn .asset { --asset-size: 16px; margin-right: 5px; }
+
+/* --- Barra de título de una ventana --- */
+.win-bar .asset { --asset-size: 16px; margin-right: 5px; }
+
+/* --- Menú Inicio --- */
+.sm-item .asset { --asset-size: 22px; margin-right: 8px; }
+
+/* --- Explorador: rejilla de archivos --- */
+.exp-item .asset { --asset-size: 32px; }
+
+/* --- Administrador de tareas: columna de proceso --- */
+.tm-table td.tm-ico { width: 1%; padding-right: 0; }
+.tm-table td.tm-ico .asset { --asset-size: 16px; }
+
+/* --- Pop-ups del malware: icono de advertencia --- */
+.popup-ico { display: flex; align-items: flex-start; justify-content: center; }
+.popup-ico .asset { --asset-size: 48px; }
+
+/* --- Diálogos del sistema: avatar de quien habla --- */
+.dialog-avatar .asset { --asset-size: 40px; }
+
+/* --- Correo: filas de la bandeja --- */
+.mail-item .asset { --asset-size: 16px; margin-right: 6px; }
+
+/* --- Créditos: logotipo de la identidad visual --- */
+.credits-logo { display: flex; justify-content: center; margin: 0 0 16px; }
+
+/* ============================================================
+   Responsivo
+   En pantallas chicas los contenedores bajan de escalón en vez de
+   dejar que la imagen decida: así la rejilla del escritorio sigue
+   entrando y el texto no se parte.
+   ============================================================ */
+@media (max-width: 980px) {
+  .desk-icon .asset { --asset-size: 28px; }
+  .exp-item .asset { --asset-size: 28px; }
+  .popup-ico .asset { --asset-size: 40px; }
+  .asset-banner { height: 104px; }
+}
+
+@media (max-width: 620px) {
+  .desk-icon .asset { --asset-size: 24px; }
+  .start-item .asset { --asset-size: 20px; }
+  .popup-ico .asset { --asset-size: 32px; }
+  .asset-banner { width: 240px; height: 86px; }
+}
+
+/* Si alguien pide no animar, las imágenes tampoco parpadean al cargar. */
+@media (prefers-reduced-motion: reduce) {
+  .asset img { transition: none; }
+}

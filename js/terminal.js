@@ -576,7 +576,7 @@
     GT.ui.openWindow({
       id: WIN_ID,
       title: 'C:\\WINTEC\\system32\\cmd.exe',
-      icon: GT.ui.icons.terminal,
+      icon: GT.ui.icons.terminal, asset: 'app.terminal',
       className: 'win-terminal',
       width: 660, height: 400,
       x: 120, y: 60,

@@ -84,6 +84,8 @@
   ];
 
   var nextPid = 10000;
+  var rowNodes = {};           // pid -> <tr>, para no rehacer la tabla entera
+  var lastSig = '';            // firma de la lista dibujada
 
   /* ============================================================
      Ciclo de vida
@@ -104,6 +106,8 @@
        si no, el jugador aprende la posicion en vez de leer la firma. */
     shuffle(list);
     selectedPid = null;
+    lastSig = '';
+    rowNodes = {};
     overloadFor = 0;
     respawnTimer = 0;
     nextPid = 10000;
@@ -115,6 +119,8 @@
 
   procs.reset = function () {
     list = [];
+    lastSig = '';
+    rowNodes = {};
     active = false;
     cpu = 0; ram = 0;
     selectedPid = null;
@@ -299,6 +305,7 @@
       '<div class="tm-table-wrap">' +
         '<table class="tm-table">' +
           '<thead><tr>' +
+            '<th class="tm-ico" aria-label="Icono"></th>' +
             '<th>PID</th><th>Nombre de imagen</th><th>CPU</th><th>Memoria</th>' +
             '<th>Firma digital</th><th>Descripción</th>' +
           '</tr></thead>' +
@@ -313,7 +320,7 @@
     GT.ui.openWindow({
       id: WIN_ID,
       title: 'Administrador de tareas de WinTEC',
-      icon: GT.ui.icons.taskmgr,
+      icon: GT.ui.icons.taskmgr, asset: 'app.taskmgr',
       width: 700, height: 510,
       x: 90, y: 20,
       body: body,
@@ -371,6 +378,21 @@
     }
 
     var tbody = document.getElementById('tm-rows');
+
+    /* El tick corre en cada cuadro, así que antes la tabla se reconstruía
+       entera 60 veces por segundo. Con texto suelto no se notaba, pero cada
+       fila tiene ahora la imagen del proceso, y una imagen que se crea y se
+       destruye sesenta veces por segundo no llega nunca a dibujarse: la
+       columna quedaba vacía.
+       Así que las filas se arman UNA vez y después sólo se actualizan los
+       números. Se reconstruye nada más cuando cambia la lista de verdad
+       (un proceso nuevo, uno terminado, otro seleccionado). */
+    var orden = list.slice().sort(function (a, b) { return b.cpu - a.cpu; });
+    var firma = orden.map(function (p) { return p.pid; }).join(',') + '|' + selectedPid;
+
+    if (firma === lastSig) { updateRows(orden); return; }
+    lastSig = firma;
+    rowNodes = {};
     tbody.innerHTML = '';
 
     /* Ordeno por CPU descendente para que el que mas consume quede primero
@@ -379,12 +401,21 @@
            quiero reordenar mi lista de verdad, solo la vista;
          - el comparador  b.cpu - a.cpu  da positivo cuando b es mayor, y eso
            en sort() significa "b va antes" => descendente. */
-    list.slice().sort(function (a, b) { return b.cpu - a.cpu; }).forEach(function (p) {
+    orden.forEach(function (p) {
       var tr = document.createElement('tr');
+      rowNodes[p.pid] = tr;
       if (p.pid === selectedPid) tr.className = 'selected';
       if (p.isNew) tr.className += ' new-proc';
 
+      /* La imagen del proceso dice algo: firmado por el sistema o sin firma.
+         Es el primer lugar donde el jugador puede sospechar sin leer. */
       tr.innerHTML =
+        '<td class="tm-ico">' +
+          GT.assets.html(p.signed ? 'proceso.firmado' : 'proceso.sin-firma', {
+            size: 'xs',
+            alt: p.signed ? 'Proceso del sistema' : 'Proceso sin firma'
+          }) +
+        '</td>' +
         '<td class="num">' + p.pid + '</td>' +
         '<td>' + GT.escapeHtml(p.name) + (p.protected ? ' <small>(crítico)</small>' : '') + '</td>' +
         '<td class="num' + (p.cpu >= 15 ? ' hot' : '') + '">' + p.cpu.toFixed(0) + '%</td>' +
@@ -409,6 +440,22 @@
       });
 
       tbody.appendChild(tr);
+    });
+  }
+
+  /* Actualización liviana: sólo los números que se mueven. Las imágenes y el
+     resto de la fila se quedan donde están. */
+  function updateRows(orden) {
+    orden.forEach(function (p) {
+      var tr = rowNodes[p.pid];
+      if (!tr) return;
+      var celdas = tr.children;
+      var cpuCell = celdas[3], ramCell = celdas[4];
+      if (cpuCell) {
+        cpuCell.textContent = p.cpu.toFixed(0) + '%';
+        cpuCell.className = 'num' + (p.cpu >= 15 ? ' hot' : '');
+      }
+      if (ramCell) ramCell.textContent = p.ram + ' MB';
     });
   }
 

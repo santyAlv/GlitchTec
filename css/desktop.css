@@ -53,10 +53,7 @@
   gap: 4px;
   text-align: center;
 }
-.desk-icon svg {
-  width: 32px; height: 32px;
-  image-rendering: pixelated;
-}
+/* La medida la pone el contenedor (.asset), no el dibujo: ver css/assets.css */
 .desk-icon span {
   font-size: 11px;
   padding: 1px 3px;
@@ -72,9 +69,9 @@
   outline: 1px dotted #fff;
   outline-offset: -1px;
 }
-.desk-icon.selected svg { filter: brightness(.8) saturate(1.4); }
+.desk-icon.selected .asset { filter: brightness(.8) saturate(1.4); }
 .desk-icon.locked { opacity: .45; cursor: not-allowed; filter: grayscale(1); }
-.desk-icon.pulse svg { animation: iconPulse 1s steps(2) infinite; }
+.desk-icon.pulse .asset { animation: iconPulse 1s steps(2) infinite; }
 @keyframes iconPulse {
   0%, 100% { filter: none; transform: translateY(0); }
   50%      { filter: drop-shadow(0 0 6px rgba(255,198,60,.95)); transform: translateY(-2px); }
@@ -154,7 +151,7 @@
   background-size: 2px 2px;
   background-position: 0 0, 1px 1px;
 }
-.task-btn svg { width: 14px; height: 14px; flex: 0 0 14px; image-rendering: pixelated; }
+/* el icono del botón de la barra de tareas lo mide .asset */
 .task-btn i { font-style: normal; overflow: hidden; text-overflow: ellipsis; }
 
 /* Bandeja del sistema: hueco con el reloj */
@@ -221,10 +218,10 @@
   text-align: left;
   font-size: 12px;
 }
-.sm-item svg { width: 22px; height: 22px; flex: 0 0 22px; image-rendering: pixelated; }
+/* el icono del menú Inicio lo mide .asset */
 .sm-item:hover:not(:disabled) { background: var(--sel); color: var(--sel-text); }
 .sm-item:disabled { color: var(--sh); text-shadow: 1px 1px 0 var(--hi); cursor: not-allowed; }
-.sm-item:disabled svg { filter: grayscale(1); opacity: .55; }
+.sm-item:disabled .asset { filter: grayscale(1); opacity: .55; }
 .sm-item small { display: block; font-size: 10px; opacity: .75; }
 
 .sm-foot {

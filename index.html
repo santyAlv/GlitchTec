@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="css/effects.css">
 <link rel="stylesheet" href="css/hacker.css">
 <link rel="stylesheet" href="css/tech.css">
+<link rel="stylesheet" href="css/assets.css">
 </head>
 <body>
 
@@ -226,6 +227,12 @@
   <section id="screen-credits" class="screen">
     <div class="doc">
       <h2 class="doc-title">// EQUIPO</h2>
+
+      <!-- Contenedor declarativo: js/assets.js lo completa al cargar. Es una
+           pieza apaisada, así que usa el contenedor banner. Si el archivo no
+           está, queda el marcador y la pantalla no se mueve. -->
+      <div class="credits-logo"><span data-asset="sys.logo" data-size="banner" data-alt="Glitch.TEC"></span></div>
+
       <ul class="credits">
         <li><span>Alvarez Santiago</span><em>Back-End</em></li>
         <li><span>Cora Alex</span><em>Front-End</em></li>
@@ -523,6 +530,7 @@
      ============================================================ -->
 <script src="js/vendor/p5.min.js"></script>
 <script src="js/state.js"></script>
+<script src="js/assets.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/ui.js"></script>
