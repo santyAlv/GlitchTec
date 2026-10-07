@@ -155,40 +155,104 @@
 .tk-tip b { color: #7a2f06; }
 
 /* ---------------- Banco de trabajo ---------------- */
-#tech-bench { display: flex; flex-direction: column; gap: 12px; }
+#tech-bench { display: flex; flex-direction: column; gap: 10px; }
 
-/* El equipo se mira bajo la luz del banco: fondo oscuro, como una
-   camara apuntando al gabinete abierto */
-#tech-pc {
+/* El equipo bajo la luz del banco. El canvas de p5 dibuja el gabinete
+   y el monitor de prueba; el marco es el mismo hueco hundido del resto
+   del sistema. */
+.bench-rig {
   flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  padding: 10px;
-  background:
-    radial-gradient(ellipse at 50% 38%, rgba(43,240,122,.09), transparent 68%),
-    #060b10;
+  padding: 4px;
+  background: #060b10;
   box-shadow: var(--bevel-in);
 }
-.pc-svg { width: 100%; max-width: 430px; height: auto; }
-.pc-lbl { font-family: var(--mono); font-size: 6.5px; fill: #8aa8a2; letter-spacing: .5px; }
+#tech-rig { display: block; line-height: 0; }
+#tech-rig canvas { display: block; width: 100%; height: auto; }
 
-.pc-part { transition: opacity .25s; opacity: .62; }
-.pc-part.is-checked { opacity: 1; filter: drop-shadow(0 0 5px rgba(79,210,255,.85)); }
-.pc-part.is-bad     { opacity: 1; filter: drop-shadow(0 0 7px rgba(255,59,82,.95)); }
-.pc-part.is-fixed   { opacity: 1; filter: drop-shadow(0 0 7px rgba(43,240,122,.9)); }
-.pc-part.is-hit     { animation: pcHit .7s ease; }
-@keyframes pcHit {
-  0%   { transform: scale(1); }
-  35%  { transform: scale(1.07); }
-  100% { transform: scale(1); }
+.rig-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px 2px;
 }
-.pc-part { transform-box: fill-box; transform-origin: center; }
 
-.pc-fan-blades { animation: pcSpin 2.6s linear infinite; transform-box: fill-box; transform-origin: center; }
-@keyframes pcSpin { to { transform: rotate(360deg); } }
+/* El botón de encendido también está en el gabinete dibujado; este es
+   el mismo disparador, para teclado y para que no haya que adivinar. */
+.rig-power {
+  flex: 0 0 auto;
+  padding: 7px 14px;
+  font-size: 11.5px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: var(--ink);
+  background: var(--face);
+  box-shadow: var(--bevel-out);
+}
+.rig-power:hover { background: #cbcfcb; }
+.rig-power:active { box-shadow: var(--bevel-press); }
 
-.pc-screen { animation: pcFlick 5s steps(2) infinite; }
-@keyframes pcFlick { 0%, 96%, 100% { opacity: 1; } 98% { opacity: .78; } }
+.rig-hint {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: #8fb3a8;
+  background: #04090b;
+  box-shadow: var(--bevel-thin-in);
+}
+
+/* ---------------- Piezas del equipo (lista) ---------------- */
+/* Las mismas zonas que el dibujo, en pestañas: el equipo se puede
+   recorrer sin depender del mouse sobre el canvas. */
+.zone-tabs {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(146px, 1fr));
+  gap: 3px;
+}
+.zone-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  text-align: left;
+  font-size: 10.5px;
+  color: var(--ink);
+  background: var(--face);
+  box-shadow: var(--bevel-out);
+}
+.zone-tab:hover { background: #cbcfcb; }
+.zone-tab.is-sel { background: #b5b9b5; box-shadow: var(--bevel-in); }
+.zone-tab .zt-name { flex: 1; min-width: 0; letter-spacing: .3px; }
+.zone-tab .zt-n { font-family: var(--mono); font-size: 9.5px; color: var(--ink-soft); }
+
+/* El punto es el estado de la pieza: sin revisar, revisada, falla, reparada */
+.zone-tab .zt-dot {
+  flex: 0 0 auto;
+  width: 8px; height: 8px;
+  background: #8c928c;
+  box-shadow: var(--bevel-thin-in);
+}
+.zone-tab.is-ok    .zt-dot { background: #2a86b0; }
+.zone-tab.is-bad   .zt-dot { background: #c21e34; animation: critBlink 1s steps(2) infinite; }
+.zone-tab.is-fixed .zt-dot { background: #18913f; }
+.zone-tab.is-bad   .zt-name { color: #7a1020; font-weight: bold; }
+
+/* ---------------- Bandeja de la pieza ---------------- */
+#tech-tray { display: flex; flex-direction: column; gap: 14px; }
+
+.tray-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 3px 8px;
+  background: linear-gradient(90deg, var(--title-1) 0%, var(--title-2) 100%);
+}
+.tray-head b { font-size: 11px; letter-spacing: 2px; color: #fff; }
+.tray-head span { font-size: 10px; color: #cfe0f5; }
 
 /* ---------------- Botones de pasos ---------------- */
 #tech-actions { display: flex; flex-direction: column; gap: 14px; }
@@ -211,7 +275,7 @@
 }
 .tech-group h4 small { font-weight: normal; letter-spacing: 0; color: var(--ink-dim); }
 
-.tech-btns { display: grid; grid-template-columns: repeat(auto-fill, minmax(226px, 1fr)); gap: 5px; }
+.tech-btns { display: grid; grid-template-columns: repeat(auto-fill, minmax(212px, 1fr)); gap: 5px; }
 
 .tech-btn {
   display: flex;
@@ -234,6 +298,12 @@
 }
 .tech-btn.is-done { color: var(--ink-soft); box-shadow: var(--bevel-in); background: #bcc0bc; }
 .tech-btn.is-done .tb-label { text-decoration: line-through; }
+
+/* Paso que necesita otro paso antes (abrir el gabinete, respaldar).
+   Se ve apagado pero se puede apretar: el taller te explica por qué no. */
+.tech-btn.is-locked { color: var(--ink-soft); }
+.tech-btn.is-locked .tb-label { font-style: italic; }
+.tech-btn.is-locked .tb-meta { color: #8a5a12; }
 
 /* Probar el equipo: el boton grande de la jugada */
 .tech-test {
@@ -378,9 +448,21 @@
 .tech-foot button:active { box-shadow: var(--bevel-press); }
 
 @media (max-width: 1180px) {
-  .tech-main { grid-template-columns: 232px 1fr 240px; }
+  .tech-main { grid-template-columns: 228px 1fr 232px; }
+  .zone-tabs { grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); }
 }
 @media (max-width: 940px) {
   .tech-main { grid-template-columns: 1fr; grid-auto-rows: min-content; }
   .tech-col { max-height: none; }
+  /* El equipo primero: en celular el banco es lo que se mira. */
+  #tech-bench { order: -1; }
+  .rig-bar { flex-wrap: wrap; }
+  .rig-power { width: 100%; }
+}
+
+/* En pantallas chicas el equipo no se achica hasta volverse ilegible:
+   se deja un ancho mínimo y la mesa se corre de costado. */
+@media (max-width: 620px) {
+  .bench-rig { overflow-x: auto; }
+  #tech-rig { min-width: 520px; }
 }

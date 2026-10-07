@@ -98,7 +98,7 @@
 
     /* ---------------- Inspección: térmica ---------------- */
     preguntar: {
-      g: 'inspeccion', label: 'Preguntarle al cliente cuándo y cómo falla', min: 2, parte: 'monitor',
+      g: 'inspeccion', label: 'Preguntarle al cliente cuándo y cómo falla', min: 2, parte: 'cliente',
       ok: 'Aporta el dato clave: falla cuando lleva un rato usándola, nunca al principio.'
     },
     medir_temp: {
@@ -134,7 +134,7 @@
       mal: 'Hace un clic seco cada pocos segundos: el cabezal está reintentando lecturas.'
     },
     ver_malware: {
-      g: 'inspeccion', label: 'Escanear el equipo en busca de malware', min: 9, parte: 'placa',
+      g: 'inspeccion', label: 'Escanear el equipo en busca de malware', min: 9, parte: 'software',
       ok: 'El análisis termina limpio: no hay malware. La lentitud es de hardware.'
     },
 
@@ -239,7 +239,7 @@
       nada: 'El disco estaba sano: cambiaste una pieza que funcionaba.'
     },
     reinstalar_so: {
-      g: 'accion', label: 'Formatear y reinstalar el sistema operativo', min: 40, parte: 'placa',
+      g: 'accion', label: 'Formatear y reinstalar el sistema operativo', min: 40, parte: 'software',
       costo: 0, arregla: 'so',
       hecho: 'Reinstalás el sistema desde cero.',
       nada: 'Formateaste sin diagnosticar: perdiste 40 minutos y la falla sigue igual, porque era de hardware.'
@@ -261,6 +261,7 @@
               'Ni una lucecita. Ni ruido. Nada de nada."',
       presupuesto: 20,
       fallas: ['cable'],
+      pieza: 'cable',
       sintomas: {
         cable: 'Apretás el botón: sin luces, sin ventiladores, sin pitidos. El equipo está muerto.'
       },
@@ -294,6 +295,7 @@
               'Y hace unos pitidos raros cuando arranca. El monitor dice sin señal."',
       presupuesto: 25,
       fallas: ['ram'],
+      pieza: 'ram',
       sintomas: {
         ram: 'El equipo enciende, los ventiladores giran, pero la pantalla sigue negra y suena ' +
              'un pitido largo y dos cortos, en loop.'
@@ -329,6 +331,7 @@
               'Después prende de nuevo y hace lo mismo. Cada vez aguanta menos."',
       presupuesto: 45,
       fallas: ['polvo', 'pasta'],
+      pieza: 'cooler',
       sintomas: {
         polvo: 'A los cuatro minutos de uso se apaga de golpe, sin pantalla azul ni aviso.',
         pasta: 'Ahora aguanta unos quince minutos, pero al exigirla se apaga igual. El CPU llega a 97 °C.'
@@ -363,6 +366,7 @@
               'Hace un ruidito como un clic. Ojo que ahí está TODA la contabilidad del estudio."',
       presupuesto: 60,
       fallas: ['respaldo', 'disco'],
+      pieza: 'disco',
       sintomas: {
         respaldo: 'El equipo arranca, pero tarda una eternidad y se congela. Y hay datos irremplazables adentro.',
         disco: 'Con el respaldo ya hecho, el equipo sigue lentísimo y clickeando: el disco no da más.'
@@ -390,79 +394,51 @@
   tech.CASES = CASES;
 
   /* ============================================================
-     Esquema del equipo (SVG) — se ilumina según lo revisado
+     Zonas de trabajo
+     Cada paso del catálogo pertenece a una zona. Las zonas físicas
+     son las piezas que dibuja el banco (js/bench.js) y se tocan
+     directamente sobre el equipo; las otras dos no están en el
+     gabinete: el cliente y el software del equipo.
      ============================================================ */
-  var PC_SVG =
-    '<svg viewBox="0 0 340 210" class="pc-svg">' +
-      /* monitor */
-      '<g class="pc-part" data-part="monitor">' +
-        '<rect x="196" y="26" width="122" height="82" rx="4" fill="#1a2530" stroke="#4a5f70" stroke-width="2"/>' +
-        '<rect x="203" y="33" width="108" height="68" rx="2" class="pc-screen" fill="#08120e"/>' +
-        '<rect x="243" y="108" width="28" height="16" fill="#2b3a47"/>' +
-        '<rect x="224" y="124" width="66" height="6" rx="3" fill="#2b3a47"/>' +
-      '</g>' +
+  var ZONE_ORDER = ['cliente', 'cable', 'fuente', 'boton', 'monitor',
+                    'placa', 'ram', 'cooler', 'gpu', 'disco', 'software'];
 
-      /* gabinete */
-      '<rect x="22" y="18" width="150" height="176" rx="5" fill="#131c24" stroke="#3d4f5e" stroke-width="2"/>' +
-      '<rect class="pc-inner" x="30" y="26" width="134" height="160" rx="3" fill="#0b1219"/>' +
+  var ZONE_LABEL = {
+    cliente:  'CLIENTE',
+    cable:    'ALIMENTACIÓN',
+    fuente:   'FUENTE',
+    boton:    'PANEL FRONTAL',
+    monitor:  'MONITOR Y VIDEO',
+    placa:    'PLACA MADRE',
+    ram:      'MEMORIA RAM',
+    cooler:   'CPU Y DISIPADOR',
+    gpu:      'PLACA DE VIDEO',
+    disco:    'DISCO',
+    software: 'SISTEMA'
+  };
 
-      /* fuente */
-      '<g class="pc-part" data-part="fuente">' +
-        '<rect x="36" y="32" width="58" height="34" rx="2" fill="#22303c" stroke="#4a5f70" stroke-width="1.6"/>' +
-        '<circle cx="65" cy="49" r="11" fill="none" stroke="#5d7387" stroke-width="1.4"/>' +
-        '<path d="M65 40v18M56 49h18" stroke="#5d7387" stroke-width="1.4"/>' +
-        '<text x="38" y="76" class="pc-lbl">FUENTE</text>' +
-      '</g>' +
-
-      /* interruptor + cable */
-      '<g class="pc-part" data-part="cable">' +
-        '<rect x="100" y="38" width="16" height="12" rx="2" fill="#2b3a47" stroke="#4a5f70" stroke-width="1.4"/>' +
-        '<path d="M116 44h14c8 0 8 22 16 22h30" fill="none" stroke="#6d8194" stroke-width="3" stroke-linecap="round"/>' +
-        '<circle cx="176" cy="66" r="4" fill="#6d8194"/>' +
-        '<text x="98" y="34" class="pc-lbl">CABLE</text>' +
-      '</g>' +
-
-      /* placa madre */
-      '<g class="pc-part" data-part="placa">' +
-        '<rect x="36" y="82" width="120" height="98" rx="2" fill="#123024" stroke="#2f6b4c" stroke-width="1.6"/>' +
-        '<rect x="60" y="120" width="30" height="30" rx="2" fill="#1d4736" stroke="#2f6b4c"/>' +
-        '<text x="63" y="139" class="pc-lbl">CPU</text>' +
-      '</g>' +
-
-      /* cooler */
-      '<g class="pc-part" data-part="cooler">' +
-        '<rect x="56" y="116" width="38" height="38" rx="3" fill="#24485c" stroke="#4e8aa8" stroke-width="1.6"/>' +
-        '<path d="M62 122v26M70 122v26M78 122v26M86 122v26" stroke="#4e8aa8" stroke-width="1.2"/>' +
-        '<circle class="pc-fan" cx="75" cy="135" r="12" fill="none" stroke="#7fc3e0" stroke-width="1.6"/>' +
-        '<path class="pc-fan-blades" d="M75 125v20M65 135h20" stroke="#7fc3e0" stroke-width="1.6"/>' +
-      '</g>' +
-
-      /* RAM */
-      '<g class="pc-part" data-part="ram">' +
-        '<rect x="104" y="88" width="10" height="56" rx="1.5" fill="#3b2a52" stroke="#8a6bd0" stroke-width="1.4"/>' +
-        '<rect x="118" y="88" width="10" height="56" rx="1.5" fill="#3b2a52" stroke="#8a6bd0" stroke-width="1.4"/>' +
-        '<text x="102" y="84" class="pc-lbl">RAM</text>' +
-      '</g>' +
-
-      /* GPU */
-      '<g class="pc-part" data-part="gpu">' +
-        '<rect x="40" y="158" width="86" height="16" rx="2" fill="#3a2230" stroke="#c06a90" stroke-width="1.4"/>' +
-        '<text x="43" y="170" class="pc-lbl">GPU</text>' +
-      '</g>' +
-
-      /* disco */
-      '<g class="pc-part" data-part="disco">' +
-        '<rect x="132" y="152" width="30" height="26" rx="2" fill="#2c2a1c" stroke="#b39b3f" stroke-width="1.4"/>' +
-        '<circle cx="147" cy="165" r="8" fill="none" stroke="#b39b3f" stroke-width="1.2"/>' +
-        '<circle cx="147" cy="165" r="2" fill="#b39b3f"/>' +
-        '<text x="130" y="188" class="pc-lbl">DISCO</text>' +
-      '</g>' +
-
-      /* boton de encendido */
-      '<g class="pc-part" data-part="boton">' +
-        '<circle class="pc-power" cx="167" cy="30" r="6" fill="#1b2b22" stroke="#4a5f70" stroke-width="1.6"/>' +
-      '</g>' +
-    '</svg>';
+  /* ============================================================
+     Qué muestra la pantalla con cada falla pendiente
+     Esto es el corazón del modo: el síntoma no se lee en un cartel,
+     se lee en el monitor cuando se enciende el equipo. Dos fallas
+     distintas pueden dar la MISMA pantalla ("sin señal"), y ahí
+     está el trabajo del técnico.
+     ============================================================ */
+  var FAULT_SCREEN = {
+    cable:    'muerta',
+    toma:     'muerta',
+    'switch': 'muerta',
+    fuente:   'muerta',
+    boton:    'muerta',
+    video:    'sin_senal',
+    gpu:      'sin_senal',
+    ram:      'post_ram',
+    polvo:    'apagon',
+    pasta:    'apagon',
+    respaldo: 'lenta',
+    disco:    'lenta',
+    so:       'lenta'
+  };
 
   /* ============================================================
      Estado del modo
@@ -477,6 +453,12 @@
   var running = false;
   var caseMinutes = 0;
   var dataLost = false;
+  var zone = null;             // zona del equipo seleccionada
+  var zones = [];              // zonas con pasos en este caso
+  var zoneState = {};          // zona -> 'ok' | 'bad' | 'fixed'
+  var testing = false;         // hay una prueba corriendo en el monitor
+  var pickedPart = null;       // pieza que el jugador señaló al cerrar
+  var pickOk = false;
 
   /* ============================================================
      Arranque
@@ -494,6 +476,19 @@
     tech.reset();
     running = true;
     GT.ui.setScreen('screen-tech');
+
+    /* El banco se monta una sola vez y queda escuchando: tocar una
+       pieza del dibujo es lo mismo que elegirla en la lista. */
+    GT.bench.mount('tech-rig');
+    GT.bench.onSelect = selectZone;
+    GT.bench.onPower = testEquipment;
+
+    var pw = document.getElementById('tech-power');
+    if (pw && !pw.dataset.bound) {
+      pw.dataset.bound = '1';
+      pw.addEventListener('click', testEquipment);
+    }
+
     loadCase(0);
   };
 
@@ -512,6 +507,20 @@
     caseMinutes = 0;
     dataLost = false;
     phase = 'trabajo';
+    testing = false;
+    pickedPart = null;
+    pickOk = false;
+    zoneState = {};
+
+    /* Equipo nuevo sobre el banco: cerrado, apagado y sin marcas. */
+    GT.bench.reset();
+
+    /* Zonas que esta orden pone en juego, en orden de recorrido */
+    zones = ZONE_ORDER.filter(function (z) {
+      return cur.pasos.some(function (id) { return STEPS[id] && STEPS[id].parte === z; });
+    });
+    zone = zones[0] || null;
+    GT.bench.select(zone);
 
     GT.state.level = i + 1;
 
@@ -535,10 +544,6 @@
     return cur.exito;
   }
 
-  function pendingFaults() {
-    return cur.fallas.filter(function (f) { return !fixed[f]; }).length;
-  }
-
   /* ============================================================
      Render
      ============================================================ */
@@ -554,41 +559,131 @@
         '<dt>Presupuesto</dt><dd>' + cur.presupuesto + ' min de taller</dd>' +
       '</dl>' +
       '<p class="tk-relato">' + GT.escapeHtml(cur.relato) + '</p>' +
-      '<h4>ESTADO ACTUAL DEL EQUIPO</h4>' +
+      '<h4>LO QUE SE VE EN EL EQUIPO</h4>' +
       '<p class="tk-sintoma" id="tech-sintoma">' + GT.escapeHtml(currentSymptom()) + '</p>' +
       '<p class="tk-tip">Regla del taller: <b>diagnosticar antes de cambiar</b>. ' +
          'Cada repuesto que ponés sin motivo sale del bolsillo del cliente.</p>';
 
-    document.getElementById('tech-pc').innerHTML = PC_SVG;
     document.getElementById('tech-log').innerHTML = '';
+    document.getElementById('tech-actions').innerHTML = '';
 
-    renderActions();
+    renderZones();
+    renderTray();
   }
 
-  function renderActions() {
-    var box = document.getElementById('tech-actions');
-    box.innerHTML =
-      '<div class="tech-group" id="grp-inspeccion"><h4>INSPECCIÓN <small>(mirar no cuesta plata)</small></h4><div class="tech-btns"></div></div>' +
-      '<div class="tech-group" id="grp-accion"><h4>ACCIONES <small>(algunas cuestan repuestos)</small></h4><div class="tech-btns"></div></div>' +
-      '<button class="tech-test" id="tech-test">▶ PROBAR EL EQUIPO</button>';
+  /* ============================================================
+     Zonas del equipo
+     La misma lista de piezas que el dibujo, en botones: el equipo se
+     puede recorrer con el mouse sobre el gabinete o desde acá.
+     ============================================================ */
+  function renderZones() {
+    var nav = document.getElementById('tech-zones');
+    if (!nav) return;
+    nav.innerHTML = '';
 
-    cur.pasos.forEach(function (id) {
-      var st = STEPS[id];
-      if (!st) return;
-
+    zones.forEach(function (z) {
       var b = document.createElement('button');
-      b.className = 'tech-btn' + (doneSteps[id] ? ' is-done' : '');
-      b.dataset.step = id;
+      var st = zoneState[z];
+      b.className = 'zone-tab' +
+        (z === zone ? ' is-sel' : '') +
+        (st ? ' is-' + st : '');
+      b.dataset.zone = z;
       b.innerHTML =
-        '<span class="tb-label">' + GT.escapeHtml(st.label) + '</span>' +
-        '<span class="tb-meta">' + st.min + ' min' +
-          (st.costo ? ' · $' + money(st.costo) : '') + '</span>';
-      b.addEventListener('click', function () { doStep(id, b); });
-
-      box.querySelector('#grp-' + st.g + ' .tech-btns').appendChild(b);
+        '<i class="zt-dot"></i>' +
+        '<span class="zt-name">' + ZONE_LABEL[z] + '</span>' +
+        '<span class="zt-n">' + doneInZone(z) + '/' + stepsOf(z).length + '</span>';
+      b.addEventListener('click', function () { selectZone(z); });
+      nav.appendChild(b);
     });
+  }
 
-    document.getElementById('tech-test').addEventListener('click', testEquipment);
+  /** Pasos de esta orden que corresponden a una zona. */
+  function stepsOf(z) {
+    return cur.pasos.filter(function (id) { return STEPS[id] && STEPS[id].parte === z; });
+  }
+
+  function doneInZone(z) {
+    return stepsOf(z).filter(function (id) { return doneSteps[id]; }).length;
+  }
+
+  /** Selecciona una zona, venga del dibujo o de la lista. */
+  function selectZone(z) {
+    /* Durante el cierre de la orden, tocar una pieza es señalarla. */
+    if (phase === 'diagnostico' && pickedPart === null) { answerPart(z); return; }
+    if (phase !== 'trabajo' || testing) return;
+    if (!z || zones.indexOf(z) === -1) return;
+
+    zone = z;
+    GT.bench.select(GT.bench.has(z) ? z : null);
+    GT.audio.click();
+    renderZones();
+    renderTray();
+  }
+
+  /* ============================================================
+     Bandeja de herramientas de la pieza elegida
+     ============================================================ */
+  function renderTray() {
+    var box = document.getElementById('tech-tray');
+    if (!box) return;
+
+    if (!zone) { box.innerHTML = ''; return; }
+
+    var list = stepsOf(zone);
+    var insp = list.filter(function (id) { return STEPS[id].g === 'inspeccion'; });
+    var acts = list.filter(function (id) { return STEPS[id].g === 'accion'; });
+
+    var html =
+      '<div class="tray-head">' +
+        '<b>' + ZONE_LABEL[zone] + '</b>' +
+        '<span>' + trayNote() + '</span>' +
+      '</div>';
+
+    html += group('INSPECCIÓN', '(mirar no cuesta plata)', insp);
+    html += group('ACCIONES', '(algunas cuestan repuestos)', acts);
+    box.innerHTML = html;
+
+    var btns = box.querySelectorAll('.tech-btn');
+    for (var i = 0; i < btns.length; i++) {
+      (function (b) {
+        b.addEventListener('click', function () { doStep(b.dataset.step, b); });
+      })(btns[i]);
+    }
+  }
+
+  function group(title, sub, ids) {
+    if (!ids.length) return '';
+    var html = '<div class="tech-group"><h4>' + title + ' <small>' + sub + '</small></h4><div class="tech-btns">';
+    ids.forEach(function (id) {
+      var st = STEPS[id];
+      var locked = st.req && !doneSteps[st.req];
+      html +=
+        '<button class="tech-btn' + (doneSteps[id] ? ' is-done' : '') + (locked ? ' is-locked' : '') +
+          '" data-step="' + id + '">' +
+          '<span class="tb-label">' + GT.escapeHtml(st.label) + '</span>' +
+          '<span class="tb-meta">' + st.min + ' min' +
+            (st.costo ? ' · $' + money(st.costo) : '') +
+            (locked ? ' · requiere: ' + GT.escapeHtml(STEPS[st.req].label.toLowerCase()) : '') +
+          '</span>' +
+        '</button>';
+    });
+    return html + '</div></div>';
+  }
+
+  /** Aviso corto arriba de la bandeja, según en qué está el equipo. */
+  function trayNote() {
+    if (zone === 'cliente') return 'preguntas al cliente, antes de tocar el equipo';
+    if (zone === 'software') return 'el equipo prendido, del lado del sistema';
+    if (!GT.bench.isOpen() && insideZone(zone)) return 'hay que abrir el gabinete para llegar acá';
+    var st = zoneState[zone];
+    if (st === 'bad') return 'falla detectada en esta pieza';
+    if (st === 'fixed') return 'pieza reparada';
+    if (st === 'ok') return 'revisada, sin novedad';
+    return 'sin revisar';
+  }
+
+  function insideZone(z) {
+    return ['fuente', 'placa', 'ram', 'cooler', 'gpu', 'disco'].indexOf(z) !== -1;
   }
 
   function money(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
@@ -622,14 +717,13 @@
     log.scrollTop = log.scrollHeight;
   }
 
-  function markPart(part, cls) {
+  /** Marca el estado de una pieza: queda pintado en el dibujo y en la lista. */
+  function markPart(part, st) {
     if (!part) return;
-    var g = document.querySelector('#tech-pc .pc-part[data-part="' + part + '"]');
-    if (!g) return;
-    g.classList.remove('is-checked', 'is-bad', 'is-fixed');
-    g.classList.add(cls);
-    g.classList.add('is-hit');
-    setTimeout(function () { g.classList.remove('is-hit'); }, 700);
+    zoneState[part] = st;
+    GT.bench.setStatus(part, st);
+    renderZones();
+    renderTray();
   }
 
   function refreshSymptom() {
@@ -642,7 +736,9 @@
      ============================================================ */
   function doStep(id, btn) {
     if (phase !== 'trabajo' || GT.state.finished) return;
+    if (testing) { GT.ui.toast('Esperá que termine la prueba', 'warn'); return; }
     var st = STEPS[id];
+    if (!st) return;
 
     /* Requisito previo (abrir el gabinete, por ejemplo) */
     if (st.req && !doneSteps[st.req]) {
@@ -667,6 +763,8 @@
     if (st.g === 'inspeccion') inspect(id, st);
     else act(id, st);
 
+    renderZones();
+    renderTray();
     renderHud();
   }
 
@@ -678,14 +776,14 @@
 
     if (esFalla) {
       found[st.detecta] = true;
-      markPart(st.parte, 'is-bad');
+      markPart(st.parte, 'bad');
       logLine('⚠ ' + st.mal, 'bad');
       logLine('Encontraste algo. Ahora hay que resolverlo, no cambiarlo por las dudas.', 'dim');
       GT.audio.alarm();
       GT.addScore(60, 'falla detectada');
       GT.ui.flash('gain');
     } else {
-      markPart(st.parte, 'is-checked');
+      markPart(st.parte, 'ok');
       logLine('✓ ' + (st.ok || 'Sin novedades.'), 'ok');
       GT.audio.click();
       GT.addScore(4, 'descarte correcto');
@@ -699,6 +797,16 @@
 
     if (st.costo) {
       GT.state.techCost = (GT.state.techCost || 0) + st.costo;
+    }
+
+    /* Abrir el gabinete no repara nada, pero destapa el equipo:
+       hasta que no pasa esto, el interior no se puede tocar. */
+    if (id === 'abrir') {
+      GT.bench.setOpen(true);
+      logLine('✔ ' + st.hecho, 'ok');
+      GT.audio.open();
+      if (insideZone(zone)) GT.bench.select(zone);
+      return;
     }
 
     var arregla = st.arregla && cur.fallas.indexOf(st.arregla) !== -1 && !fixed[st.arregla];
@@ -719,7 +827,7 @@
 
     if (arregla) {
       fixed[st.arregla] = true;
-      markPart(st.parte, 'is-fixed');
+      markPart(st.parte, 'fixed');
       logLine('✔ ' + st.hecho, 'ok');
       GT.audio.ok();
 
@@ -755,43 +863,120 @@
   /* ============================================================
      Probar el equipo
      ============================================================ */
+  /* El botón de encendido: se aprieta, el equipo intenta arrancar y el
+     monitor muestra lo que mostraría en el taller. Mientras la pantalla
+     corre no se puede tocar nada, igual que en la vida real: primero se
+     mira qué hace el equipo, después se decide. */
   function testEquipment() {
-    if (phase !== 'trabajo' || GT.state.finished) return;
+    if (phase !== 'trabajo' || GT.state.finished || testing) return;
 
     caseMinutes += 2;
     GT.state.techMinutes = (GT.state.techMinutes || 0) + 2;
-    logLine('<b>› Probar el equipo</b> <i>(2 min)</i>', 'step');
+    logLine('<b>› Encender y probar el equipo</b> <i>(2 min)</i>', 'step');
 
-    if (pendingFaults() > 0) {
-      logLine('✘ ' + currentSymptom(), 'bad');
-      logLine('Todavía falla. Seguí buscando.', 'dim');
-      GT.audio.error();
-      GT.ui.shake();
-      renderHud();
-      return;
-    }
+    var falla = firstPending();
+    var kind = falla ? (FAULT_SCREEN[falla] || 'sin_senal') : 'ok';
 
-    logLine('✔ ' + cur.exito, 'ok');
-    GT.audio.levelUp();
-    GT.ui.flash('gain');
-    markPart(null);
-    phase = 'diagnostico';
-    renderDiagnosis();
+    testing = true;
+    setHint('Prueba en curso: mirá el monitor.');
+    renderTray();
     renderHud();
+
+    GT.bench.screenTest(kind, function () {
+      testing = false;
+
+      if (falla) {
+        logLine('✘ ' + currentSymptom(), 'bad');
+        logLine('La pantalla te lo está diciendo. Seguí buscando por ahí.', 'dim');
+        GT.audio.error();
+        GT.ui.shake();
+        setHint('El equipo sigue fallando. Mirá lo que quedó en el monitor.');
+        renderTray();
+        renderHud();
+        return;
+      }
+
+      logLine('✔ ' + cur.exito, 'ok');
+      GT.audio.levelUp();
+      GT.ui.flash('gain');
+      setHint('El equipo arrancó. Ahora hay que cerrar la orden.');
+      phase = 'diagnostico';
+      renderDiagnosis();
+      renderHud();
+    });
+  }
+
+  /** Primera falla sin resolver: es la que manda en la pantalla. */
+  function firstPending() {
+    for (var i = 0; i < cur.fallas.length; i++) {
+      if (!fixed[cur.fallas[i]]) return cur.fallas[i];
+    }
+    return null;
+  }
+
+  function setHint(txt) {
+    var el = document.getElementById('tech-rig-hint');
+    if (el) el.textContent = txt;
   }
 
   /* ============================================================
      Cierre de la orden: explicar la falla
      ============================================================ */
+  /* El cierre tiene dos pasos y el primero se hace SOBRE EL EQUIPO:
+     el técnico tiene que poder señalar la pieza que falló, no sólo
+     elegir una opción de una lista. */
   function renderDiagnosis() {
+    document.getElementById('tech-tray').innerHTML = '';
+    GT.bench.setPickMode(true);
+
+    document.getElementById('tech-actions').innerHTML =
+      '<div class="tech-diag">' +
+        '<h4>CERRAR LA ORDEN · PASO 1</h4>' +
+        '<p class="td-lead">El equipo anda. Antes de asentar nada en la ficha, ' +
+          '<b>señalá en el equipo la pieza que falló</b>: tocala en el gabinete ' +
+          'o elegila en la lista de piezas.</p>' +
+        '<p class="td-q">¿Dónde estaba la falla?</p>' +
+      '</div>';
+
+    setHint('Señalá la pieza que falló.');
+  }
+
+  /** Respuesta al paso 1: la pieza señalada sobre el equipo. */
+  function answerPart(z) {
+    if (phase !== 'diagnostico' || pickedPart !== null) return;
+
+    pickedPart = z;
+    pickOk = (z === cur.pieza);
+    GT.bench.setPickMode(false);
+    GT.bench.select(z);
+
+    if (pickOk) {
+      GT.addScore(120, 'pieza señalada correctamente');
+      GT.audio.ok();
+      logLine('✔ Señalaste ' + ZONE_LABEL[z] + ': era esa.', 'ok');
+    } else {
+      GT.addScore(-60, 'pieza mal señalada');
+      GT.audio.error();
+      logLine('✘ Señalaste ' + ZONE_LABEL[z] + ', y la falla no estaba ahí.', 'bad');
+    }
+
+    renderZones();
+    renderCause();
+  }
+
+  /** Paso 2: la causa, como se asienta en la ficha de servicio. */
+  function renderCause() {
     var d = cur.diagnostico;
     var box = document.getElementById('tech-actions');
 
     var html =
       '<div class="tech-diag">' +
-        '<h4>CERRAR LA ORDEN</h4>' +
-        '<p class="td-lead">El equipo anda. Antes de entregarlo, dejá asentado en la ficha ' +
-          'qué era lo que fallaba.</p>' +
+        '<h4>CERRAR LA ORDEN · PASO 2</h4>' +
+        '<p class="td-lead">' +
+          (pickOk
+            ? 'Bien señalada: <b>' + ZONE_LABEL[pickedPart] + '</b>. '
+            : 'Señalaste <b>' + ZONE_LABEL[pickedPart] + '</b>, que no era. ') +
+          'Ahora dejá asentado en la ficha qué era lo que fallaba.</p>' +
         '<p class="td-q">' + d.pregunta + '</p>' +
         '<div class="td-opts">';
     d.opciones.forEach(function (o, i) {
@@ -859,6 +1044,10 @@
     } else {
       resumen.push(wasted + ' acción(es) que no resolvían nada.');
     }
+
+    resumen.push(pickOk
+      ? 'Señalaste bien la pieza sobre el equipo (+120).'
+      : 'Señalaste mal la pieza sobre el equipo (−60).');
 
     if (dataLost) resumen.push('Los datos del cliente se perdieron. Eso no se recupera con un descuento.');
 

@@ -158,12 +158,16 @@
         <article class="doc-card">
           <h3>8. Modo Servicio Técnico</h3>
           <p>El otro modo de juego. Sos el técnico del taller: te entran equipos rotos y tenés
-             que descubrir por qué fallan.</p>
+             que descubrir por qué fallan. El equipo está sobre el banco, con el
+             <b>gabinete</b> a la izquierda y un <b>monitor de prueba</b> a la derecha.</p>
           <ul class="cmd-list">
+            <li><b>Tocá una pieza</b> del equipo y se abren las herramientas de esa pieza</li>
+            <li><b>Abrí el gabinete</b>: con la tapa puesta no se puede tocar el interior</li>
             <li><b>Inspeccionar</b> es gratis pero consume minutos de taller</li>
             <li><b>Actuar</b> sobre lo que encontraste: reconectar, reasentar, limpiar, cambiar</li>
-            <li><b>Probar</b> el equipo: si sigue fallando, cambia el síntoma</li>
-            <li><b>Cerrar la orden</b> explicando cuál era la falla</li>
+            <li><b>Encender y probar</b>: el monitor muestra lo que mostraría el equipo de verdad
+                (POST, pitidos, código de error, arranque, apagón). El síntoma se <i>lee</i> de ahí</li>
+            <li><b>Cerrar la orden</b>: señalás en el equipo la pieza que falló y asentás la causa</li>
           </ul>
           <p>Cambiar una pieza sana te cuesta plata y <b>reputación</b>. Si la reputación llega
              a 0%, se termina la partida.</p>
@@ -323,7 +327,26 @@
       <aside class="tech-col" id="tech-ticket"></aside>
 
       <section class="tech-col" id="tech-bench">
-        <div id="tech-pc"></div>
+
+        <!-- El equipo sobre la mesa: lo dibuja p5.js (js/bench.js).
+             El gabinete y el monitor de prueba son el tablero del modo:
+             se hace click sobre la pieza que se quiere trabajar. -->
+        <div class="bench-rig">
+          <div id="tech-rig"></div>
+          <div class="rig-bar">
+            <button class="rig-power" id="tech-power">⏻ ENCENDER Y PROBAR EL EQUIPO</button>
+            <span class="rig-hint" id="tech-rig-hint">Tocá una pieza del equipo para trabajar sobre ella.</span>
+          </div>
+        </div>
+
+        <!-- Zonas del equipo: las mismas piezas del dibujo, en lista,
+             para poder llegar a todas sin depender del mouse. -->
+        <nav class="zone-tabs" id="tech-zones"></nav>
+
+        <!-- Herramientas de la pieza seleccionada -->
+        <div id="tech-tray"></div>
+
+        <!-- Cierre de la orden (ficha de servicio) -->
         <div id="tech-actions"></div>
       </section>
 
@@ -394,6 +417,7 @@
 <script src="js/hacker.js"></script>
 <script src="js/levels.js"></script>
 <script src="js/boss.js"></script>
+<script src="js/bench.js"></script>
 <script src="js/tech.js"></script>
 <script src="js/api.js"></script>
 <script src="js/game.js"></script>

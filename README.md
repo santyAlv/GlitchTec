@@ -87,11 +87,18 @@ marco del sistema con otro color: parecen del sistema, pero no lo son.
 
 ### Modo 2 — Servicio Técnico
 
-1. Leé la **orden de trabajo**: lo que dice el cliente y el síntoma real del equipo.
-2. **Inspeccioná** (gratis, pero consume minutos de taller) hasta encontrar la falla.
-3. **Actuá** sobre lo que encontraste. Ojo: cambiar una pieza sana cuesta plata y reputación.
-4. **Probá el equipo**. Si sigue fallando, el síntoma cambia y hay que seguir buscando.
-5. **Cerrá la orden** explicando cuál era la falla.
+El equipo está sobre el banco: a la izquierda el **gabinete** y a la derecha un
+**monitor de prueba**, los dos dibujados con p5.js (`js/bench.js`).
+
+1. Leé la **orden de trabajo**: lo que dice el cliente.
+2. **Encendé el equipo**. El monitor muestra lo que mostraría de verdad —POST, pitidos,
+   código de error, arranque, apagón o *sin señal*— y de ahí se lee el síntoma.
+3. **Tocá la pieza** que querés trabajar (en el gabinete o en la lista) y se abren sus
+   herramientas. Con la tapa puesta no se llega al interior: primero hay que abrirlo.
+4. **Inspeccioná** (gratis, pero consume minutos de taller) hasta encontrar la falla.
+5. **Actuá** sobre lo que encontraste. Ojo: cambiar una pieza sana cuesta plata y reputación.
+6. **Probá de nuevo**: si sigue fallando, la pantalla cambia y hay que seguir buscando.
+7. **Cerrá la orden**: señalás sobre el equipo la pieza que falló y asentás la causa en la ficha.
 
 Las cuatro órdenes: *no enciende* (alimentación) · *enciende sin imagen* (RAM mal asentada) ·
 *se apaga sola* (polvo + pasta térmica) · *lentísima y se cuelga* (disco moribundo: **respaldo primero**).
@@ -193,6 +200,7 @@ glitch-tec/
 │   ├── mail.js             # TEC-Mail (phishing)
 │   ├── boss.js             # Nivel final (purge)
 │   ├── hacker.js           # GL1TCH-M4N: paseo, bloqueo de teclas, colores
+│   ├── bench.js            # Sketch p5: banco de trabajo (gabinete + monitor de prueba)
 │   ├── tech.js             # Modo Servicio Técnico (4 órdenes de trabajo)
 │   ├── api.js              # Cliente PHP / fallback local
 │   └── ...
