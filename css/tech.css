@@ -166,14 +166,114 @@
   background: #060b10;
   box-shadow: var(--bevel-in);
 }
-#tech-rig { display: block; line-height: 0; }
+
+/* El canvas 3D y, encima, la capa de carteles en HTML. */
+#tech-rig { position: relative; display: block; line-height: 0; }
 #tech-rig canvas { display: block; width: 100%; height: auto; }
+
+.rig-labels { position: absolute; inset: 0; pointer-events: none; }
+
+/* Cartel de una pieza: cuelga del punto proyectado del canvas */
+.rig-tag {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  white-space: nowrap;
+  padding: 2px 7px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .5px;
+  color: #d4e4de;
+  background: rgba(6, 11, 14, .92);
+  box-shadow: 0 0 0 1px rgba(170, 190, 186, .5);
+}
+.rig-tag.is-sel   { box-shadow: 0 0 0 1px #fff; }
+.rig-tag.is-ok    { color: #9adcff; box-shadow: 0 0 0 1px #4fd2ff; }
+.rig-tag.is-bad   { color: #ffb4c0; box-shadow: 0 0 0 1px #ff3b52; }
+.rig-tag.is-fixed { color: #a8f5c6; box-shadow: 0 0 0 1px #2bf07a; }
+
+/* Qué tenés en la mano y avisos grandes */
+.rig-tool {
+  position: absolute;
+  left: 8px; top: 8px;
+  padding: 3px 9px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 1px;
+  color: #16180a;
+  background: #ffc63c;
+}
+.rig-banner {
+  position: absolute;
+  left: 50%; bottom: 8px;
+  transform: translateX(-50%);
+  padding: 4px 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #16180a;
+  background: #ffc63c;
+}
 
 .rig-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
+  flex-wrap: wrap;
   padding: 6px 4px 2px;
+}
+
+/* Girar el equipo y elegir desde dónde mirarlo */
+.rig-turn {
+  padding: 7px 12px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--ink);
+  background: var(--face);
+  box-shadow: var(--bevel-out);
+}
+.rig-turn:hover { background: #cbcfcb; }
+.rig-turn:active { box-shadow: var(--bevel-press); }
+
+.rig-views { display: flex; gap: 2px; margin-left: auto; }
+.view-btn {
+  padding: 6px 9px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--ink);
+  background: var(--face);
+  box-shadow: var(--bevel-out);
+}
+.view-btn:hover { background: #cbcfcb; }
+.view-btn.is-sel { background: #b5b9b5; box-shadow: var(--bevel-in); }
+
+/* Herramientas: las mismas que están sobre la mesa en 3D */
+.rig-tools {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+  padding: 2px 4px 6px;
+}
+.rig-tools .tool-lead {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: #6f8a86;
+  margin-right: 4px;
+}
+.tool-btn {
+  padding: 5px 9px;
+  font-size: 10px;
+  letter-spacing: .5px;
+  color: var(--ink);
+  background: var(--face);
+  box-shadow: var(--bevel-out);
+}
+.tool-btn:hover { background: #cbcfcb; }
+.tool-btn.is-held {
+  color: #16180a;
+  background: #ffc63c;
+  box-shadow: var(--bevel-in);
+  font-weight: bold;
 }
 
 /* El botón de encendido también está en el gabinete dibujado; este es
@@ -192,8 +292,8 @@
 .rig-power:active { box-shadow: var(--bevel-press); }
 
 .rig-hint {
-  flex: 1;
-  min-width: 0;
+  display: block;
+  margin: 0 4px 2px;
   padding: 4px 8px;
   font-family: var(--mono);
   font-size: 10.5px;
@@ -463,6 +563,6 @@
 /* En pantallas chicas el equipo no se achica hasta volverse ilegible:
    se deja un ancho mínimo y la mesa se corre de costado. */
 @media (max-width: 620px) {
-  .bench-rig { overflow-x: auto; }
-  #tech-rig { min-width: 520px; }
+  .rig-views { margin-left: 0; }
+  .rig-power, .rig-turn { flex: 1; }
 }

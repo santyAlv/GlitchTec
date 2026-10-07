@@ -40,25 +40,25 @@
 
     /* ---------------- Inspección: alimentación ---------------- */
     ver_cable: {
-      g: 'inspeccion', label: 'Revisar el cable de alimentación', min: 2, parte: 'cable',
+      lado: 'atras', g: 'inspeccion', label: 'Revisar el cable de alimentación', min: 2, parte: 'cable',
       detecta: 'cable',
       ok: 'El cable está firme en los dos extremos, sin cortes ni marcas de calor.',
       mal: 'El conector está flojo en la parte de atrás del gabinete: se sale con sólo rozarlo.'
     },
     ver_toma: {
-      g: 'inspeccion', label: 'Probar el tomacorriente con otro equipo', min: 3, parte: 'cable',
+      lado: 'atras', tool: 'tester', g: 'inspeccion', label: 'Probar el tomacorriente con otro equipo', min: 3, parte: 'cable',
       detecta: 'toma',
       ok: 'El toma da corriente: la lámpara de prueba enciende.',
       mal: 'El toma no da tensión. El problema no está en la PC, está en la instalación.'
     },
     ver_switch: {
-      g: 'inspeccion', label: 'Mirar el interruptor trasero de la fuente', min: 1, parte: 'fuente',
+      lado: 'atras', g: 'inspeccion', label: 'Mirar el interruptor trasero de la fuente', min: 1, parte: 'fuente',
       detecta: 'switch',
       ok: 'El interruptor de la fuente está en I (encendido).',
       mal: 'El interruptor de la fuente está en 0. Alguien lo movió al limpiar.'
     },
     ver_fuente: {
-      g: 'inspeccion', label: 'Probar la fuente (puente del conector 24 pines)', min: 8, parte: 'fuente',
+      tool: 'tester', g: 'inspeccion', label: 'Probar la fuente (puente del conector 24 pines)', min: 8, parte: 'fuente',
       req: 'abrir', detecta: 'fuente',
       ok: 'Puenteada, la fuente arranca y el ventilador gira: entrega tensión.',
       mal: 'Puenteada no arranca: el ventilador no gira y huele a componente quemado. Fuente muerta.'
@@ -72,7 +72,7 @@
 
     /* ---------------- Inspección: video / POST ---------------- */
     ver_cable_video: {
-      g: 'inspeccion', label: 'Revisar el cable de video y el monitor', min: 3, parte: 'monitor',
+      lado: 'atras', g: 'inspeccion', label: 'Revisar el cable de video y el monitor', min: 3, parte: 'monitor',
       detecta: 'video',
       ok: 'El cable HDMI está bien puesto y el monitor enciende con su cartel de "sin señal".',
       mal: 'El cable de video está enchufado al puerto de la placa madre y no al de la placa de video.'
@@ -102,7 +102,7 @@
       ok: 'Aporta el dato clave: falla cuando lleva un rato usándola, nunca al principio.'
     },
     medir_temp: {
-      g: 'inspeccion', label: 'Medir temperaturas con carga', min: 6, parte: 'cooler',
+      tool: 'tester', g: 'inspeccion', label: 'Medir temperaturas con carga', min: 6, parte: 'cooler',
       detecta: 'pasta',
       ok: 'El CPU se estabiliza en 58 °C bajo carga. Temperatura normal.',
       mal: 'El CPU trepa a 97 °C en menos de dos minutos y el sistema se apaga solo.'
@@ -140,18 +140,18 @@
 
     /* ---------------- Acciones: gratis ---------------- */
     abrir: {
-      g: 'accion', label: 'Abrir el gabinete', min: 3, parte: 'placa', costo: 0,
+      tool: 'destornillador', g: 'accion', label: 'Abrir el gabinete', min: 3, parte: 'placa', costo: 0,
       hecho: 'Sacás la tapa lateral. Ahora podés revisar el interior del equipo.',
       nada: 'El gabinete ya está abierto.'
     },
     reconectar_cable: {
-      g: 'accion', label: 'Reconectar y asegurar el cable de alimentación', min: 1, parte: 'cable',
+      lado: 'atras', g: 'accion', label: 'Reconectar y asegurar el cable de alimentación', min: 1, parte: 'cable',
       costo: 0, arregla: 'cable',
       hecho: 'Calzás el conector a fondo hasta el tope. Ahora no se mueve.',
       nada: 'El cable ya estaba bien puesto: no cambió nada.'
     },
     prender_switch: {
-      g: 'accion', label: 'Poner el interruptor de la fuente en I', min: 1, parte: 'fuente',
+      lado: 'atras', g: 'accion', label: 'Poner el interruptor de la fuente en I', min: 1, parte: 'fuente',
       costo: 0, arregla: 'switch',
       hecho: 'Pasás el interruptor trasero de 0 a I.',
       nada: 'El interruptor ya estaba en I.'
@@ -175,25 +175,25 @@
       nada: 'La placa de video ya estaba bien puesta.'
     },
     pasar_video: {
-      g: 'accion', label: 'Pasar el cable de video a la placa de video', min: 1, parte: 'monitor',
+      lado: 'atras', g: 'accion', label: 'Pasar el cable de video a la placa de video', min: 1, parte: 'monitor',
       costo: 0, arregla: 'video',
       hecho: 'Movés el cable del puerto de la placa madre al de la placa de video.',
       nada: 'El cable de video ya estaba en el puerto correcto.'
     },
     limpiar_polvo: {
-      g: 'accion', label: 'Limpiar el polvo del disipador y los ventiladores', min: 12, parte: 'cooler',
+      tool: 'aire', g: 'accion', label: 'Limpiar el polvo del disipador y los ventiladores', min: 12, parte: 'cooler',
       req: 'abrir', costo: 0, arregla: 'polvo',
       hecho: 'Aire comprimido y pincel: el disipador vuelve a dejar pasar el aire.',
       nada: 'Estaba limpio: perdiste el tiempo.'
     },
     cambiar_pasta: {
-      g: 'accion', label: 'Cambiar la pasta térmica del procesador', min: 15, parte: 'cooler',
+      tool: 'pasta', g: 'accion', label: 'Cambiar la pasta térmica del procesador', min: 15, parte: 'cooler',
       req: 'abrir', costo: 1500, arregla: 'pasta',
       hecho: 'Retirás el disipador, limpiás con alcohol isopropílico y ponés pasta nueva.',
       nada: 'La pasta estaba en buen estado: gastaste sin necesidad.'
     },
     respaldar: {
-      g: 'accion', label: 'Respaldar los datos del cliente', min: 20, parte: 'disco',
+      tool: 'respaldo', g: 'accion', label: 'Respaldar los datos del cliente', min: 20, parte: 'disco',
       costo: 0, arregla: 'respaldo',
       hecho: 'Clonás lo que se puede leer a un disco externo antes de tocar nada más.',
       nada: 'Ya tenías el respaldo hecho.'
@@ -201,13 +201,13 @@
 
     /* ---------------- Acciones: repuestos (cuestan plata) ---------------- */
     cambiar_cable: {
-      g: 'accion', label: 'Cambiar el cable de alimentación', min: 2, parte: 'cable',
+      lado: 'atras', g: 'accion', label: 'Cambiar el cable de alimentación', min: 2, parte: 'cable',
       costo: 2500, arregla: 'cable',
       hecho: 'Ponés un cable nuevo.',
       nada: 'El cable viejo estaba perfecto: cambiaste una pieza sana.'
     },
     cambiar_fuente: {
-      g: 'accion', label: 'Cambiar la fuente de alimentación', min: 20, parte: 'fuente',
+      tool: 'destornillador', g: 'accion', label: 'Cambiar la fuente de alimentación', min: 20, parte: 'fuente',
       req: 'abrir', costo: 42000, arregla: 'fuente',
       hecho: 'Montás una fuente nueva y recableás el equipo.',
       nada: 'La fuente vieja andaba bien: cambiaste una pieza sana y cara.'
@@ -219,7 +219,7 @@
       nada: 'La memoria estaba sana, sólo mal puesta: cambiaste una pieza que funcionaba.'
     },
     cambiar_gpu: {
-      g: 'accion', label: 'Cambiar la placa de video', min: 15, parte: 'gpu',
+      tool: 'destornillador', g: 'accion', label: 'Cambiar la placa de video', min: 15, parte: 'gpu',
       req: 'abrir', costo: 120000, arregla: 'gpu_rota',
       hecho: 'Montás otra placa de video.',
       nada: 'La placa de video andaba bien: tiraste el presupuesto del cliente a la basura.'
@@ -231,7 +231,7 @@
       nada: 'El monitor andaba: el problema nunca estuvo ahí.'
     },
     cambiar_disco: {
-      g: 'accion', label: 'Cambiar el disco por un SSD', min: 25, parte: 'disco',
+      tool: 'destornillador', g: 'accion', label: 'Cambiar el disco por un SSD', min: 25, parte: 'disco',
       req: 'abrir', costo: 55000, arregla: 'disco', exige: 'respaldo',
       exigeTexto: 'Cambiaste el disco SIN respaldar. Los datos del cliente se fueron con el disco viejo: ' +
                   'diez años de fotos y la contabilidad del negocio. El equipo anda; el cliente no vuelve nunca más.',
@@ -396,7 +396,7 @@
   /* ============================================================
      Zonas de trabajo
      Cada paso del catálogo pertenece a una zona. Las zonas físicas
-     son las piezas que dibuja el banco (js/bench.js) y se tocan
+     son las piezas que dibuja el banco 3D (js/bench3d.js) y se tocan
      directamente sobre el equipo; las otras dos no están en el
      gabinete: el cliente y el software del equipo.
      ============================================================ */
@@ -482,12 +482,24 @@
     GT.bench.mount('tech-rig');
     GT.bench.onSelect = selectZone;
     GT.bench.onPower = testEquipment;
+    GT.bench.onTool = function () { renderTools(); renderTray(); };
 
-    var pw = document.getElementById('tech-power');
-    if (pw && !pw.dataset.bound) {
-      pw.dataset.bound = '1';
-      pw.addEventListener('click', testEquipment);
-    }
+    bindOnce('tech-power', testEquipment);
+    bindOnce('tech-turn', function () {
+      var atras = GT.bench.turn();
+      GT.audio.open();
+      setHint(atras
+        ? 'Gabinete girado: tenés los conectores de atrás.'
+        : 'Gabinete de frente otra vez.');
+      renderTray();
+    });
+
+    /* Vistas de la cámara: el jugador no camina, se acerca. */
+    ['general', 'gabinete', 'interior', 'monitor'].forEach(function (v) {
+      bindOnce('tech-view-' + v, function () { GT.bench.look(v); renderViews(v); });
+    });
+
+    renderTools();
 
     loadCase(0);
   };
@@ -521,6 +533,9 @@
     });
     zone = zones[0] || null;
     GT.bench.select(zone);
+    GT.bench.look('general');
+    renderViews('general');
+    renderTools();
 
     GT.state.level = i + 1;
 
@@ -656,14 +671,23 @@
     var html = '<div class="tech-group"><h4>' + title + ' <small>' + sub + '</small></h4><div class="tech-btns">';
     ids.forEach(function (id) {
       var st = STEPS[id];
-      var locked = st.req && !doneSteps[st.req];
+      var tool = st.tool || 'mano';
+      var faltaTool = (tool !== 'mano' && GT.bench.held() !== tool);
+      var faltaLado = (st.lado === 'atras' && !GT.bench.facingBack());
+      var locked = (st.req && !doneSteps[st.req]) || faltaTool || faltaLado;
+
+      var pide = '';
+      if (faltaTool) pide = ' · necesita ' + GT.bench.toolName(tool).toLowerCase();
+      else if (faltaLado) pide = ' · girá el gabinete';
+      else if (st.req && !doneSteps[st.req]) pide = ' · requiere: ' + STEPS[st.req].label.toLowerCase();
+      else if (tool !== 'mano') pide = ' · con ' + GT.bench.toolName(tool).toLowerCase();
+
       html +=
         '<button class="tech-btn' + (doneSteps[id] ? ' is-done' : '') + (locked ? ' is-locked' : '') +
           '" data-step="' + id + '">' +
           '<span class="tb-label">' + GT.escapeHtml(st.label) + '</span>' +
           '<span class="tb-meta">' + st.min + ' min' +
-            (st.costo ? ' · $' + money(st.costo) : '') +
-            (locked ? ' · requiere: ' + GT.escapeHtml(STEPS[st.req].label.toLowerCase()) : '') +
+            (st.costo ? ' · $' + money(st.costo) : '') + GT.escapeHtml(pide) +
           '</span>' +
         '</button>';
     });
@@ -740,6 +764,25 @@
     var st = STEPS[id];
     if (!st) return;
 
+    /* La herramienta que hace falta tiene que estar en la mano:
+       la tapa no sale sin destornillador y el polvo no se va soplando. */
+    var tool = st.tool || 'mano';
+    if (tool !== 'mano' && GT.bench.held() !== tool) {
+      GT.audio.error();
+      logLine('✋ Para eso necesitás: ' + GT.bench.toolName(tool) + '. Está sobre la mesa.', 'warn');
+      GT.ui.toast('Agarrá ' + GT.bench.toolName(tool).toLowerCase(), 'warn');
+      return;
+    }
+
+    /* Lo que está atrás del gabinete se trabaja desde atrás: hay que
+       girar el equipo, igual que en el banco. */
+    if (st.lado === 'atras' && !GT.bench.facingBack()) {
+      GT.audio.error();
+      logLine('✋ Eso está en la parte de atrás. Girá el gabinete.', 'warn');
+      GT.ui.toast('Girá el gabinete para llegar atrás', 'warn');
+      return;
+    }
+
     /* Requisito previo (abrir el gabinete, por ejemplo) */
     if (st.req && !doneSteps[st.req]) {
       GT.audio.error();
@@ -805,9 +848,13 @@
       GT.bench.setOpen(true);
       logLine('✔ ' + st.hecho, 'ok');
       GT.audio.open();
+      renderViews('interior');
       if (insideZone(zone)) GT.bench.select(zone);
       return;
     }
+
+    /* Lo que se hace con las manos se ve en el equipo */
+    sceneEffect(id, st);
 
     var arregla = st.arregla && cur.fallas.indexOf(st.arregla) !== -1 && !fixed[st.arregla];
 
@@ -858,6 +905,21 @@
       GT.audio.error();
     }
     refreshSymptom();
+  }
+
+  /** Efecto de la acción sobre la escena 3D: la pieza sale del zócalo,
+      el polvo se va, la ficha del monitor cambia de puerto. */
+  function sceneEffect(id, st) {
+    if (id === 'limpiar_polvo') GT.bench.cleanDust();
+    if (id === 'pasar_video') GT.bench.plugVideoToGpu();
+
+    var sale = {
+      reasentar_ram: 'ram', cambiar_ram: 'ram',
+      reasentar_gpu: 'gpu', cambiar_gpu: 'gpu',
+      cambiar_disco: 'disco', cambiar_fuente: 'fuente',
+      cambiar_pasta: 'cooler'
+    };
+    if (sale[id]) GT.bench.pullPart(sale[id]);
   }
 
   /* ============================================================
@@ -917,6 +979,48 @@
   function setHint(txt) {
     var el = document.getElementById('tech-rig-hint');
     if (el) el.textContent = txt;
+  }
+
+  function bindOnce(id, fn) {
+    var el = document.getElementById(id);
+    if (!el || el.dataset.bound) return;
+    el.dataset.bound = '1';
+    el.addEventListener('click', fn);
+  }
+
+  /* ============================================================
+     Herramientas de la mesa
+     Son las mismas que están sobre el escritorio en 3D: esto es la
+     otra forma de agarrarlas, para teclado y pantallas chicas.
+     ============================================================ */
+  function renderTools() {
+    var box = document.getElementById('tech-tools');
+    if (!box) return;
+
+    var held = GT.bench.held();
+    var html = '<span class="tool-lead">HERRAMIENTAS</span>';
+
+    html += '<button class="tool-btn' + (held === 'mano' ? ' is-held' : '') +
+            '" data-tool="mano">MANO</button>';
+    GT.bench.tools().forEach(function (t) {
+      html += '<button class="tool-btn' + (held === t.id ? ' is-held' : '') +
+              '" data-tool="' + t.id + '">' + t.label + '</button>';
+    });
+    box.innerHTML = html;
+
+    var btns = box.querySelectorAll('.tool-btn');
+    for (var i = 0; i < btns.length; i++) {
+      (function (b) {
+        b.addEventListener('click', function () { GT.bench.hold(b.dataset.tool); GT.audio.click(); });
+      })(btns[i]);
+    }
+  }
+
+  function renderViews(active) {
+    ['general', 'gabinete', 'interior', 'monitor'].forEach(function (v) {
+      var el = document.getElementById('tech-view-' + v);
+      if (el) el.className = 'view-btn' + (v === active ? ' is-sel' : '');
+    });
   }
 
   /* ============================================================

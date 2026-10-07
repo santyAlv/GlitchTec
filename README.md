@@ -87,18 +87,25 @@ marco del sistema con otro color: parecen del sistema, pero no lo son.
 
 ### Modo 2 — Servicio Técnico
 
-El equipo está sobre el banco: a la izquierda el **gabinete** y a la derecha un
-**monitor de prueba**, los dos dibujados con p5.js (`js/bench.js`).
+Es un **escritorio en 3D** hecho con p5.js en WEBGL (`js/bench3d.js`): el equipo del
+cliente, el monitor de prueba y las herramientas sobre la mesa. La cámara no camina,
+sólo se acerca a lo que estás trabajando (banco · gabinete · interior · monitor).
 
 1. Leé la **orden de trabajo**: lo que dice el cliente.
 2. **Encendé el equipo**. El monitor muestra lo que mostraría de verdad —POST, pitidos,
    código de error, arranque, apagón o *sin señal*— y de ahí se lee el síntoma.
-3. **Tocá la pieza** que querés trabajar (en el gabinete o en la lista) y se abren sus
-   herramientas. Con la tapa puesta no se llega al interior: primero hay que abrirlo.
-4. **Inspeccioná** (gratis, pero consume minutos de taller) hasta encontrar la falla.
-5. **Actuá** sobre lo que encontraste. Ojo: cambiar una pieza sana cuesta plata y reputación.
-6. **Probá de nuevo**: si sigue fallando, la pantalla cambia y hay que seguir buscando.
-7. **Cerrá la orden**: señalás sobre el equipo la pieza que falló y asentás la causa en la ficha.
+3. **Agarrá la herramienta** que haga falta: destornillador para la tapa y los tornillos,
+   aire comprimido para el polvo, pasta térmica, tester y disco de respaldo.
+4. **Sacá la tapa** y **girá el gabinete** (arrastrándolo) para llegar a los conectores
+   de atrás: ficha de corriente, interruptor de la fuente y los dos puertos de video.
+5. **Tocá la pieza** que querés trabajar y se abre lo que podés hacerle.
+6. **Inspeccioná** (gratis, pero consume minutos de taller) hasta encontrar la falla.
+7. **Actuá** sobre lo que encontraste. Ojo: cambiar una pieza sana cuesta plata y reputación.
+8. **Probá de nuevo**: si sigue fallando, la pantalla cambia y hay que seguir buscando.
+9. **Cerrá la orden**: señalás sobre el equipo la pieza que falló y asentás la causa en la ficha.
+
+Las piezas se ven: la tapa queda apoyada en la mesa, la RAM sale del zócalo, el polvo
+tapa el disipador hasta que lo soplás y el cable de video se ve pasar de un puerto al otro.
 
 Las cuatro órdenes: *no enciende* (alimentación) · *enciende sin imagen* (RAM mal asentada) ·
 *se apaga sola* (polvo + pasta térmica) · *lentísima y se cuelga* (disco moribundo: **respaldo primero**).
@@ -200,7 +207,7 @@ glitch-tec/
 │   ├── mail.js             # TEC-Mail (phishing)
 │   ├── boss.js             # Nivel final (purge)
 │   ├── hacker.js           # GL1TCH-M4N: paseo, bloqueo de teclas, colores
-│   ├── bench.js            # Sketch p5: banco de trabajo (gabinete + monitor de prueba)
+│   ├── bench3d.js          # Sketch p5 WEBGL: escritorio 3D (gabinete, monitor, herramientas)
 │   ├── tech.js             # Modo Servicio Técnico (4 órdenes de trabajo)
 │   ├── api.js              # Cliente PHP / fallback local
 │   └── ...

@@ -158,13 +158,17 @@
         <article class="doc-card">
           <h3>8. Modo Servicio Técnico</h3>
           <p>El otro modo de juego. Sos el técnico del taller: te entran equipos rotos y tenés
-             que descubrir por qué fallan. El equipo está sobre el banco, con el
-             <b>gabinete</b> a la izquierda y un <b>monitor de prueba</b> a la derecha.</p>
+             que descubrir por qué fallan. Estás sentado frente a un <b>escritorio en 3D</b>
+             con el equipo del cliente, un <b>monitor de prueba</b> y las
+             <b>herramientas sobre la mesa</b>.</p>
           <ul class="cmd-list">
-            <li><b>Tocá una pieza</b> del equipo y se abren las herramientas de esa pieza</li>
-            <li><b>Abrí el gabinete</b>: con la tapa puesta no se puede tocar el interior</li>
+            <li><b>Agarrá una herramienta</b> (destornillador, aire comprimido, pasta térmica,
+                tester, disco de respaldo). Sin la herramienta correcta no se puede hacer el trabajo</li>
+            <li><b>Sacá la tapa</b> con el destornillador: con la tapa puesta no se toca el interior</li>
+            <li><b>Girá el gabinete</b> (arrastrándolo o con el botón) para llegar a los
+                conectores de atrás: la ficha de corriente, el interruptor y los puertos de video</li>
+            <li><b>Tocá una pieza</b> del equipo y se abren las cosas que podés hacerle</li>
             <li><b>Inspeccionar</b> es gratis pero consume minutos de taller</li>
-            <li><b>Actuar</b> sobre lo que encontraste: reconectar, reasentar, limpiar, cambiar</li>
             <li><b>Encender y probar</b>: el monitor muestra lo que mostraría el equipo de verdad
                 (POST, pitidos, código de error, arranque, apagón). El síntoma se <i>lee</i> de ahí</li>
             <li><b>Cerrar la orden</b>: señalás en el equipo la pieza que falló y asentás la causa</li>
@@ -328,15 +332,28 @@
 
       <section class="tech-col" id="tech-bench">
 
-        <!-- El equipo sobre la mesa: lo dibuja p5.js (js/bench.js).
-             El gabinete y el monitor de prueba son el tablero del modo:
-             se hace click sobre la pieza que se quiere trabajar. -->
+        <!-- El escritorio del taller en 3D: lo dibuja p5.js en WEBGL
+             (js/bench3d.js). El gabinete, el monitor y las herramientas
+             sobre la mesa son el tablero del modo: se agarra una
+             herramienta, se gira el equipo y se trabaja encima. -->
         <div class="bench-rig">
           <div id="tech-rig"></div>
+
           <div class="rig-bar">
-            <button class="rig-power" id="tech-power">⏻ ENCENDER Y PROBAR EL EQUIPO</button>
-            <span class="rig-hint" id="tech-rig-hint">Tocá una pieza del equipo para trabajar sobre ella.</span>
+            <button class="rig-power" id="tech-power">⏻ ENCENDER Y PROBAR</button>
+            <button class="rig-turn" id="tech-turn">⟲ GIRAR EL GABINETE</button>
+            <span class="rig-views">
+              <button class="view-btn is-sel" id="tech-view-general">BANCO</button>
+              <button class="view-btn" id="tech-view-gabinete">GABINETE</button>
+              <button class="view-btn" id="tech-view-interior">INTERIOR</button>
+              <button class="view-btn" id="tech-view-monitor">MONITOR</button>
+            </span>
           </div>
+
+          <!-- Las mismas herramientas que están sobre la mesa -->
+          <div class="rig-tools" id="tech-tools"></div>
+
+          <span class="rig-hint" id="tech-rig-hint">Agarrá una herramienta y tocá la pieza del equipo. El gabinete se puede girar arrastrándolo.</span>
         </div>
 
         <!-- Zonas del equipo: las mismas piezas del dibujo, en lista,
@@ -417,7 +434,7 @@
 <script src="js/hacker.js"></script>
 <script src="js/levels.js"></script>
 <script src="js/boss.js"></script>
-<script src="js/bench.js"></script>
+<script src="js/bench3d.js"></script>
 <script src="js/tech.js"></script>
 <script src="js/api.js"></script>
 <script src="js/game.js"></script>
