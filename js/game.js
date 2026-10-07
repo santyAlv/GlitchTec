@@ -49,7 +49,7 @@
     { t: '  Multímetro ............. OK', c: 'ok', d: 200 },
     { t: '', d: 80 },
     { t: 'Sincronizando órdenes de trabajo pendientes...', d: 460 },
-    { t: '  4 equipos esperando en el mostrador', c: 'warn', d: 420 },
+    { t: '  7 equipos esperando en el mostrador', c: 'warn', d: 420 },
     { t: '', d: 100 },
     { t: 'Técnico de turno: vos. Buena suerte.', c: 'ok', d: 640 },
     { t: '', d: 200 }
@@ -388,7 +388,7 @@
     document.querySelector('#screen-win .doc-title-win').textContent =
       tecnico ? '// TODOS LOS EQUIPOS ENTREGADOS' : '// SISTEMA RESTAURADO';
     document.querySelector('#screen-win .win-lead').textContent = tecnico
-      ? 'Cerraste las cuatro órdenes. Cuatro clientes se van con su equipo andando.'
+      ? 'Cerraste las siete órdenes. Siete clientes se van con su equipo andando.'
       : 'El proceso hostil fue eliminado. Tu PC vuelve a ser tuya.';
 
     document.getElementById('win-stats').innerHTML =

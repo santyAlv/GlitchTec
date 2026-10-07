@@ -130,11 +130,12 @@
 
   /* Herramientas sobre la mesa. Se agarran con un click. */
   var TOOLS = [
-    { id: 'destornillador', x: -236, label: 'DESTORNILLADOR', col: [196,  84,  52] },
-    { id: 'aire',           x: -126, label: 'AIRE COMPRIMIDO', col: [ 70, 150, 190] },
-    { id: 'pasta',          x:  -16, label: 'PASTA TÉRMICA',   col: [205, 205, 210] },
-    { id: 'tester',         x:   94, label: 'TESTER',          col: [220, 170,  40] },
-    { id: 'respaldo',       x:  204, label: 'DISCO DE RESPALDO', col: [120, 190, 130] }
+    { id: 'destornillador', x: -262, label: 'DESTORNILLADOR',       col: [196,  84,  52] },
+    { id: 'aire',           x: -158, label: 'AIRE COMPRIMIDO',      col: [ 70, 150, 190] },
+    { id: 'alcohol',        x:  -54, label: 'ALCOHOL ISOPROPÍLICO', col: [150, 196, 210] },
+    { id: 'pasta',          x:   50, label: 'PASTA TÉRMICA',        col: [205, 205, 210] },
+    { id: 'tester',         x:  154, label: 'TESTER',               col: [220, 170,  40] },
+    { id: 'respaldo',       x:  258, label: 'DISCO DE RESPALDO',    col: [120, 190, 130] }
   ];
 
   var TOOL_NAME = {};
@@ -167,7 +168,9 @@
   var status = {};          // zona -> 'ok' | 'bad' | 'fixed'
   var anim = {};            // pieza -> 0..1 (sale y vuelve del zócalo)
   var hover = null, selected = null, held = 'mano';
-  var dust = true;          // polvo en el disipador
+  var dust = false;         // polvo tapando el disipador y los filtros
+  var sulfato = false;      // sulfato en la placa y en los contactos de la RAM
+  var wet = false;          // marcas de humedad en el fondo del gabinete
   var videoOnGpu = false;   // dónde está enchufada la ficha del monitor
   var pickMode = false;
   var fansOn = false, ledOn = false;
@@ -318,7 +321,8 @@
     status = {}; anim = {};
     hover = null; selected = null; held = 'mano';
     yaw = 0; yawTarget = 0; panel = 0; panelTarget = 0;
-    dust = true; videoOnGpu = false; pickMode = false;
+    dust = false; sulfato = false; wet = false;
+    videoOnGpu = false; pickMode = false;
     fansOn = false; ledOn = false;
     seq = null;
     view = 'general';
@@ -362,7 +366,14 @@
   bench.facingBack = function () { return yawTarget === 90; };
 
   /** Efectos de las acciones del taller sobre la escena. */
+  /* El equipo que entra al taller no siempre viene igual: la orden de
+     trabajo decide si hay polvo, sulfato o humedad adentro. */
+  bench.setDust = function (v) { dust = !!v; };
+  bench.setSulfato = function (v) { sulfato = !!v; };
+  bench.setWet = function (v) { wet = !!v; };
   bench.cleanDust = function () { dust = false; };
+  bench.cleanSulfato = function () { sulfato = false; };
+  bench.dryOut = function () { wet = false; };
   bench.plugVideoToGpu = function () { videoOnGpu = true; };
   bench.pullPart = function (id) { anim[id] = 1; };     // sale del zócalo y vuelve
 
@@ -433,6 +444,12 @@
         p.box(30, 54, 30);
         p.push(); p.translate(0, -36, 0); mat(p, 150, 160, 170);
         p.box(8, 24, 8); p.pop();
+      } else if (t.id === 'alcohol') {
+        p.box(34, 56, 34);                       // frasco
+        p.push(); p.translate(0, -38, 0); mat(p, 90, 110, 120);
+        p.box(16, 22, 16); p.pop();              // tapa
+        p.push(); p.translate(26, -10, 0); mat(p, 170, 150, 100);
+        p.box(10, 54, 10); p.pop();              // pincel
       } else if (t.id === 'pasta') {
         p.box(16, 18, 76);
       } else if (t.id === 'tester') {
@@ -487,6 +504,14 @@
     p.translate(-110, 190, 60); p.box(50, 14, 50); p.pop();
     p.push(); mat(p, 26, 32, 38);
     p.translate(110, 190, 60); p.box(50, 14, 50); p.pop();
+
+    /* Humedad: marcas de agua secas en el fondo del gabinete */
+    if (wet) {
+      p.push(); mat(p, 64, 72, 54);
+      p.translate(40, 172, -10); p.box(160, 6, 110); p.pop();
+      p.push(); mat(p, 72, 80, 60);
+      p.translate(-90, 172, 30); p.box(70, 6, 60); p.pop();
+    }
 
     drawPsu(p);
     drawBoard(p);
@@ -562,6 +587,14 @@
     /* Zócalos y chips sueltos, para que se lea como una placa */
     p.push(); p.translate(-70, -80, 8); mat(p, 20, 52, 40); p.box(70, 50, 6); p.pop();
     p.push(); p.translate(90, 96, 8); mat(p, 20, 52, 40); p.box(60, 20, 6); p.pop();
+
+    /* Sulfato: la costra verdosa que deja la humedad sobre el cobre */
+    if (sulfato) {
+      mat(p, 168, 198, 160);
+      p.push(); p.translate(-40, 110, 8); p.box(120, 16, 7); p.pop();
+      p.push(); p.translate(60, 70, 8); p.box(40, 24, 7); p.pop();
+      p.push(); p.translate(-96, 20, 8); p.box(26, 44, 7); p.pop();
+    }
     p.pop();
   }
 
@@ -598,6 +631,13 @@
     matFor(p, 'ram', [92, 66, 132]);
     p.push(); p.translate(-16, 0, 0); p.box(20, 116, 14); p.pop();
     p.push(); p.translate(16, 0, 0); p.box(20, 116, 14); p.pop();
+
+    /* Los contactos sulfatados: por ahí no pasa la señal */
+    if (sulfato) {
+      mat(p, 176, 204, 168);
+      p.push(); p.translate(-16, 54, 0); p.box(22, 14, 16); p.pop();
+      p.push(); p.translate(16, 54, 0); p.box(22, 14, 16); p.pop();
+    }
     p.pop();
   }
 

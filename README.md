@@ -105,10 +105,24 @@ sólo se acerca a lo que estás trabajando (banco · gabinete · interior · mon
 9. **Cerrá la orden**: señalás sobre el equipo la pieza que falló y asentás la causa en la ficha.
 
 Las piezas se ven: la tapa queda apoyada en la mesa, la RAM sale del zócalo, el polvo
-tapa el disipador hasta que lo soplás y el cable de video se ve pasar de un puerto al otro.
+tapa el disipador hasta que lo soplás, el sulfato deja su verdín sobre las pistas y el cable
+de video se ve pasar de un puerto al otro. Cada orden trae el equipo como lo dejó el cliente:
+con polvo, con sulfato o con humedad adentro.
 
-Las cuatro órdenes: *no enciende* (alimentación) · *enciende sin imagen* (RAM mal asentada) ·
-*se apaga sola* (polvo + pasta térmica) · *lentísima y se cuelga* (disco moribundo: **respaldo primero**).
+### Las siete órdenes de trabajo
+
+| # | Orden | Qué enseña |
+|---|-------|------------|
+| 1 | No enciende | Alimentación: revisar de afuera hacia adentro y de lo barato a lo caro |
+| 2 | Enciende pero no da imagen | El POST y su código de pitidos; RAM mal asentada |
+| 3 | Se apaga sola | Protección térmica: polvo en el disipador **y** pasta térmica vencida |
+| 4 | Lentísima y se cuelga | Disco moribundo (SMART): **respaldo antes de tocar nada** |
+| 5 | Estuvo guardada en un depósito húmedo | Humedad y **sulfatación**: secar primero, limpiar el verdín con alcohol isopropílico, no cambiar la pieza |
+| 6 | Hace ruido y se apaga | La ventilación como **circuito**: filtros tapados y ventilador trabado |
+| 7 | Se apaga cuando la exigen | **Pasta térmica seca** en un equipo limpio: mantenimiento preventivo cada 2 o 3 años |
+
+Las tres últimas son mantenimiento preventivo y correctivo: polvo, humedad y pasta térmica,
+que es por donde entra la mayoría de las fallas reales de un equipo de escritorio.
 
 ---
 
@@ -208,7 +222,7 @@ glitch-tec/
 │   ├── boss.js             # Nivel final (purge)
 │   ├── hacker.js           # GL1TCH-M4N: paseo, bloqueo de teclas, colores
 │   ├── bench3d.js          # Sketch p5 WEBGL: escritorio 3D (gabinete, monitor, herramientas)
-│   ├── tech.js             # Modo Servicio Técnico (4 órdenes de trabajo)
+│   ├── tech.js             # Modo Servicio Técnico (7 órdenes de trabajo)
 │   ├── api.js              # Cliente PHP / fallback local
 │   └── ...
 ├── api/                    # Endpoints PHP
@@ -268,7 +282,7 @@ git push -u origin main
 
 Implementado: selección de modo, escritorio WinTEC 95, Terminal, Explorador, pop-ups del malware,
 Administrador de tareas, TEC-Mail, purga final, **hacker con bloqueo de teclas y corrupción de
-colores**, **modo Servicio Técnico con 4 órdenes de trabajo**, puntuación/integridad/tiempo,
+colores**, **modo Servicio Técnico con 7 órdenes de trabajo**, puntuación/integridad/tiempo,
 p5.js, API PHP y esquema MySQL.
 
 Pendiente (post-alfa): módulos avanzados de ransomware/spyware, más narrativa, más órdenes de

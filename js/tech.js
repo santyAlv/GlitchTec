@@ -133,6 +133,54 @@
       ok: 'Sólo se oye el zumbido normal del plato girando.',
       mal: 'Hace un clic seco cada pocos segundos: el cabezal está reintentando lecturas.'
     },
+    /* ---------------- Inspección: humedad y sulfatación ---------------- */
+    ver_humedad: {
+      g: 'inspeccion', label: 'Revisar si el equipo entró con humedad', min: 3, parte: 'placa',
+      detecta: 'humedad',
+      ok: 'El interior está seco: ni marcas de agua ni condensación en el fondo.',
+      mal: 'El fondo del gabinete tiene marcas de agua secas y el interior está húmedo al tacto. ' +
+           'Este equipo estuvo mojado: no se enciende así.'
+    },
+    ver_sulfato: {
+      g: 'inspeccion', label: 'Revisar la placa buscando sulfato y óxido', min: 6, parte: 'placa',
+      req: 'abrir', detecta: 'sulfato',
+      ok: 'La placa está limpia: el cobre de las pistas se ve brillante, sin verdín.',
+      mal: 'Hay una costra verdosa sobre las pistas y los tornillos están oxidados. Eso es sulfato.'
+    },
+    ver_contactos_ram: {
+      g: 'inspeccion', label: 'Sacar la memoria y mirarle los contactos', min: 4, parte: 'ram',
+      req: 'abrir', detecta: 'sulfato_ram',
+      ok: 'Los contactos dorados del módulo están limpios y parejos.',
+      mal: 'Los contactos del módulo están cubiertos de verdín: por ahí no pasa la señal.'
+    },
+    medir_continuidad: {
+      tool: 'tester', g: 'inspeccion', label: 'Medir continuidad en las líneas de alimentación',
+      min: 7, parte: 'placa', req: 'abrir',
+      ok: 'Las líneas de 12 V y 5 V están limpias: no hay cortocircuito en la placa.'
+    },
+
+    /* ---------------- Inspección: ventilación ---------------- */
+    ver_filtros: {
+      g: 'inspeccion', label: 'Revisar los filtros y las entradas de aire', min: 3, parte: 'boton',
+      detecta: 'filtro',
+      ok: 'Los filtros del frente están limpios y el aire entra sin problema.',
+      mal: 'Los filtros del frente son una manta de pelusa. Apoyada contra la pared y sobre ' +
+           'alfombra, la máquina no tiene de dónde tomar aire.'
+    },
+    medir_rpm: {
+      tool: 'tester', g: 'inspeccion', label: 'Medir las vueltas del ventilador del disipador',
+      min: 4, parte: 'cooler', req: 'abrir', detecta: 'vent_trabado',
+      ok: 'El ventilador gira a 1.800 vueltas, parejo y sin ruido.',
+      mal: 'El ventilador arranca a los tirones y no pasa de 400 vueltas: el rodamiento está trabado.'
+    },
+    ver_pasta: {
+      tool: 'destornillador', g: 'inspeccion', label: 'Sacar el disipador y mirar la pasta térmica',
+      min: 5, parte: 'cooler', req: 'abrir', detecta: 'pasta',
+      ok: 'La pasta está fresca y bien distribuida sobre el procesador.',
+      mal: 'La pasta está seca y cuarteada, como barro viejo: se despega sola y ya no transmite ' +
+           'el calor al disipador.'
+    },
+
     ver_malware: {
       g: 'inspeccion', label: 'Escanear el equipo en busca de malware', min: 9, parte: 'software',
       ok: 'El análisis termina limpio: no hay malware. La lentitud es de hardware.'
@@ -192,6 +240,40 @@
       hecho: 'Retirás el disipador, limpiás con alcohol isopropílico y ponés pasta nueva.',
       nada: 'La pasta estaba en buen estado: gastaste sin necesidad.'
     },
+    /* ---------------- Acciones: mantenimiento correctivo ---------------- */
+    secar_equipo: {
+      tool: 'aire', g: 'accion', label: 'Secar el equipo y dejarlo ventilar', min: 45, parte: 'placa',
+      req: 'abrir', costo: 0, arregla: 'humedad',
+      hecho: 'Soplás la humedad, dejás el equipo abierto ventilando y recién después lo tocás. ' +
+             'Encenderlo mojado lo hubiera quemado.',
+      nada: 'El equipo ya estaba seco: perdiste tres cuartos de hora.'
+    },
+    limpiar_sulfato: {
+      tool: 'alcohol', g: 'accion', label: 'Limpiar el sulfato de la placa con alcohol isopropílico',
+      min: 18, parte: 'placa', req: 'abrir', costo: 0, arregla: 'sulfato',
+      hecho: 'Pincel y alcohol isopropílico: levanta el verdín y se evapora sin dejar agua.',
+      nada: 'No había sulfato que limpiar.'
+    },
+    limpiar_contactos_ram: {
+      tool: 'alcohol', g: 'accion', label: 'Limpiar los contactos de la memoria con alcohol',
+      min: 8, parte: 'ram', req: 'abrir', costo: 0, arregla: 'sulfato_ram',
+      hecho: 'Frotás los contactos con alcohol isopropílico hasta que vuelve a verse el dorado, ' +
+             'y recién ahí la calzás de nuevo.',
+      nada: 'Los contactos ya estaban limpios.'
+    },
+    limpiar_filtros: {
+      tool: 'aire', g: 'accion', label: 'Limpiar los filtros y las entradas de aire', min: 8,
+      parte: 'boton', costo: 0, arregla: 'filtro',
+      hecho: 'Sacás los filtros, les das aire y los volvés a poner. El frente vuelve a respirar.',
+      nada: 'Los filtros ya estaban limpios.'
+    },
+    cambiar_vent: {
+      tool: 'destornillador', g: 'accion', label: 'Cambiar el ventilador del disipador', min: 12,
+      parte: 'cooler', req: 'abrir', costo: 9000, arregla: 'vent_trabado',
+      hecho: 'Montás un ventilador nuevo en el disipador: vuelve a girar parejo.',
+      nada: 'El ventilador andaba bien: cambiaste una pieza sana.'
+    },
+
     respaldar: {
       tool: 'respaldo', g: 'accion', label: 'Respaldar los datos del cliente', min: 20, parte: 'disco',
       costo: 0, arregla: 'respaldo',
@@ -388,6 +470,132 @@
                 'antes de cualquier maniobra. El hardware se compra; diez años de contabilidad, no.'
       },
       leccion: 'Ante un disco moribundo: respaldo primero, reparación después. Los datos no tienen repuesto.'
+    },
+
+    /* ---------------- CASO 5 ---------------- */
+    {
+      id: 'c5',
+      titulo: 'Estuvo guardada en un depósito húmedo',
+      cliente: 'Cooperativa del barrio — PC del depósito',
+      equipo: 'WinTEC Tower 2000, guardada todo el invierno',
+      relato: '"La bajamos del depósito después del invierno. Ahí abajo entra agua cuando llueve ' +
+              'fuerte. La enchufamos y no hace absolutamente nada."',
+      antecedente: 'Antecedente: el equipo estuvo meses en un depósito que se llueve. ' +
+                   'Ojo: encender un equipo húmedo lo termina de arruinar.',
+      presupuesto: 85,
+      fallas: ['humedad', 'sulfato_ram'],
+      pieza: 'ram',
+      sintomas: {
+        humedad: 'No da señales de vida. El interior está húmedo al tacto y el fondo tiene ' +
+                 'marcas de agua secas.',
+        sulfato_ram: 'Ya seco, enciende y los ventiladores giran, pero la pantalla queda negra ' +
+                     'y suena un pitido largo y dos cortos.'
+      },
+      exito: 'Con los contactos limpios el POST pasa de una, sin pitidos de error, y arranca el sistema.',
+      pasos: ['ver_humedad', 'ver_cable', 'abrir', 'ver_sulfato', 'ver_contactos_ram',
+              'medir_continuidad', 'ver_fuente', 'secar_equipo', 'limpiar_sulfato',
+              'limpiar_contactos_ram', 'reasentar_ram', 'cambiar_ram', 'cambiar_fuente'],
+      diagnostico: {
+        pregunta: '¿Por qué no arrancaba el equipo de la cooperativa?',
+        opciones: [
+          'La fuente se quemó por la humedad',
+          'La humedad dejó sulfato en los contactos de la memoria y cortó el contacto',
+          'La memoria se quemó y había que cambiarla',
+          'El cable de alimentación estaba flojo'
+        ],
+        correcta: 1,
+        porque: 'La humedad rara vez quema algo de entrada: lo que hace es <b>oxidar los contactos</b>. ' +
+                'Ese verdín es <b>sulfato</b>, y donde se forma deja de pasar la señal, por eso el ' +
+                'POST frenaba en memoria. El orden del trabajo tampoco es libre: primero se <b>seca</b> ' +
+                'el equipo (encenderlo mojado sí lo quema), después se limpia el sulfato con ' +
+                '<b>alcohol isopropílico</b>, que se evapora sin dejar agua ni residuo. La memoria ' +
+                'estaba sana: no había nada que comprar.'
+      },
+      leccion: 'Equipo con humedad: secar primero y nunca encenderlo mojado. El sulfato se limpia ' +
+               'con alcohol isopropílico; la pieza no se cambia.'
+    },
+
+    /* ---------------- CASO 6 ---------------- */
+    {
+      id: 'c6',
+      titulo: 'Hace ruido y se apaga',
+      cliente: 'Lucas — PC de la sala de estudio',
+      equipo: 'WinTEC Tower 3000, en el piso contra la pared y sobre alfombra',
+      relato: '"Hace un ruido como de aspiradora y después de un rato se apaga sola. ' +
+              'La tengo en el piso, pegada a la pared, abajo del escritorio."',
+      antecedente: 'Antecedente: nunca se le hizo mantenimiento y está apoyada sobre alfombra, ' +
+                   'contra la pared. Mirá por dónde entra y por dónde sale el aire.',
+      presupuesto: 50,
+      fallas: ['filtro', 'vent_trabado'],
+      pieza: 'cooler',
+      sintomas: {
+        filtro: 'Arranca, se escucha un zumbido fuerte y a los diez minutos se apaga sola.',
+        vent_trabado: 'Con los filtros limpios aguanta más, pero el ventilador del disipador ' +
+                      'apenas gira y el equipo se vuelve a apagar.'
+      },
+      exito: 'Media hora de prueba con carga: el ventilador gira parejo a 1.800 vueltas, el CPU se ' +
+             'queda en 58 °C y no se apaga más.',
+      pasos: ['preguntar', 'medir_temp', 'ver_filtros', 'abrir', 'ver_disipador', 'medir_rpm',
+              'ver_pasta', 'limpiar_filtros', 'limpiar_polvo', 'cambiar_vent', 'cambiar_pasta',
+              'cambiar_fuente'],
+      diagnostico: {
+        pregunta: '¿Por qué se apagaba sola la PC de la sala de estudio?',
+        opciones: [
+          'El sistema operativo estaba corrupto',
+          'La fuente no daba abasto',
+          'No entraba aire: filtros tapados y el ventilador del disipador trabado',
+          'La memoria tenía errores'
+        ],
+        correcta: 2,
+        porque: 'Se apagaba por <b>protección térmica</b>, y la refrigeración es un <b>circuito ' +
+                'completo</b>: entra aire por el frente, pasa por el disipador y sale por atrás. ' +
+                'Con los filtros tapados no entra nada, y con el ventilador del disipador trabado ' +
+                'el calor del procesador no se va a ningún lado. Soplarle aire a un ventilador ' +
+                'trabado no lo arregla: el rodamiento ya se fue y hay que cambiarlo. Y el lugar ' +
+                'también cuenta: contra la pared y sobre alfombra, el equipo respira su propio aire caliente.'
+      },
+      leccion: 'La ventilación es un circuito: entrada, disipador y salida. Filtro tapado o ' +
+               'ventilador trabado terminan igual, en apagado por temperatura.'
+    },
+
+    /* ---------------- CASO 7 ---------------- */
+    {
+      id: 'c7',
+      titulo: 'Se apaga cuando la exigen',
+      cliente: 'Belén — edición de video',
+      equipo: 'WinTEC Tower 4000, 5 años de uso, impecable por fuera',
+      relato: '"La mandé a limpiar hace dos semanas y sigue igual: abro el programa de video, ' +
+              'laburo diez minutos y se apaga. Si navego nomás, anda bárbaro."',
+      antecedente: 'Antecedente: limpieza hecha hace dos semanas, sin polvo. Cinco años de uso ' +
+                   'y nunca se le tocó la pasta térmica.',
+      presupuesto: 40,
+      fallas: ['pasta'],
+      pieza: 'cooler',
+      sintomas: {
+        pasta: 'En reposo anda bien. Con carga el CPU trepa a 97 °C en dos minutos y el equipo se apaga.'
+      },
+      exito: 'Con pasta nueva el CPU se estabiliza en 62 °C exportando video media hora. No se apaga más.',
+      pasos: ['preguntar', 'medir_temp', 'ver_disipador', 'abrir', 'ver_pasta', 'medir_rpm',
+              'ver_carga', 'limpiar_polvo', 'cambiar_pasta', 'cambiar_vent', 'cambiar_fuente',
+              'reinstalar_so'],
+      diagnostico: {
+        pregunta: 'El equipo estaba limpio y el ventilador giraba bien. ¿Por qué se apagaba con carga?',
+        opciones: [
+          'La pasta térmica estaba seca y ya no llevaba el calor al disipador',
+          'Le faltaba memoria RAM para editar video',
+          'La fuente estaba débil',
+          'El programa de video tenía un virus'
+        ],
+        correcta: 0,
+        porque: 'Un equipo <b>limpio</b> y con el ventilador girando igual se apaga por temperatura: ' +
+                'entre el procesador y el disipador va una capa de <b>pasta térmica</b> que con los ' +
+                'años se seca y se cuartea. Seca no transmite: el disipador puede estar impecable y ' +
+                'frío mientras el procesador se cocina. Por eso falla <b>sólo con carga</b>, cuando ' +
+                'el CPU genera calor de verdad. Se saca el disipador, se limpia con alcohol ' +
+                'isopropílico y se pone pasta nueva: es mantenimiento preventivo, cada dos o tres años.'
+      },
+      leccion: 'Limpiar el polvo no alcanza: la pasta térmica se seca y cambiarla es mantenimiento ' +
+               'preventivo, cada dos o tres años, no cuando el equipo ya se apaga.'
     }
   ];
 
@@ -437,7 +645,14 @@
     pasta:    'apagon',
     respaldo: 'lenta',
     disco:    'lenta',
-    so:       'lenta'
+    so:       'lenta',
+
+    /* Mantenimiento: humedad, sulfatación y ventilación */
+    humedad:     'muerta',
+    sulfato:     'lenta',
+    sulfato_ram: 'post_ram',
+    filtro:      'apagon',
+    vent_trabado: 'apagon'
   };
 
   /* ============================================================
@@ -527,6 +742,12 @@
     /* Equipo nuevo sobre el banco: cerrado, apagado y sin marcas. */
     GT.bench.reset();
 
+    /* Cada orden trae su suciedad: lo que se ve adentro del gabinete
+       depende de las fallas que tenga este equipo. */
+    GT.bench.setDust(tiene('polvo') || tiene('filtro'));
+    GT.bench.setSulfato(tiene('sulfato') || tiene('sulfato_ram'));
+    GT.bench.setWet(tiene('humedad'));
+
     /* Zonas que esta orden pone en juego, en orden de recorrido */
     zones = ZONE_ORDER.filter(function (z) {
       return cur.pasos.some(function (id) { return STEPS[id] && STEPS[id].parte === z; });
@@ -546,10 +767,14 @@
     logLine('── ORDEN ' + pad3(i + 1) + ' · ' + cur.titulo.toUpperCase() + ' ──', 'head');
     logLine('Cliente: ' + cur.cliente, 'dim');
     logLine('Síntoma declarado: ' + currentSymptom(), 'sym');
+    if (cur.antecedente) logLine(cur.antecedente, 'warn');
     logLine('Empezá inspeccionando. Cada revisión consume minutos de taller.', 'dim');
   }
 
   function pad3(n) { return (n < 100 ? '0' : '') + (n < 10 ? '0' : '') + n; }
+
+  /** ¿Esta orden tiene tal falla? */
+  function tiene(falla) { return cur && cur.fallas.indexOf(falla) !== -1; }
 
   /** Síntoma que muestra el equipo según la primera falla pendiente. */
   function currentSymptom() {
@@ -803,6 +1028,9 @@
     GT.state.techMinutes = (GT.state.techMinutes || 0) + st.min;
     if (btn) btn.classList.add('is-done');
 
+    /* Sacar el disipador para mirarle la pasta también se ve en el equipo */
+    if (id === 'ver_pasta') GT.bench.pullPart('cooler');
+
     if (st.g === 'inspeccion') inspect(id, st);
     else act(id, st);
 
@@ -910,14 +1138,16 @@
   /** Efecto de la acción sobre la escena 3D: la pieza sale del zócalo,
       el polvo se va, la ficha del monitor cambia de puerto. */
   function sceneEffect(id, st) {
-    if (id === 'limpiar_polvo') GT.bench.cleanDust();
+    if (id === 'limpiar_polvo' || id === 'limpiar_filtros') GT.bench.cleanDust();
+    if (id === 'limpiar_sulfato' || id === 'limpiar_contactos_ram') GT.bench.cleanSulfato();
+    if (id === 'secar_equipo') GT.bench.dryOut();
     if (id === 'pasar_video') GT.bench.plugVideoToGpu();
 
     var sale = {
-      reasentar_ram: 'ram', cambiar_ram: 'ram',
+      reasentar_ram: 'ram', cambiar_ram: 'ram', limpiar_contactos_ram: 'ram',
       reasentar_gpu: 'gpu', cambiar_gpu: 'gpu',
       cambiar_disco: 'disco', cambiar_fuente: 'fuente',
-      cambiar_pasta: 'cooler'
+      cambiar_pasta: 'cooler', cambiar_vent: 'cooler'
     };
     if (sale[id]) GT.bench.pullPart(sale[id]);
   }
