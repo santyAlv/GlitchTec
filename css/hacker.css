@@ -4,6 +4,9 @@
    La capa vive a nivel de #crt (no dentro de #screen-desktop)
    para que el filtro de colores NO la afecte: el cartel y el
    panel de rescate tienen que seguir siendo legibles.
+
+   Todo lo que el hacker abre imita el chrome del sistema, pero
+   mal: el marco es el mismo, el color no.
    ============================================================ */
 
 #hacker-layer {
@@ -23,6 +26,7 @@
   transition: left .95s cubic-bezier(.36,1.4,.5,1), top .95s cubic-bezier(.36,1.4,.5,1);
   animation: hkFloat 3.4s ease-in-out infinite;
   filter: drop-shadow(0 0 14px rgba(178,107,255,.55));
+  image-rendering: pixelated;
 }
 .hk-fig.no-anim { transition: none; }
 .hk-fig .hk-svg { width: 100%; height: 100%; display: block; }
@@ -64,24 +68,23 @@
   94%, 98%      { opacity: .15; }
 }
 
-.hk-fig:hover { filter: drop-shadow(0 0 20px rgba(53,255,122,.75)); }
+.hk-fig:hover { filter: drop-shadow(0 0 20px rgba(43,240,122,.75)); }
 
 /* ---------------- Globo de amenaza ---------------- */
+/* Un globo de ayuda del sistema, pero podrido */
 .hk-bubble {
   position: absolute;
   transform: translateX(-50%);
   max-width: 260px;
-  padding: 8px 13px;
+  padding: 7px 11px;
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 11.5px;
   line-height: 1.45;
-  color: #f2e6ff;
-  background: rgba(28, 6, 48, .96);
-  border: 1px solid var(--violet);
-  border-radius: 3px;
-  box-shadow: 0 6px 26px rgba(0,0,0,.7), 0 0 22px rgba(178,107,255,.28);
+  color: #2b0a48;
+  background: #ffffdc;
+  box-shadow: var(--bevel-thin-out), 2px 2px 0 rgba(0,0,0,.5);
   text-align: center;
-  animation: hkBubbleIn .18s ease;
+  animation: hkBubbleIn .12s steps(2);
   pointer-events: none;
 }
 .hk-bubble::after {
@@ -91,9 +94,9 @@
   bottom: -7px;
   transform: translateX(-50%);
   border: 7px solid transparent;
-  border-top-color: var(--violet);
+  border-top-color: #ffffdc;
 }
-@keyframes hkBubbleIn { from { opacity: 0; transform: translate(-50%, 8px); } }
+@keyframes hkBubbleIn { from { opacity: 0; transform: translate(-50%, 6px); } }
 
 /* ============================================================
    Panel de rescate del teclado
@@ -110,7 +113,7 @@
 }
 @keyframes hkFade { from { opacity: 0; } }
 
-.hk-modal.nudge .hk-modal-box { animation: hkNudge .22s cubic-bezier(.36,.07,.19,.97); }
+.hk-modal.nudge .hk-modal-box { animation: hkNudge .22s steps(2) 2; }
 @keyframes hkNudge {
   0%, 100% { margin-left: 0; }
   25%      { margin-left: -9px; }
@@ -120,151 +123,155 @@
 .hk-modal-box {
   position: absolute;
   left: 50%;
-  bottom: 58px;
+  bottom: 52px;
   transform: translateX(-50%);
   width: min(560px, calc(100% - 40px));
   max-height: calc(100% - 100px);
   display: flex;
   flex-direction: column;
   pointer-events: auto;
-  background: #0a0512;
-  border: 1px solid var(--violet);
-  box-shadow: 0 20px 70px rgba(0,0,0,.9), 0 0 44px rgba(178,107,255,.35);
-  animation: hkBoxIn .26s cubic-bezier(.2,1.3,.4,1);
+  padding: 3px;
+  background: var(--face);
+  box-shadow: var(--bevel-out), 3px 3px 0 rgba(0,0,0,.6);
+  animation: hkBoxIn .16s steps(3);
 }
 /* Una vez que el jugador lo arrastra, manda la posición absoluta */
 .hk-modal-box.dragged { transform: none; }
 @keyframes hkBoxIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(24px); }
+  from { opacity: .3; transform: translateX(-50%) translateY(12px); }
 }
 
 .hk-modal-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   cursor: move;
   user-select: none;
-  padding: 9px 13px;
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 2px;
+  height: 20px;
+  padding: 0 2px 0 5px;
+  margin-bottom: 3px;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1px;
   color: #fff;
-  background: linear-gradient(180deg, #7c2bd6 0%, #4a1090 100%);
-  border-bottom: 1px solid #2d0a63;
+  background: linear-gradient(90deg, #3d0a72 0%, #a13be0 100%);
 }
-.hk-skull { font-size: 15px; animation: hkBlink 2.2s steps(1) infinite; }
+.hk-skull { font-size: 13px; animation: hkBlink 2.2s steps(1) infinite; }
 .hk-modal-name { flex: 1; }
 .hk-fold {
-  width: 22px; height: 18px;
+  width: 16px; height: 15px;
   display: grid; place-items: center;
-  font-size: 11px; line-height: 1;
-  color: #fff;
-  background: rgba(255,255,255,.16);
-  border: 1px solid rgba(255,255,255,.3);
+  font-size: 10px; line-height: 1;
+  font-weight: bold;
+  color: var(--ink);
+  background: var(--face);
+  box-shadow: var(--bevel-out);
   cursor: pointer;
 }
-.hk-fold:hover { background: rgba(255,255,255,.32); }
+.hk-fold:active { box-shadow: var(--bevel-press); }
 
 /* Plegado: queda sólo la barra, para poder usar la Terminal */
 .hk-modal-box.collapsed .hk-modal-body { display: none; }
 .hk-modal-box.collapsed { width: min(360px, calc(100% - 40px)); }
-.hk-modal-box.collapsed .hk-modal-bar { border-bottom: 0; }
+.hk-modal-box.collapsed .hk-modal-bar { margin-bottom: 0; }
 
 .hk-modal-body {
-  padding: 16px 18px 18px;
+  padding: 14px 15px 15px;
   overflow: auto;
-  font-size: 13px;
+  font-size: 12px;
+  color: var(--ink);
 }
 
 .hk-modal-lead {
-  margin: 0 0 13px;
+  margin: 0 0 12px;
+  padding: 8px 10px;
   font-family: var(--mono);
-  font-size: 12.5px;
+  font-size: 12px;
   line-height: 1.6;
-  color: #e0c9ff;
+  color: #3d0a72;
+  background: #f0e4ff;
+  box-shadow: var(--bevel-thin-in);
 }
 
-/* Teclas robadas */
+/* Teclas robadas: teclas de un teclado real, tachadas */
 .hk-keys {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 7px;
+  margin-bottom: 14px;
 }
 .hk-key {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
   font-family: var(--mono);
-  font-size: 17px;
+  font-size: 15px;
   font-weight: bold;
-  color: #ffd0d8;
-  background: #180a12;
-  border: 1px solid var(--red-dim);
-  border-bottom-width: 3px;
-  border-radius: 4px;
+  color: #7a1020;
+  background: var(--face);
+  box-shadow: var(--bevel-out);
   position: relative;
-  animation: hkKeyDead 1.6s ease-in-out infinite;
+  animation: hkKeyDead 1.6s steps(2) infinite;
 }
 .hk-key::after {
   content: "";
   position: absolute;
-  inset: 4px;
+  inset: 5px;
   background: linear-gradient(-45deg,
-    transparent 47.5%, var(--red) 47.5%, var(--red) 52.5%, transparent 52.5%);
-  opacity: .85;
+    transparent 46%, #b5121b 46%, #b5121b 54%, transparent 54%);
 }
 @keyframes hkKeyDead {
   0%, 100% { opacity: 1; }
-  50%      { opacity: .55; }
+  50%      { opacity: .6; }
 }
 
 .hk-modal-q {
-  margin: 0 0 13px;
-  padding-top: 13px;
-  border-top: 1px solid #241041;
-  font-size: 14px;
+  margin: 0 0 11px;
+  padding-top: 11px;
+  border-top: 1px solid var(--sh);
+  box-shadow: 0 1px 0 var(--hi) inset;
+  font-size: 12.5px;
   line-height: 1.6;
-  color: var(--text);
+  color: var(--ink);
 }
-.hk-modal-q b { color: var(--violet); }
+.hk-modal-q b { color: #3d0a72; }
 
-.hk-opts { display: flex; flex-direction: column; gap: 7px; }
+.hk-opts { display: flex; flex-direction: column; gap: 5px; }
 .hk-opt {
   text-align: left;
-  padding: 10px 13px;
-  font-size: 12.5px;
+  padding: 8px 11px;
+  font-size: 12px;
   line-height: 1.45;
-  color: #cfe6dd;
-  background: #120a1e;
-  border: 1px solid #2c1450;
-  border-radius: 2px;
-  transition: background .12s, border-color .12s, transform .08s;
+  color: var(--ink);
+  background: var(--face);
+  box-shadow: var(--bevel-out);
 }
-.hk-opt b { color: var(--violet); margin-right: 4px; }
-.hk-opt:hover:not(:disabled) { background: #1e0f36; border-color: var(--violet); transform: translateX(3px); }
-.hk-opt:disabled { opacity: .5; cursor: default; }
-.hk-opt.right { background: rgba(53,255,122,.14); border-color: var(--green); color: #d9ffe8; opacity: 1; }
-.hk-opt.wrong { background: rgba(255,59,82,.14); border-color: var(--red); color: #ffd7dd; }
+.hk-opt b { color: #3d0a72; margin-right: 4px; }
+.hk-opt:hover:not(:disabled) { background: #cbcfcb; }
+.hk-opt:active:not(:disabled) { box-shadow: var(--bevel-press); }
+.hk-opt:disabled { color: var(--ink-dim); cursor: default; }
+.hk-opt.right { background: #d9f2e0; box-shadow: var(--bevel-in); color: #0d4a20; }
+.hk-opt.wrong { background: #f7dade; box-shadow: var(--bevel-in); color: #7a1020; }
 
 .hk-feedback {
-  margin-top: 13px;
-  padding: 11px 13px;
-  font-size: 12.5px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  font-size: 12px;
   line-height: 1.6;
-  border-left: 3px solid var(--line);
-  background: rgba(255,255,255,.03);
+  background: var(--paper-2);
+  box-shadow: var(--bevel-thin-in);
+  border-left: 4px solid var(--sh);
 }
-.hk-feedback.ok  { border-left-color: var(--green); color: #d9ffe8; }
-.hk-feedback.bad { border-left-color: var(--red); color: #ffd7dd; }
+.hk-feedback.ok  { border-left-color: #12833c; color: #0d4a20; }
+.hk-feedback.bad { border-left-color: #a3121b; color: #7a1020; }
 
 .hk-modal-foot {
-  margin: 14px 0 0;
+  margin: 12px 0 0;
   font-family: var(--mono);
   font-size: 10.5px;
-  letter-spacing: .4px;
-  color: var(--text-dim);
+  letter-spacing: .3px;
+  color: var(--ink-dim);
 }
 
 /* ============================================================
@@ -282,26 +289,26 @@
   100% { filter: invert(1) hue-rotate(360deg) saturate(1.7) contrast(1.12); }
 }
 
+/* Contador: un cartel de la bandeja del sistema, en violeta */
 .hk-badge {
   position: absolute;
-  top: 14px;
-  left: 14px;
+  top: 12px;
+  left: 12px;
   z-index: 8600;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 8px 14px;
+  padding: 6px 12px;
   font-family: var(--mono);
-  background: rgba(10, 3, 18, .94);
-  border: 1px solid var(--violet);
-  border-left: 4px solid var(--red);
-  box-shadow: 0 6px 26px rgba(0,0,0,.7);
+  color: #fff;
+  background: #2b0a48;
+  box-shadow: inset -1px -1px 0 #12021f, inset 1px 1px 0 #a866ff, 2px 2px 0 rgba(0,0,0,.55);
   pointer-events: none;
   animation: hkBadgePulse 1s steps(2) infinite;
 }
 .hk-badge b { font-size: 10px; letter-spacing: 2px; color: #ff8fa0; }
-.hk-badge span { font-size: 19px; color: var(--violet); letter-spacing: 2px; }
-@keyframes hkBadgePulse { 50% { border-left-color: var(--violet); } }
+.hk-badge span { font-size: 18px; color: #d9b3ff; letter-spacing: 2px; }
+@keyframes hkBadgePulse { 50% { background: #3d0a72; } }
 
 @media (max-width: 980px) {
   .hk-fig { width: 84px; height: 92px; }

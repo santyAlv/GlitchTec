@@ -155,6 +155,9 @@
       [523, 659, 784, 1046].forEach(function (f, i) { tone(f, 0.13, 'triangle', 0.07, i * 0.1); });
     },
     boot:     function () { tone(1046, 0.28, 'square', 0.05); },
+    /* Pitido del parlante de la placa: el codigo de error del POST.
+       Largo o corto, porque la combinacion es la que dice que falla. */
+    beep:     function (long) { tone(900, long ? 0.42 : 0.1, 'square', 0.075); },
     victory:  function () {
       [523, 659, 784, 1046, 1318].forEach(function (f, i) { tone(f, 0.2, 'triangle', 0.07, i * 0.14); });
     },

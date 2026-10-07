@@ -54,25 +54,25 @@
 
     /* ---------------- Inspección: alimentación ---------------- */
     ver_cable: {
-      g: 'inspeccion', label: 'Revisar el cable de alimentación', min: 2, parte: 'cable',
+      lado: 'atras', g: 'inspeccion', label: 'Revisar el cable de alimentación', min: 2, parte: 'cable',
       detecta: 'cable',
       ok: 'El cable está firme en los dos extremos, sin cortes ni marcas de calor.',
       mal: 'El conector está flojo en la parte de atrás del gabinete: se sale con sólo rozarlo.'
     },
     ver_toma: {
-      g: 'inspeccion', label: 'Probar el tomacorriente con otro equipo', min: 3, parte: 'cable',
+      lado: 'atras', tool: 'tester', g: 'inspeccion', label: 'Probar el tomacorriente con otro equipo', min: 3, parte: 'cable',
       detecta: 'toma',
       ok: 'El toma da corriente: la lámpara de prueba enciende.',
       mal: 'El toma no da tensión. El problema no está en la PC, está en la instalación.'
     },
     ver_switch: {
-      g: 'inspeccion', label: 'Mirar el interruptor trasero de la fuente', min: 1, parte: 'fuente',
+      lado: 'atras', g: 'inspeccion', label: 'Mirar el interruptor trasero de la fuente', min: 1, parte: 'fuente',
       detecta: 'switch',
       ok: 'El interruptor de la fuente está en I (encendido).',
       mal: 'El interruptor de la fuente está en 0. Alguien lo movió al limpiar.'
     },
     ver_fuente: {
-      g: 'inspeccion', label: 'Probar la fuente (puente del conector 24 pines)', min: 8, parte: 'fuente',
+      tool: 'tester', g: 'inspeccion', label: 'Probar la fuente (puente del conector 24 pines)', min: 8, parte: 'fuente',
       req: 'abrir', detecta: 'fuente',
       ok: 'Puenteada, la fuente arranca y el ventilador gira: entrega tensión.',
       mal: 'Puenteada no arranca: el ventilador no gira y huele a componente quemado. Fuente muerta.'
@@ -86,7 +86,7 @@
 
     /* ---------------- Inspección: video / POST ---------------- */
     ver_cable_video: {
-      g: 'inspeccion', label: 'Revisar el cable de video y el monitor', min: 3, parte: 'monitor',
+      lado: 'atras', g: 'inspeccion', label: 'Revisar el cable de video y el monitor', min: 3, parte: 'monitor',
       detecta: 'video',
       ok: 'El cable HDMI está bien puesto y el monitor enciende con su cartel de "sin señal".',
       mal: 'El cable de video está enchufado al puerto de la placa madre y no al de la placa de video.'
@@ -112,11 +112,11 @@
 
     /* ---------------- Inspección: térmica ---------------- */
     preguntar: {
-      g: 'inspeccion', label: 'Preguntarle al cliente cuándo y cómo falla', min: 2, parte: 'monitor',
+      g: 'inspeccion', label: 'Preguntarle al cliente cuándo y cómo falla', min: 2, parte: 'cliente',
       ok: 'Aporta el dato clave: falla cuando lleva un rato usándola, nunca al principio.'
     },
     medir_temp: {
-      g: 'inspeccion', label: 'Medir temperaturas con carga', min: 6, parte: 'cooler',
+      tool: 'tester', g: 'inspeccion', label: 'Medir temperaturas con carga', min: 6, parte: 'cooler',
       detecta: 'pasta',
       ok: 'El CPU se estabiliza en 58 °C bajo carga. Temperatura normal.',
       mal: 'El CPU trepa a 97 °C en menos de dos minutos y el sistema se apaga solo.'
@@ -147,25 +147,73 @@
       ok: 'Sólo se oye el zumbido normal del plato girando.',
       mal: 'Hace un clic seco cada pocos segundos: el cabezal está reintentando lecturas.'
     },
+    /* ---------------- Inspección: humedad y sulfatación ---------------- */
+    ver_humedad: {
+      g: 'inspeccion', label: 'Revisar si el equipo entró con humedad', min: 3, parte: 'placa',
+      detecta: 'humedad',
+      ok: 'El interior está seco: ni marcas de agua ni condensación en el fondo.',
+      mal: 'El fondo del gabinete tiene marcas de agua secas y el interior está húmedo al tacto. ' +
+           'Este equipo estuvo mojado: no se enciende así.'
+    },
+    ver_sulfato: {
+      g: 'inspeccion', label: 'Revisar la placa buscando sulfato y óxido', min: 6, parte: 'placa',
+      req: 'abrir', detecta: 'sulfato',
+      ok: 'La placa está limpia: el cobre de las pistas se ve brillante, sin verdín.',
+      mal: 'Hay una costra verdosa sobre las pistas y los tornillos están oxidados. Eso es sulfato.'
+    },
+    ver_contactos_ram: {
+      g: 'inspeccion', label: 'Sacar la memoria y mirarle los contactos', min: 4, parte: 'ram',
+      req: 'abrir', detecta: 'sulfato_ram',
+      ok: 'Los contactos dorados del módulo están limpios y parejos.',
+      mal: 'Los contactos del módulo están cubiertos de verdín: por ahí no pasa la señal.'
+    },
+    medir_continuidad: {
+      tool: 'tester', g: 'inspeccion', label: 'Medir continuidad en las líneas de alimentación',
+      min: 7, parte: 'placa', req: 'abrir',
+      ok: 'Las líneas de 12 V y 5 V están limpias: no hay cortocircuito en la placa.'
+    },
+
+    /* ---------------- Inspección: ventilación ---------------- */
+    ver_filtros: {
+      g: 'inspeccion', label: 'Revisar los filtros y las entradas de aire', min: 3, parte: 'boton',
+      detecta: 'filtro',
+      ok: 'Los filtros del frente están limpios y el aire entra sin problema.',
+      mal: 'Los filtros del frente son una manta de pelusa. Apoyada contra la pared y sobre ' +
+           'alfombra, la máquina no tiene de dónde tomar aire.'
+    },
+    medir_rpm: {
+      tool: 'tester', g: 'inspeccion', label: 'Medir las vueltas del ventilador del disipador',
+      min: 4, parte: 'cooler', req: 'abrir', detecta: 'vent_trabado',
+      ok: 'El ventilador gira a 1.800 vueltas, parejo y sin ruido.',
+      mal: 'El ventilador arranca a los tirones y no pasa de 400 vueltas: el rodamiento está trabado.'
+    },
+    ver_pasta: {
+      tool: 'destornillador', g: 'inspeccion', label: 'Sacar el disipador y mirar la pasta térmica',
+      min: 5, parte: 'cooler', req: 'abrir', detecta: 'pasta',
+      ok: 'La pasta está fresca y bien distribuida sobre el procesador.',
+      mal: 'La pasta está seca y cuarteada, como barro viejo: se despega sola y ya no transmite ' +
+           'el calor al disipador.'
+    },
+
     ver_malware: {
-      g: 'inspeccion', label: 'Escanear el equipo en busca de malware', min: 9, parte: 'placa',
+      g: 'inspeccion', label: 'Escanear el equipo en busca de malware', min: 9, parte: 'software',
       ok: 'El análisis termina limpio: no hay malware. La lentitud es de hardware.'
     },
 
     /* ---------------- Acciones: gratis ---------------- */
     abrir: {
-      g: 'accion', label: 'Abrir el gabinete', min: 3, parte: 'placa', costo: 0,
+      tool: 'destornillador', g: 'accion', label: 'Abrir el gabinete', min: 3, parte: 'placa', costo: 0,
       hecho: 'Sacás la tapa lateral. Ahora podés revisar el interior del equipo.',
       nada: 'El gabinete ya está abierto.'
     },
     reconectar_cable: {
-      g: 'accion', label: 'Reconectar y asegurar el cable de alimentación', min: 1, parte: 'cable',
+      lado: 'atras', g: 'accion', label: 'Reconectar y asegurar el cable de alimentación', min: 1, parte: 'cable',
       costo: 0, arregla: 'cable',
       hecho: 'Calzás el conector a fondo hasta el tope. Ahora no se mueve.',
       nada: 'El cable ya estaba bien puesto: no cambió nada.'
     },
     prender_switch: {
-      g: 'accion', label: 'Poner el interruptor de la fuente en I', min: 1, parte: 'fuente',
+      lado: 'atras', g: 'accion', label: 'Poner el interruptor de la fuente en I', min: 1, parte: 'fuente',
       costo: 0, arregla: 'switch',
       hecho: 'Pasás el interruptor trasero de 0 a I.',
       nada: 'El interruptor ya estaba en I.'
@@ -189,25 +237,59 @@
       nada: 'La placa de video ya estaba bien puesta.'
     },
     pasar_video: {
-      g: 'accion', label: 'Pasar el cable de video a la placa de video', min: 1, parte: 'monitor',
+      lado: 'atras', g: 'accion', label: 'Pasar el cable de video a la placa de video', min: 1, parte: 'monitor',
       costo: 0, arregla: 'video',
       hecho: 'Movés el cable del puerto de la placa madre al de la placa de video.',
       nada: 'El cable de video ya estaba en el puerto correcto.'
     },
     limpiar_polvo: {
-      g: 'accion', label: 'Limpiar el polvo del disipador y los ventiladores', min: 12, parte: 'cooler',
+      tool: 'aire', g: 'accion', label: 'Limpiar el polvo del disipador y los ventiladores', min: 12, parte: 'cooler',
       req: 'abrir', costo: 0, arregla: 'polvo',
       hecho: 'Aire comprimido y pincel: el disipador vuelve a dejar pasar el aire.',
       nada: 'Estaba limpio: perdiste el tiempo.'
     },
     cambiar_pasta: {
-      g: 'accion', label: 'Cambiar la pasta térmica del procesador', min: 15, parte: 'cooler',
+      tool: 'pasta', g: 'accion', label: 'Cambiar la pasta térmica del procesador', min: 15, parte: 'cooler',
       req: 'abrir', costo: 1500, arregla: 'pasta',
       hecho: 'Retirás el disipador, limpiás con alcohol isopropílico y ponés pasta nueva.',
       nada: 'La pasta estaba en buen estado: gastaste sin necesidad.'
     },
+    /* ---------------- Acciones: mantenimiento correctivo ---------------- */
+    secar_equipo: {
+      tool: 'aire', g: 'accion', label: 'Secar el equipo y dejarlo ventilar', min: 45, parte: 'placa',
+      req: 'abrir', costo: 0, arregla: 'humedad',
+      hecho: 'Soplás la humedad, dejás el equipo abierto ventilando y recién después lo tocás. ' +
+             'Encenderlo mojado lo hubiera quemado.',
+      nada: 'El equipo ya estaba seco: perdiste tres cuartos de hora.'
+    },
+    limpiar_sulfato: {
+      tool: 'alcohol', g: 'accion', label: 'Limpiar el sulfato de la placa con alcohol isopropílico',
+      min: 18, parte: 'placa', req: 'abrir', costo: 0, arregla: 'sulfato',
+      hecho: 'Pincel y alcohol isopropílico: levanta el verdín y se evapora sin dejar agua.',
+      nada: 'No había sulfato que limpiar.'
+    },
+    limpiar_contactos_ram: {
+      tool: 'alcohol', g: 'accion', label: 'Limpiar los contactos de la memoria con alcohol',
+      min: 8, parte: 'ram', req: 'abrir', costo: 0, arregla: 'sulfato_ram',
+      hecho: 'Frotás los contactos con alcohol isopropílico hasta que vuelve a verse el dorado, ' +
+             'y recién ahí la calzás de nuevo.',
+      nada: 'Los contactos ya estaban limpios.'
+    },
+    limpiar_filtros: {
+      tool: 'aire', g: 'accion', label: 'Limpiar los filtros y las entradas de aire', min: 8,
+      parte: 'boton', costo: 0, arregla: 'filtro',
+      hecho: 'Sacás los filtros, les das aire y los volvés a poner. El frente vuelve a respirar.',
+      nada: 'Los filtros ya estaban limpios.'
+    },
+    cambiar_vent: {
+      tool: 'destornillador', g: 'accion', label: 'Cambiar el ventilador del disipador', min: 12,
+      parte: 'cooler', req: 'abrir', costo: 9000, arregla: 'vent_trabado',
+      hecho: 'Montás un ventilador nuevo en el disipador: vuelve a girar parejo.',
+      nada: 'El ventilador andaba bien: cambiaste una pieza sana.'
+    },
+
     respaldar: {
-      g: 'accion', label: 'Respaldar los datos del cliente', min: 20, parte: 'disco',
+      tool: 'respaldo', g: 'accion', label: 'Respaldar los datos del cliente', min: 20, parte: 'disco',
       costo: 0, arregla: 'respaldo',
       hecho: 'Clonás lo que se puede leer a un disco externo antes de tocar nada más.',
       nada: 'Ya tenías el respaldo hecho.'
@@ -215,13 +297,13 @@
 
     /* ---------------- Acciones: repuestos (cuestan plata) ---------------- */
     cambiar_cable: {
-      g: 'accion', label: 'Cambiar el cable de alimentación', min: 2, parte: 'cable',
+      lado: 'atras', g: 'accion', label: 'Cambiar el cable de alimentación', min: 2, parte: 'cable',
       costo: 2500, arregla: 'cable',
       hecho: 'Ponés un cable nuevo.',
       nada: 'El cable viejo estaba perfecto: cambiaste una pieza sana.'
     },
     cambiar_fuente: {
-      g: 'accion', label: 'Cambiar la fuente de alimentación', min: 20, parte: 'fuente',
+      tool: 'destornillador', g: 'accion', label: 'Cambiar la fuente de alimentación', min: 20, parte: 'fuente',
       req: 'abrir', costo: 42000, arregla: 'fuente',
       hecho: 'Montás una fuente nueva y recableás el equipo.',
       nada: 'La fuente vieja andaba bien: cambiaste una pieza sana y cara.'
@@ -233,7 +315,7 @@
       nada: 'La memoria estaba sana, sólo mal puesta: cambiaste una pieza que funcionaba.'
     },
     cambiar_gpu: {
-      g: 'accion', label: 'Cambiar la placa de video', min: 15, parte: 'gpu',
+      tool: 'destornillador', g: 'accion', label: 'Cambiar la placa de video', min: 15, parte: 'gpu',
       req: 'abrir', costo: 120000, arregla: 'gpu_rota',
       hecho: 'Montás otra placa de video.',
       nada: 'La placa de video andaba bien: tiraste el presupuesto del cliente a la basura.'
@@ -250,7 +332,7 @@
        arruinaste. Por eso el castigo de ese camino es el mas grande de todo
        el modo (-300 puntos y -30 de reputacion). */
     cambiar_disco: {
-      g: 'accion', label: 'Cambiar el disco por un SSD', min: 25, parte: 'disco',
+      tool: 'destornillador', g: 'accion', label: 'Cambiar el disco por un SSD', min: 25, parte: 'disco',
       req: 'abrir', costo: 55000, arregla: 'disco', exige: 'respaldo',
       exigeTexto: 'Cambiaste el disco SIN respaldar. Los datos del cliente se fueron con el disco viejo: ' +
                   'diez años de fotos y la contabilidad del negocio. El equipo anda; el cliente no vuelve nunca más.',
@@ -258,7 +340,7 @@
       nada: 'El disco estaba sano: cambiaste una pieza que funcionaba.'
     },
     reinstalar_so: {
-      g: 'accion', label: 'Formatear y reinstalar el sistema operativo', min: 40, parte: 'placa',
+      g: 'accion', label: 'Formatear y reinstalar el sistema operativo', min: 40, parte: 'software',
       costo: 0, arregla: 'so',
       hecho: 'Reinstalás el sistema desde cero.',
       nada: 'Formateaste sin diagnosticar: perdiste 40 minutos y la falla sigue igual, porque era de hardware.'
@@ -292,6 +374,7 @@
               'Ni una lucecita. Ni ruido. Nada de nada."',
       presupuesto: 20,
       fallas: ['cable'],
+      pieza: 'cable',
       sintomas: {
         cable: 'Apretás el botón: sin luces, sin ventiladores, sin pitidos. El equipo está muerto.'
       },
@@ -325,6 +408,7 @@
               'Y hace unos pitidos raros cuando arranca. El monitor dice sin señal."',
       presupuesto: 25,
       fallas: ['ram'],
+      pieza: 'ram',
       sintomas: {
         ram: 'El equipo enciende, los ventiladores giran, pero la pantalla sigue negra y suena ' +
              'un pitido largo y dos cortos, en loop.'
@@ -360,6 +444,7 @@
               'Después prende de nuevo y hace lo mismo. Cada vez aguanta menos."',
       presupuesto: 45,
       fallas: ['polvo', 'pasta'],
+      pieza: 'cooler',
       sintomas: {
         polvo: 'A los cuatro minutos de uso se apaga de golpe, sin pantalla azul ni aviso.',
         pasta: 'Ahora aguanta unos quince minutos, pero al exigirla se apaga igual. El CPU llega a 97 °C.'
@@ -394,6 +479,7 @@
               'Hace un ruidito como un clic. Ojo que ahí está TODA la contabilidad del estudio."',
       presupuesto: 60,
       fallas: ['respaldo', 'disco'],
+      pieza: 'disco',
       sintomas: {
         respaldo: 'El equipo arranca, pero tarda una eternidad y se congela. Y hay datos irremplazables adentro.',
         disco: 'Con el respaldo ya hecho, el equipo sigue lentísimo y clickeando: el disco no da más.'
@@ -415,85 +501,190 @@
                 'antes de cualquier maniobra. El hardware se compra; diez años de contabilidad, no.'
       },
       leccion: 'Ante un disco moribundo: respaldo primero, reparación después. Los datos no tienen repuesto.'
+    },
+
+    /* ---------------- CASO 5 ---------------- */
+    {
+      id: 'c5',
+      titulo: 'Estuvo guardada en un depósito húmedo',
+      cliente: 'Cooperativa del barrio — PC del depósito',
+      equipo: 'WinTEC Tower 2000, guardada todo el invierno',
+      relato: '"La bajamos del depósito después del invierno. Ahí abajo entra agua cuando llueve ' +
+              'fuerte. La enchufamos y no hace absolutamente nada."',
+      antecedente: 'Antecedente: el equipo estuvo meses en un depósito que se llueve. ' +
+                   'Ojo: encender un equipo húmedo lo termina de arruinar.',
+      presupuesto: 85,
+      fallas: ['humedad', 'sulfato_ram'],
+      pieza: 'ram',
+      sintomas: {
+        humedad: 'No da señales de vida. El interior está húmedo al tacto y el fondo tiene ' +
+                 'marcas de agua secas.',
+        sulfato_ram: 'Ya seco, enciende y los ventiladores giran, pero la pantalla queda negra ' +
+                     'y suena un pitido largo y dos cortos.'
+      },
+      exito: 'Con los contactos limpios el POST pasa de una, sin pitidos de error, y arranca el sistema.',
+      pasos: ['ver_humedad', 'ver_cable', 'abrir', 'ver_sulfato', 'ver_contactos_ram',
+              'medir_continuidad', 'ver_fuente', 'secar_equipo', 'limpiar_sulfato',
+              'limpiar_contactos_ram', 'reasentar_ram', 'cambiar_ram', 'cambiar_fuente'],
+      diagnostico: {
+        pregunta: '¿Por qué no arrancaba el equipo de la cooperativa?',
+        opciones: [
+          'La fuente se quemó por la humedad',
+          'La humedad dejó sulfato en los contactos de la memoria y cortó el contacto',
+          'La memoria se quemó y había que cambiarla',
+          'El cable de alimentación estaba flojo'
+        ],
+        correcta: 1,
+        porque: 'La humedad rara vez quema algo de entrada: lo que hace es <b>oxidar los contactos</b>. ' +
+                'Ese verdín es <b>sulfato</b>, y donde se forma deja de pasar la señal, por eso el ' +
+                'POST frenaba en memoria. El orden del trabajo tampoco es libre: primero se <b>seca</b> ' +
+                'el equipo (encenderlo mojado sí lo quema), después se limpia el sulfato con ' +
+                '<b>alcohol isopropílico</b>, que se evapora sin dejar agua ni residuo. La memoria ' +
+                'estaba sana: no había nada que comprar.'
+      },
+      leccion: 'Equipo con humedad: secar primero y nunca encenderlo mojado. El sulfato se limpia ' +
+               'con alcohol isopropílico; la pieza no se cambia.'
+    },
+
+    /* ---------------- CASO 6 ---------------- */
+    {
+      id: 'c6',
+      titulo: 'Hace ruido y se apaga',
+      cliente: 'Lucas — PC de la sala de estudio',
+      equipo: 'WinTEC Tower 3000, en el piso contra la pared y sobre alfombra',
+      relato: '"Hace un ruido como de aspiradora y después de un rato se apaga sola. ' +
+              'La tengo en el piso, pegada a la pared, abajo del escritorio."',
+      antecedente: 'Antecedente: nunca se le hizo mantenimiento y está apoyada sobre alfombra, ' +
+                   'contra la pared. Mirá por dónde entra y por dónde sale el aire.',
+      presupuesto: 50,
+      fallas: ['filtro', 'vent_trabado'],
+      pieza: 'cooler',
+      sintomas: {
+        filtro: 'Arranca, se escucha un zumbido fuerte y a los diez minutos se apaga sola.',
+        vent_trabado: 'Con los filtros limpios aguanta más, pero el ventilador del disipador ' +
+                      'apenas gira y el equipo se vuelve a apagar.'
+      },
+      exito: 'Media hora de prueba con carga: el ventilador gira parejo a 1.800 vueltas, el CPU se ' +
+             'queda en 58 °C y no se apaga más.',
+      pasos: ['preguntar', 'medir_temp', 'ver_filtros', 'abrir', 'ver_disipador', 'medir_rpm',
+              'ver_pasta', 'limpiar_filtros', 'limpiar_polvo', 'cambiar_vent', 'cambiar_pasta',
+              'cambiar_fuente'],
+      diagnostico: {
+        pregunta: '¿Por qué se apagaba sola la PC de la sala de estudio?',
+        opciones: [
+          'El sistema operativo estaba corrupto',
+          'La fuente no daba abasto',
+          'No entraba aire: filtros tapados y el ventilador del disipador trabado',
+          'La memoria tenía errores'
+        ],
+        correcta: 2,
+        porque: 'Se apagaba por <b>protección térmica</b>, y la refrigeración es un <b>circuito ' +
+                'completo</b>: entra aire por el frente, pasa por el disipador y sale por atrás. ' +
+                'Con los filtros tapados no entra nada, y con el ventilador del disipador trabado ' +
+                'el calor del procesador no se va a ningún lado. Soplarle aire a un ventilador ' +
+                'trabado no lo arregla: el rodamiento ya se fue y hay que cambiarlo. Y el lugar ' +
+                'también cuenta: contra la pared y sobre alfombra, el equipo respira su propio aire caliente.'
+      },
+      leccion: 'La ventilación es un circuito: entrada, disipador y salida. Filtro tapado o ' +
+               'ventilador trabado terminan igual, en apagado por temperatura.'
+    },
+
+    /* ---------------- CASO 7 ---------------- */
+    {
+      id: 'c7',
+      titulo: 'Se apaga cuando la exigen',
+      cliente: 'Belén — edición de video',
+      equipo: 'WinTEC Tower 4000, 5 años de uso, impecable por fuera',
+      relato: '"La mandé a limpiar hace dos semanas y sigue igual: abro el programa de video, ' +
+              'laburo diez minutos y se apaga. Si navego nomás, anda bárbaro."',
+      antecedente: 'Antecedente: limpieza hecha hace dos semanas, sin polvo. Cinco años de uso ' +
+                   'y nunca se le tocó la pasta térmica.',
+      presupuesto: 40,
+      fallas: ['pasta'],
+      pieza: 'cooler',
+      sintomas: {
+        pasta: 'En reposo anda bien. Con carga el CPU trepa a 97 °C en dos minutos y el equipo se apaga.'
+      },
+      exito: 'Con pasta nueva el CPU se estabiliza en 62 °C exportando video media hora. No se apaga más.',
+      pasos: ['preguntar', 'medir_temp', 'ver_disipador', 'abrir', 'ver_pasta', 'medir_rpm',
+              'ver_carga', 'limpiar_polvo', 'cambiar_pasta', 'cambiar_vent', 'cambiar_fuente',
+              'reinstalar_so'],
+      diagnostico: {
+        pregunta: 'El equipo estaba limpio y el ventilador giraba bien. ¿Por qué se apagaba con carga?',
+        opciones: [
+          'La pasta térmica estaba seca y ya no llevaba el calor al disipador',
+          'Le faltaba memoria RAM para editar video',
+          'La fuente estaba débil',
+          'El programa de video tenía un virus'
+        ],
+        correcta: 0,
+        porque: 'Un equipo <b>limpio</b> y con el ventilador girando igual se apaga por temperatura: ' +
+                'entre el procesador y el disipador va una capa de <b>pasta térmica</b> que con los ' +
+                'años se seca y se cuartea. Seca no transmite: el disipador puede estar impecable y ' +
+                'frío mientras el procesador se cocina. Por eso falla <b>sólo con carga</b>, cuando ' +
+                'el CPU genera calor de verdad. Se saca el disipador, se limpia con alcohol ' +
+                'isopropílico y se pone pasta nueva: es mantenimiento preventivo, cada dos o tres años.'
+      },
+      leccion: 'Limpiar el polvo no alcanza: la pasta térmica se seca y cambiarla es mantenimiento ' +
+               'preventivo, cada dos o tres años, no cuando el equipo ya se apaga.'
     }
   ];
 
   tech.CASES = CASES;
 
   /* ============================================================
-     Esquema del equipo (SVG) — se ilumina según lo revisado
+     Zonas de trabajo
+     Cada paso del catálogo pertenece a una zona. Las zonas físicas
+     son las piezas que dibuja el banco 3D (js/bench3d.js) y se tocan
+     directamente sobre el equipo; las otras dos no están en el
+     gabinete: el cliente y el software del equipo.
      ============================================================ */
-  var PC_SVG =
-    '<svg viewBox="0 0 340 210" class="pc-svg">' +
-      /* monitor */
-      '<g class="pc-part" data-part="monitor">' +
-        '<rect x="196" y="26" width="122" height="82" rx="4" fill="#1a2530" stroke="#4a5f70" stroke-width="2"/>' +
-        '<rect x="203" y="33" width="108" height="68" rx="2" class="pc-screen" fill="#08120e"/>' +
-        '<rect x="243" y="108" width="28" height="16" fill="#2b3a47"/>' +
-        '<rect x="224" y="124" width="66" height="6" rx="3" fill="#2b3a47"/>' +
-      '</g>' +
+  var ZONE_ORDER = ['cliente', 'cable', 'fuente', 'boton', 'monitor',
+                    'placa', 'ram', 'cooler', 'gpu', 'disco', 'software'];
 
-      /* gabinete */
-      '<rect x="22" y="18" width="150" height="176" rx="5" fill="#131c24" stroke="#3d4f5e" stroke-width="2"/>' +
-      '<rect class="pc-inner" x="30" y="26" width="134" height="160" rx="3" fill="#0b1219"/>' +
+  var ZONE_LABEL = {
+    cliente:  'CLIENTE',
+    cable:    'ALIMENTACIÓN',
+    fuente:   'FUENTE',
+    boton:    'PANEL FRONTAL',
+    monitor:  'MONITOR Y VIDEO',
+    placa:    'PLACA MADRE',
+    ram:      'MEMORIA RAM',
+    cooler:   'CPU Y DISIPADOR',
+    gpu:      'PLACA DE VIDEO',
+    disco:    'DISCO',
+    software: 'SISTEMA'
+  };
 
-      /* fuente */
-      '<g class="pc-part" data-part="fuente">' +
-        '<rect x="36" y="32" width="58" height="34" rx="2" fill="#22303c" stroke="#4a5f70" stroke-width="1.6"/>' +
-        '<circle cx="65" cy="49" r="11" fill="none" stroke="#5d7387" stroke-width="1.4"/>' +
-        '<path d="M65 40v18M56 49h18" stroke="#5d7387" stroke-width="1.4"/>' +
-        '<text x="38" y="76" class="pc-lbl">FUENTE</text>' +
-      '</g>' +
+  /* ============================================================
+     Qué muestra la pantalla con cada falla pendiente
+     Esto es el corazón del modo: el síntoma no se lee en un cartel,
+     se lee en el monitor cuando se enciende el equipo. Dos fallas
+     distintas pueden dar la MISMA pantalla ("sin señal"), y ahí
+     está el trabajo del técnico.
+     ============================================================ */
+  var FAULT_SCREEN = {
+    cable:    'muerta',
+    toma:     'muerta',
+    'switch': 'muerta',
+    fuente:   'muerta',
+    boton:    'muerta',
+    video:    'sin_senal',
+    gpu:      'sin_senal',
+    ram:      'post_ram',
+    polvo:    'apagon',
+    pasta:    'apagon',
+    respaldo: 'lenta',
+    disco:    'lenta',
+    so:       'lenta',
 
-      /* interruptor + cable */
-      '<g class="pc-part" data-part="cable">' +
-        '<rect x="100" y="38" width="16" height="12" rx="2" fill="#2b3a47" stroke="#4a5f70" stroke-width="1.4"/>' +
-        '<path d="M116 44h14c8 0 8 22 16 22h30" fill="none" stroke="#6d8194" stroke-width="3" stroke-linecap="round"/>' +
-        '<circle cx="176" cy="66" r="4" fill="#6d8194"/>' +
-        '<text x="98" y="34" class="pc-lbl">CABLE</text>' +
-      '</g>' +
-
-      /* placa madre */
-      '<g class="pc-part" data-part="placa">' +
-        '<rect x="36" y="82" width="120" height="98" rx="2" fill="#123024" stroke="#2f6b4c" stroke-width="1.6"/>' +
-        '<rect x="60" y="120" width="30" height="30" rx="2" fill="#1d4736" stroke="#2f6b4c"/>' +
-        '<text x="63" y="139" class="pc-lbl">CPU</text>' +
-      '</g>' +
-
-      /* cooler */
-      '<g class="pc-part" data-part="cooler">' +
-        '<rect x="56" y="116" width="38" height="38" rx="3" fill="#24485c" stroke="#4e8aa8" stroke-width="1.6"/>' +
-        '<path d="M62 122v26M70 122v26M78 122v26M86 122v26" stroke="#4e8aa8" stroke-width="1.2"/>' +
-        '<circle class="pc-fan" cx="75" cy="135" r="12" fill="none" stroke="#7fc3e0" stroke-width="1.6"/>' +
-        '<path class="pc-fan-blades" d="M75 125v20M65 135h20" stroke="#7fc3e0" stroke-width="1.6"/>' +
-      '</g>' +
-
-      /* RAM */
-      '<g class="pc-part" data-part="ram">' +
-        '<rect x="104" y="88" width="10" height="56" rx="1.5" fill="#3b2a52" stroke="#8a6bd0" stroke-width="1.4"/>' +
-        '<rect x="118" y="88" width="10" height="56" rx="1.5" fill="#3b2a52" stroke="#8a6bd0" stroke-width="1.4"/>' +
-        '<text x="102" y="84" class="pc-lbl">RAM</text>' +
-      '</g>' +
-
-      /* GPU */
-      '<g class="pc-part" data-part="gpu">' +
-        '<rect x="40" y="158" width="86" height="16" rx="2" fill="#3a2230" stroke="#c06a90" stroke-width="1.4"/>' +
-        '<text x="43" y="170" class="pc-lbl">GPU</text>' +
-      '</g>' +
-
-      /* disco */
-      '<g class="pc-part" data-part="disco">' +
-        '<rect x="132" y="152" width="30" height="26" rx="2" fill="#2c2a1c" stroke="#b39b3f" stroke-width="1.4"/>' +
-        '<circle cx="147" cy="165" r="8" fill="none" stroke="#b39b3f" stroke-width="1.2"/>' +
-        '<circle cx="147" cy="165" r="2" fill="#b39b3f"/>' +
-        '<text x="130" y="188" class="pc-lbl">DISCO</text>' +
-      '</g>' +
-
-      /* boton de encendido */
-      '<g class="pc-part" data-part="boton">' +
-        '<circle class="pc-power" cx="167" cy="30" r="6" fill="#1b2b22" stroke="#4a5f70" stroke-width="1.6"/>' +
-      '</g>' +
-    '</svg>';
+    /* Mantenimiento: humedad, sulfatación y ventilación */
+    humedad:     'muerta',
+    sulfato:     'lenta',
+    sulfato_ram: 'post_ram',
+    filtro:      'apagon',
+    vent_trabado: 'apagon'
+  };
 
   /* ============================================================
      Estado del modo
@@ -519,6 +710,12 @@
   var running = false;
   var caseMinutes = 0;         // minutos gastados en ESTA orden
   var dataLost = false;        // ¿se perdieron los datos del cliente?
+  var zone = null;             // zona del equipo seleccionada
+  var zones = [];              // zonas con pasos en este caso
+  var zoneState = {};          // zona -> 'ok' | 'bad' | 'fixed'
+  var testing = false;         // hay una prueba corriendo en el monitor
+  var pickedPart = null;       // pieza que el jugador señaló al cerrar
+  var pickOk = false;
 
   /* ============================================================
      Arranque
@@ -536,6 +733,31 @@
     tech.reset();
     running = true;
     GT.ui.setScreen('screen-tech');
+
+    /* El banco se monta una sola vez y queda escuchando: tocar una
+       pieza del dibujo es lo mismo que elegirla en la lista. */
+    GT.bench.mount('tech-rig');
+    GT.bench.onSelect = selectZone;
+    GT.bench.onPower = testEquipment;
+    GT.bench.onTool = function () { renderTools(); renderTray(); };
+
+    bindOnce('tech-power', testEquipment);
+    bindOnce('tech-turn', function () {
+      var atras = GT.bench.turn();
+      GT.audio.open();
+      setHint(atras
+        ? 'Gabinete girado: tenés los conectores de atrás.'
+        : 'Gabinete de frente otra vez.');
+      renderTray();
+    });
+
+    /* Vistas de la cámara: el jugador no camina, se acerca. */
+    ['general', 'gabinete', 'interior', 'monitor'].forEach(function (v) {
+      bindOnce('tech-view-' + v, function () { GT.bench.look(v); renderViews(v); });
+    });
+
+    renderTools();
+
     loadCase(0);
   };
 
@@ -554,6 +776,29 @@
     caseMinutes = 0;
     dataLost = false;
     phase = 'trabajo';
+    testing = false;
+    pickedPart = null;
+    pickOk = false;
+    zoneState = {};
+
+    /* Equipo nuevo sobre el banco: cerrado, apagado y sin marcas. */
+    GT.bench.reset();
+
+    /* Cada orden trae su suciedad: lo que se ve adentro del gabinete
+       depende de las fallas que tenga este equipo. */
+    GT.bench.setDust(tiene('polvo') || tiene('filtro'));
+    GT.bench.setSulfato(tiene('sulfato') || tiene('sulfato_ram'));
+    GT.bench.setWet(tiene('humedad'));
+
+    /* Zonas que esta orden pone en juego, en orden de recorrido */
+    zones = ZONE_ORDER.filter(function (z) {
+      return cur.pasos.some(function (id) { return STEPS[id] && STEPS[id].parte === z; });
+    });
+    zone = zones[0] || null;
+    GT.bench.select(zone);
+    GT.bench.look('general');
+    renderViews('general');
+    renderTools();
 
     GT.state.level = i + 1;
     GT.startPuzzle();
@@ -565,10 +810,14 @@
     logLine('── ORDEN ' + pad3(i + 1) + ' · ' + cur.titulo.toUpperCase() + ' ──', 'head');
     logLine('Cliente: ' + cur.cliente, 'dim');
     logLine('Síntoma declarado: ' + currentSymptom(), 'sym');
+    if (cur.antecedente) logLine(cur.antecedente, 'warn');
     logLine('Empezá inspeccionando. Cada revisión consume minutos de taller.', 'dim');
   }
 
   function pad3(n) { return (n < 100 ? '0' : '') + (n < 10 ? '0' : '') + n; }
+
+  /** ¿Esta orden tiene tal falla? */
+  function tiene(falla) { return cur && cur.fallas.indexOf(falla) !== -1; }
 
   /** Síntoma que muestra el equipo según la primera falla pendiente.
       Recorro las fallas EN ORDEN y devuelvo el sintoma de la primera que
@@ -582,10 +831,6 @@
       if (!fixed[cur.fallas[i]]) return cur.sintomas[cur.fallas[i]];
     }
     return cur.exito;
-  }
-
-  function pendingFaults() {
-    return cur.fallas.filter(function (f) { return !fixed[f]; }).length;
   }
 
   /* ============================================================
@@ -603,41 +848,140 @@
         '<dt>Presupuesto</dt><dd>' + cur.presupuesto + ' min de taller</dd>' +
       '</dl>' +
       '<p class="tk-relato">' + GT.escapeHtml(cur.relato) + '</p>' +
-      '<h4>ESTADO ACTUAL DEL EQUIPO</h4>' +
+      '<h4>LO QUE SE VE EN EL EQUIPO</h4>' +
       '<p class="tk-sintoma" id="tech-sintoma">' + GT.escapeHtml(currentSymptom()) + '</p>' +
       '<p class="tk-tip">Regla del taller: <b>diagnosticar antes de cambiar</b>. ' +
          'Cada repuesto que ponés sin motivo sale del bolsillo del cliente.</p>';
 
-    document.getElementById('tech-pc').innerHTML = PC_SVG;
     document.getElementById('tech-log').innerHTML = '';
+    document.getElementById('tech-actions').innerHTML = '';
 
-    renderActions();
+    renderZones();
+    renderTray();
   }
 
-  function renderActions() {
-    var box = document.getElementById('tech-actions');
-    box.innerHTML =
-      '<div class="tech-group" id="grp-inspeccion"><h4>INSPECCIÓN <small>(mirar no cuesta plata)</small></h4><div class="tech-btns"></div></div>' +
-      '<div class="tech-group" id="grp-accion"><h4>ACCIONES <small>(algunas cuestan repuestos)</small></h4><div class="tech-btns"></div></div>' +
-      '<button class="tech-test" id="tech-test">▶ PROBAR EL EQUIPO</button>';
+  /* ============================================================
+     Zonas del equipo
+     La misma lista de piezas que el dibujo, en botones: el equipo se
+     puede recorrer con el mouse sobre el gabinete o desde acá.
+     ============================================================ */
+  function renderZones() {
+    var nav = document.getElementById('tech-zones');
+    if (!nav) return;
+    nav.innerHTML = '';
 
-    cur.pasos.forEach(function (id) {
-      var st = STEPS[id];
-      if (!st) return;
-
+    zones.forEach(function (z) {
       var b = document.createElement('button');
-      b.className = 'tech-btn' + (doneSteps[id] ? ' is-done' : '');
-      b.dataset.step = id;
+      var st = zoneState[z];
+      b.className = 'zone-tab' +
+        (z === zone ? ' is-sel' : '') +
+        (st ? ' is-' + st : '');
+      b.dataset.zone = z;
       b.innerHTML =
-        '<span class="tb-label">' + GT.escapeHtml(st.label) + '</span>' +
-        '<span class="tb-meta">' + st.min + ' min' +
-          (st.costo ? ' · $' + money(st.costo) : '') + '</span>';
-      b.addEventListener('click', function () { doStep(id, b); });
-
-      box.querySelector('#grp-' + st.g + ' .tech-btns').appendChild(b);
+        '<i class="zt-dot"></i>' +
+        '<span class="zt-name">' + ZONE_LABEL[z] + '</span>' +
+        '<span class="zt-n">' + doneInZone(z) + '/' + stepsOf(z).length + '</span>';
+      b.addEventListener('click', function () { selectZone(z); });
+      nav.appendChild(b);
     });
+  }
 
-    document.getElementById('tech-test').addEventListener('click', testEquipment);
+  /** Pasos de esta orden que corresponden a una zona. */
+  function stepsOf(z) {
+    return cur.pasos.filter(function (id) { return STEPS[id] && STEPS[id].parte === z; });
+  }
+
+  function doneInZone(z) {
+    return stepsOf(z).filter(function (id) { return doneSteps[id]; }).length;
+  }
+
+  /** Selecciona una zona, venga del dibujo o de la lista. */
+  function selectZone(z) {
+    /* Durante el cierre de la orden, tocar una pieza es señalarla. */
+    if (phase === 'diagnostico' && pickedPart === null) { answerPart(z); return; }
+    if (phase !== 'trabajo' || testing) return;
+    if (!z || zones.indexOf(z) === -1) return;
+
+    zone = z;
+    GT.bench.select(GT.bench.has(z) ? z : null);
+    GT.audio.click();
+    renderZones();
+    renderTray();
+  }
+
+  /* ============================================================
+     Bandeja de herramientas de la pieza elegida
+     ============================================================ */
+  function renderTray() {
+    var box = document.getElementById('tech-tray');
+    if (!box) return;
+
+    if (!zone) { box.innerHTML = ''; return; }
+
+    var list = stepsOf(zone);
+    var insp = list.filter(function (id) { return STEPS[id].g === 'inspeccion'; });
+    var acts = list.filter(function (id) { return STEPS[id].g === 'accion'; });
+
+    var html =
+      '<div class="tray-head">' +
+        '<b>' + ZONE_LABEL[zone] + '</b>' +
+        '<span>' + trayNote() + '</span>' +
+      '</div>';
+
+    html += group('INSPECCIÓN', '(mirar no cuesta plata)', insp);
+    html += group('ACCIONES', '(algunas cuestan repuestos)', acts);
+    box.innerHTML = html;
+
+    var btns = box.querySelectorAll('.tech-btn');
+    for (var i = 0; i < btns.length; i++) {
+      (function (b) {
+        b.addEventListener('click', function () { doStep(b.dataset.step, b); });
+      })(btns[i]);
+    }
+  }
+
+  function group(title, sub, ids) {
+    if (!ids.length) return '';
+    var html = '<div class="tech-group"><h4>' + title + ' <small>' + sub + '</small></h4><div class="tech-btns">';
+    ids.forEach(function (id) {
+      var st = STEPS[id];
+      var tool = st.tool || 'mano';
+      var faltaTool = (tool !== 'mano' && GT.bench.held() !== tool);
+      var faltaLado = (st.lado === 'atras' && !GT.bench.facingBack());
+      var locked = (st.req && !doneSteps[st.req]) || faltaTool || faltaLado;
+
+      var pide = '';
+      if (faltaTool) pide = ' · necesita ' + GT.bench.toolName(tool).toLowerCase();
+      else if (faltaLado) pide = ' · girá el gabinete';
+      else if (st.req && !doneSteps[st.req]) pide = ' · requiere: ' + STEPS[st.req].label.toLowerCase();
+      else if (tool !== 'mano') pide = ' · con ' + GT.bench.toolName(tool).toLowerCase();
+
+      html +=
+        '<button class="tech-btn' + (doneSteps[id] ? ' is-done' : '') + (locked ? ' is-locked' : '') +
+          '" data-step="' + id + '">' +
+          '<span class="tb-label">' + GT.escapeHtml(st.label) + '</span>' +
+          '<span class="tb-meta">' + st.min + ' min' +
+            (st.costo ? ' · $' + money(st.costo) : '') + GT.escapeHtml(pide) +
+          '</span>' +
+        '</button>';
+    });
+    return html + '</div></div>';
+  }
+
+  /** Aviso corto arriba de la bandeja, según en qué está el equipo. */
+  function trayNote() {
+    if (zone === 'cliente') return 'preguntas al cliente, antes de tocar el equipo';
+    if (zone === 'software') return 'el equipo prendido, del lado del sistema';
+    if (!GT.bench.isOpen() && insideZone(zone)) return 'hay que abrir el gabinete para llegar acá';
+    var st = zoneState[zone];
+    if (st === 'bad') return 'falla detectada en esta pieza';
+    if (st === 'fixed') return 'pieza reparada';
+    if (st === 'ok') return 'revisada, sin novedad';
+    return 'sin revisar';
+  }
+
+  function insideZone(z) {
+    return ['fuente', 'placa', 'ram', 'cooler', 'gpu', 'disco'].indexOf(z) !== -1;
   }
 
   function money(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
@@ -674,14 +1018,13 @@
     log.scrollTop = log.scrollHeight;
   }
 
-  function markPart(part, cls) {
+  /** Marca el estado de una pieza: queda pintado en el dibujo y en la lista. */
+  function markPart(part, st) {
     if (!part) return;
-    var g = document.querySelector('#tech-pc .pc-part[data-part="' + part + '"]');
-    if (!g) return;
-    g.classList.remove('is-checked', 'is-bad', 'is-fixed');
-    g.classList.add(cls);
-    g.classList.add('is-hit');
-    setTimeout(function () { g.classList.remove('is-hit'); }, 700);
+    zoneState[part] = st;
+    GT.bench.setStatus(part, st);
+    renderZones();
+    renderTray();
   }
 
   function refreshSymptom() {
@@ -704,7 +1047,28 @@
      el tiempo se gasta aunque no encuentres nada. */
   function doStep(id, btn) {
     if (phase !== 'trabajo' || GT.state.finished) return;
+    if (testing) { GT.ui.toast('Esperá que termine la prueba', 'warn'); return; }
     var st = STEPS[id];
+    if (!st) return;
+
+    /* La herramienta que hace falta tiene que estar en la mano:
+       la tapa no sale sin destornillador y el polvo no se va soplando. */
+    var tool = st.tool || 'mano';
+    if (tool !== 'mano' && GT.bench.held() !== tool) {
+      GT.audio.error();
+      logLine('✋ Para eso necesitás: ' + GT.bench.toolName(tool) + '. Está sobre la mesa.', 'warn');
+      GT.ui.toast('Agarrá ' + GT.bench.toolName(tool).toLowerCase(), 'warn');
+      return;
+    }
+
+    /* Lo que está atrás del gabinete se trabaja desde atrás: hay que
+       girar el equipo, igual que en el banco. */
+    if (st.lado === 'atras' && !GT.bench.facingBack()) {
+      GT.audio.error();
+      logLine('✋ Eso está en la parte de atrás. Girá el gabinete.', 'warn');
+      GT.ui.toast('Girá el gabinete para llegar atrás', 'warn');
+      return;
+    }
 
     /* Requisito previo (abrir el gabinete, por ejemplo) */
     if (st.req && !doneSteps[st.req]) {
@@ -726,9 +1090,14 @@
     GT.state.techMinutes = (GT.state.techMinutes || 0) + st.min;
     if (btn) btn.classList.add('is-done');
 
+    /* Sacar el disipador para mirarle la pasta también se ve en el equipo */
+    if (id === 'ver_pasta') GT.bench.pullPart('cooler');
+
     if (st.g === 'inspeccion') inspect(id, st);
     else act(id, st);
 
+    renderZones();
+    renderTray();
     renderHud();
   }
 
@@ -749,14 +1118,14 @@
 
     if (esFalla) {
       found[st.detecta] = true;
-      markPart(st.parte, 'is-bad');
+      markPart(st.parte, 'bad');
       logLine('⚠ ' + st.mal, 'bad');
       logLine('Encontraste algo. Ahora hay que resolverlo, no cambiarlo por las dudas.', 'dim');
       GT.audio.alarm();
       GT.addScore(60, 'falla detectada');
       GT.ui.flash('gain');
     } else {
-      markPart(st.parte, 'is-checked');
+      markPart(st.parte, 'ok');
       logLine('✓ ' + (st.ok || 'Sin novedades.'), 'ok');
       GT.audio.click();
       GT.addScore(4, 'descarte correcto');
@@ -780,6 +1149,20 @@
       GT.state.techCost = (GT.state.techCost || 0) + st.costo;
     }
 
+    /* Abrir el gabinete no repara nada, pero destapa el equipo:
+       hasta que no pasa esto, el interior no se puede tocar. */
+    if (id === 'abrir') {
+      GT.bench.setOpen(true);
+      logLine('✔ ' + st.hecho, 'ok');
+      GT.audio.open();
+      renderViews('interior');
+      if (insideZone(zone)) GT.bench.select(zone);
+      return;
+    }
+
+    /* Lo que se hace con las manos se ve en el equipo */
+    sceneEffect(id, st);
+
     var arregla = st.arregla && cur.fallas.indexOf(st.arregla) !== -1 && !fixed[st.arregla];
 
     /* Maniobra peligrosa: hacerla antes de otro paso obligatorio.
@@ -802,7 +1185,7 @@
 
     if (arregla) {
       fixed[st.arregla] = true;
-      markPart(st.parte, 'is-fixed');
+      markPart(st.parte, 'fixed');
       logLine('✔ ' + st.hecho, 'ok');
       GT.audio.ok();
 
@@ -838,6 +1221,23 @@
     refreshSymptom();
   }
 
+  /** Efecto de la acción sobre la escena 3D: la pieza sale del zócalo,
+      el polvo se va, la ficha del monitor cambia de puerto. */
+  function sceneEffect(id, st) {
+    if (id === 'limpiar_polvo' || id === 'limpiar_filtros') GT.bench.cleanDust();
+    if (id === 'limpiar_sulfato' || id === 'limpiar_contactos_ram') GT.bench.cleanSulfato();
+    if (id === 'secar_equipo') GT.bench.dryOut();
+    if (id === 'pasar_video') GT.bench.plugVideoToGpu();
+
+    var sale = {
+      reasentar_ram: 'ram', cambiar_ram: 'ram', limpiar_contactos_ram: 'ram',
+      reasentar_gpu: 'gpu', cambiar_gpu: 'gpu',
+      cambiar_disco: 'disco', cambiar_fuente: 'fuente',
+      cambiar_pasta: 'cooler', cambiar_vent: 'cooler'
+    };
+    if (sale[id]) GT.bench.pullPart(sale[id]);
+  }
+
   /* ============================================================
      Probar el equipo
      ============================================================ */
@@ -845,44 +1245,163 @@
      fallas faltan; simplemente le muestro el sintoma que queda. Si quedan
      fallas pendientes, el equipo sigue roto (y el sintoma puede haber CAMBIADO,
      que es lo que lo obliga a volver a inspeccionar en vez de adivinar).
-     Cuando no queda ninguna, paso a la fase de diagnostico. */
+     Cuando no queda ninguna, paso a la fase de diagnostico.
+     Acá eso se ve en el monitor del banco: se aprieta el botón, el equipo
+     intenta arrancar y la pantalla muestra lo que mostraría en el taller.
+     Mientras la prueba corre no se puede tocar nada, igual que en la vida
+     real: primero se mira qué hace el equipo, después se decide. */
   function testEquipment() {
-    if (phase !== 'trabajo' || GT.state.finished) return;
+    if (phase !== 'trabajo' || GT.state.finished || testing) return;
 
     caseMinutes += 2;
     GT.state.techMinutes = (GT.state.techMinutes || 0) + 2;
-    logLine('<b>› Probar el equipo</b> <i>(2 min)</i>', 'step');
+    logLine('<b>› Encender y probar el equipo</b> <i>(2 min)</i>', 'step');
 
-    if (pendingFaults() > 0) {
-      logLine('✘ ' + currentSymptom(), 'bad');
-      logLine('Todavía falla. Seguí buscando.', 'dim');
-      GT.audio.error();
-      GT.ui.shake();
-      renderHud();
-      return;
-    }
+    var falla = firstPending();
+    var kind = falla ? (FAULT_SCREEN[falla] || 'sin_senal') : 'ok';
 
-    logLine('✔ ' + cur.exito, 'ok');
-    GT.audio.levelUp();
-    GT.ui.flash('gain');
-    markPart(null);
-    phase = 'diagnostico';
-    renderDiagnosis();
+    testing = true;
+    setHint('Prueba en curso: mirá el monitor.');
+    renderTray();
     renderHud();
+
+    GT.bench.screenTest(kind, function () {
+      testing = false;
+
+      if (falla) {
+        logLine('✘ ' + currentSymptom(), 'bad');
+        logLine('La pantalla te lo está diciendo. Seguí buscando por ahí.', 'dim');
+        GT.audio.error();
+        GT.ui.shake();
+        setHint('El equipo sigue fallando. Mirá lo que quedó en el monitor.');
+        renderTray();
+        renderHud();
+        return;
+      }
+
+      logLine('✔ ' + cur.exito, 'ok');
+      GT.audio.levelUp();
+      GT.ui.flash('gain');
+      setHint('El equipo arrancó. Ahora hay que cerrar la orden.');
+      phase = 'diagnostico';
+      renderDiagnosis();
+      renderHud();
+    });
+  }
+
+  /** Primera falla sin resolver: es la que manda en la pantalla. */
+  function firstPending() {
+    for (var i = 0; i < cur.fallas.length; i++) {
+      if (!fixed[cur.fallas[i]]) return cur.fallas[i];
+    }
+    return null;
+  }
+
+  function setHint(txt) {
+    var el = document.getElementById('tech-rig-hint');
+    if (el) el.textContent = txt;
+  }
+
+  function bindOnce(id, fn) {
+    var el = document.getElementById(id);
+    if (!el || el.dataset.bound) return;
+    el.dataset.bound = '1';
+    el.addEventListener('click', fn);
+  }
+
+  /* ============================================================
+     Herramientas de la mesa
+     Son las mismas que están sobre el escritorio en 3D: esto es la
+     otra forma de agarrarlas, para teclado y pantallas chicas.
+     ============================================================ */
+  function renderTools() {
+    var box = document.getElementById('tech-tools');
+    if (!box) return;
+
+    var held = GT.bench.held();
+    var html = '<span class="tool-lead">HERRAMIENTAS</span>';
+
+    html += '<button class="tool-btn' + (held === 'mano' ? ' is-held' : '') +
+            '" data-tool="mano">MANO</button>';
+    GT.bench.tools().forEach(function (t) {
+      html += '<button class="tool-btn' + (held === t.id ? ' is-held' : '') +
+              '" data-tool="' + t.id + '">' + t.label + '</button>';
+    });
+    box.innerHTML = html;
+
+    var btns = box.querySelectorAll('.tool-btn');
+    for (var i = 0; i < btns.length; i++) {
+      (function (b) {
+        b.addEventListener('click', function () { GT.bench.hold(b.dataset.tool); GT.audio.click(); });
+      })(btns[i]);
+    }
+  }
+
+  function renderViews(active) {
+    ['general', 'gabinete', 'interior', 'monitor'].forEach(function (v) {
+      var el = document.getElementById('tech-view-' + v);
+      if (el) el.className = 'view-btn' + (v === active ? ' is-sel' : '');
+    });
   }
 
   /* ============================================================
      Cierre de la orden: explicar la falla
      ============================================================ */
+  /* El cierre tiene dos pasos y el primero se hace SOBRE EL EQUIPO:
+     el técnico tiene que poder señalar la pieza que falló, no sólo
+     elegir una opción de una lista. */
   function renderDiagnosis() {
+    document.getElementById('tech-tray').innerHTML = '';
+    GT.bench.setPickMode(true);
+
+    document.getElementById('tech-actions').innerHTML =
+      '<div class="tech-diag">' +
+        '<h4>CERRAR LA ORDEN · PASO 1</h4>' +
+        '<p class="td-lead">El equipo anda. Antes de asentar nada en la ficha, ' +
+          '<b>señalá en el equipo la pieza que falló</b>: tocala en el gabinete ' +
+          'o elegila en la lista de piezas.</p>' +
+        '<p class="td-q">¿Dónde estaba la falla?</p>' +
+      '</div>';
+
+    setHint('Señalá la pieza que falló.');
+  }
+
+  /** Respuesta al paso 1: la pieza señalada sobre el equipo. */
+  function answerPart(z) {
+    if (phase !== 'diagnostico' || pickedPart !== null) return;
+
+    pickedPart = z;
+    pickOk = (z === cur.pieza);
+    GT.bench.setPickMode(false);
+    GT.bench.select(z);
+
+    if (pickOk) {
+      GT.addScore(120, 'pieza señalada correctamente');
+      GT.audio.ok();
+      logLine('✔ Señalaste ' + ZONE_LABEL[z] + ': era esa.', 'ok');
+    } else {
+      GT.addScore(-60, 'pieza mal señalada');
+      GT.audio.error();
+      logLine('✘ Señalaste ' + ZONE_LABEL[z] + ', y la falla no estaba ahí.', 'bad');
+    }
+
+    renderZones();
+    renderCause();
+  }
+
+  /** Paso 2: la causa, como se asienta en la ficha de servicio. */
+  function renderCause() {
     var d = cur.diagnostico;
     var box = document.getElementById('tech-actions');
 
     var html =
       '<div class="tech-diag">' +
-        '<h4>CERRAR LA ORDEN</h4>' +
-        '<p class="td-lead">El equipo anda. Antes de entregarlo, dejá asentado en la ficha ' +
-          'qué era lo que fallaba.</p>' +
+        '<h4>CERRAR LA ORDEN · PASO 2</h4>' +
+        '<p class="td-lead">' +
+          (pickOk
+            ? 'Bien señalada: <b>' + ZONE_LABEL[pickedPart] + '</b>. '
+            : 'Señalaste <b>' + ZONE_LABEL[pickedPart] + '</b>, que no era. ') +
+          'Ahora dejá asentado en la ficha qué era lo que fallaba.</p>' +
         '<p class="td-q">' + d.pregunta + '</p>' +
         '<div class="td-opts">';
     d.opciones.forEach(function (o, i) {
@@ -956,6 +1475,10 @@
     } else {
       resumen.push(wasted + ' acción(es) que no resolvían nada.');
     }
+
+    resumen.push(pickOk
+      ? 'Señalaste bien la pieza sobre el equipo (+120).'
+      : 'Señalaste mal la pieza sobre el equipo (−60).');
 
     if (dataLost) resumen.push('Los datos del cliente se perdieron. Eso no se recupera con un descuento.');
 

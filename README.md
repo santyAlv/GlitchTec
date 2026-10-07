@@ -4,7 +4,7 @@ Prototipo funcional de un **videojuego educativo** sobre informática, con **dos
 
 | Modo | De qué va |
 |---|---|
-| **PC Corrompida** (software) | Un escritorio WinTEC XP infectado por un malware consciente. Terminal real, administrador de tareas, correo y purga final. Un **hacker** se pasea por la pantalla, te bloquea teclas y te corrompe los colores. |
+| **PC Corrompida** (software) | Un escritorio WinTEC 95 infectado por un malware consciente. Terminal real, administrador de tareas, correo y purga final. Un **hacker** se pasea por la pantalla, te bloquea teclas y te corrompe los colores. |
 | **Servicio Técnico** (hardware) | Sos el técnico del taller: entran equipos rotos y hay que **diagnosticar** por qué fallan, repararlos y explicar la falla. |
 
 **Materia:** PISWD · **Profesor:** Callamullo Diego
@@ -27,6 +27,77 @@ Prototipo funcional de un **videojuego educativo** sobre informática, con **dos
 | Lógica del servidor | **PHP** |
 | Base de datos | **MySQL / MariaDB** |
 | Control de versiones | **Git + GitHub** |
+
+---
+
+## Dirección de arte — "WinTEC 95"
+
+Todo el juego pasa dentro de una computadora vieja, así que la interfaz **es**
+el escenario: se ve como un sistema operativo de fines de los 90 corriendo en un
+monitor CRT. Está armado enteramente con las tecnologías del stack (HTML, CSS y
+JavaScript): no hay imágenes, ni fuentes externas, ni librerías de UI.
+
+| Pieza | Cómo se resuelve |
+|---|---|
+| **Paleta** | Gris de sistema (`--face`), azul de barra de título, verde azulado de escritorio y el fósforo del monitor (verde, ámbar, rojo, cian) para terminal, boot y HUD. |
+| **Relieve** | Tres variables de `box-shadow` (`--bevel-out`, `--bevel-in`, `--bevel-thin-in`) reemplazan a los bordes redondeados: lo que se aprieta sobresale, lo que muestra contenido está hundido. |
+| **Tipografía** | Sans de sistema sin suavizado (`-webkit-font-smoothing: none`) para la interfaz y monoespaciada para todo lo que "sale de la máquina". |
+| **Iconos** | Cada icono es un *slot*: entra el arte final del equipo de diseño (PNG) y, si todavía no está, el SVG de 16×16 dibujado sobre rejilla entera con `shape-rendering="crispEdges"`. Ver **Recursos gráficos**. |
+| **Tramas** | El "dither" de un pixel de los fondos noventosos, hecho con dos degradés a 45° superpuestos. |
+| **Filtro CRT** | Líneas de barrido, máscara de fósforo RGB, viñeta, curvatura simulada y parpadeo del tubo, todo en `css/effects.css`. |
+
+La corrupción del malware está construida sobre ese mismo sistema: cuando la
+infección sube, se desincroniza la imagen, se parten los canales de color y hasta
+las barras de título cambian de tono. Los pop-ups y el panel del hacker usan el
+marco del sistema con otro color: parecen del sistema, pero no lo son.
+
+---
+
+## Recursos gráficos (cómo enchufar el arte)
+
+La interfaz se maquetó sin imágenes, y meter PNG en una maqueta hecha para texto
+es la forma más fácil de desarmarla: el renglón crece cuando la imagen carga, el
+icono empuja al de al lado, la tipografía se corre. Por eso **ningún elemento
+gráfico se escribe suelto**: todos van adentro de un contenedor de medida
+reservada (`.asset`), que ocupa exactamente el mismo lugar tenga adentro lo que
+tenga.
+
+| Estado | Qué hay adentro | Cómo se ve |
+|---|---|---|
+| `is-final` | El PNG del equipo de diseño | El arte |
+| `is-draft` | El SVG provisional de la maqueta | El dibujo de siempre |
+| `is-pending` | Nada todavía | Un marcador gris tramado con las dos primeras letras de la pieza |
+
+Los tres miden igual, así que el arte se puede ir enchufando **de a una pieza**
+sin tocar la maqueta y sin que se mueva un pixel. Si un archivo falta o se
+renombra, el contenedor vuelve solo al marcador en vez de dejar el icono roto
+del navegador.
+
+**Para agregar arte** alcanza con una línea en el catálogo de `js/assets.js`:
+
+```js
+'fs.documento': 'documento.png',    // archivo dentro de EntidadesGraficas/Diseño/iconos/
+'sys.logo':     { src: '...', fit: 'cover' },   // si viene con margen de más
+```
+
+**Dónde van los gráficos** (las áreas del DOM preparadas):
+
+| Lugar | Slot | Medida |
+|---|---|---|
+| Iconos del escritorio | `app.*` | 32 px (24 en celular) |
+| Barra de tareas | `app.*` | 16 px |
+| Barra de título de ventana | `app.*` | 16 px |
+| Menú Inicio | `app.*` | 22 px |
+| Explorador de archivos | `fs.*` | 32 px |
+| Administrador de tareas | `proceso.firmado` / `proceso.sin-firma` | 16 px |
+| Pop-ups del malware | `aviso.alerta` / `aviso.malware` | 48 px |
+| Diálogos del sistema | `sys.usuario` / `aviso.malware` | 32 px |
+| Créditos | `sys.logo` | banner 300×130 |
+| Ventana de componentes (pendiente) | `hw.*` | — |
+
+Desde la consola del navegador, `GlitchTec.assets.revisar()` marca en pantalla lo
+que todavía no es arte final —magenta lo que no tiene nada, ámbar lo provisional—
+y devuelve la lista de piezas que faltan dibujar.
 
 ---
 
@@ -66,14 +137,42 @@ Prototipo funcional de un **videojuego educativo** sobre informática, con **dos
 
 ### Modo 2 — Servicio Técnico
 
-1. Leé la **orden de trabajo**: lo que dice el cliente y el síntoma real del equipo.
-2. **Inspeccioná** (gratis, pero consume minutos de taller) hasta encontrar la falla.
-3. **Actuá** sobre lo que encontraste. Ojo: cambiar una pieza sana cuesta plata y reputación.
-4. **Probá el equipo**. Si sigue fallando, el síntoma cambia y hay que seguir buscando.
-5. **Cerrá la orden** explicando cuál era la falla.
+Es un **escritorio en 3D** hecho con p5.js en WEBGL (`js/bench3d.js`): el equipo del
+cliente, el monitor de prueba y las herramientas sobre la mesa. La cámara no camina,
+sólo se acerca a lo que estás trabajando (banco · gabinete · interior · monitor).
 
-Las cuatro órdenes: *no enciende* (alimentación) · *enciende sin imagen* (RAM mal asentada) ·
-*se apaga sola* (polvo + pasta térmica) · *lentísima y se cuelga* (disco moribundo: **respaldo primero**).
+1. Leé la **orden de trabajo**: lo que dice el cliente.
+2. **Encendé el equipo**. El monitor muestra lo que mostraría de verdad —POST, pitidos,
+   código de error, arranque, apagón o *sin señal*— y de ahí se lee el síntoma.
+3. **Agarrá la herramienta** que haga falta: destornillador para la tapa y los tornillos,
+   aire comprimido para el polvo, pasta térmica, tester y disco de respaldo.
+4. **Sacá la tapa** y **girá el gabinete** (arrastrándolo) para llegar a los conectores
+   de atrás: ficha de corriente, interruptor de la fuente y los dos puertos de video.
+5. **Tocá la pieza** que querés trabajar y se abre lo que podés hacerle.
+6. **Inspeccioná** (gratis, pero consume minutos de taller) hasta encontrar la falla.
+7. **Actuá** sobre lo que encontraste. Ojo: cambiar una pieza sana cuesta plata y reputación.
+8. **Probá de nuevo**: si sigue fallando, la pantalla cambia y hay que seguir buscando.
+9. **Cerrá la orden**: señalás sobre el equipo la pieza que falló y asentás la causa en la ficha.
+
+Las piezas se ven: la tapa queda apoyada en la mesa, la RAM sale del zócalo, el polvo
+tapa el disipador hasta que lo soplás, el sulfato deja su verdín sobre las pistas y el cable
+de video se ve pasar de un puerto al otro. Cada orden trae el equipo como lo dejó el cliente:
+con polvo, con sulfato o con humedad adentro.
+
+### Las siete órdenes de trabajo
+
+| # | Orden | Qué enseña |
+|---|-------|------------|
+| 1 | No enciende | Alimentación: revisar de afuera hacia adentro y de lo barato a lo caro |
+| 2 | Enciende pero no da imagen | El POST y su código de pitidos; RAM mal asentada |
+| 3 | Se apaga sola | Protección térmica: polvo en el disipador **y** pasta térmica vencida |
+| 4 | Lentísima y se cuelga | Disco moribundo (SMART): **respaldo antes de tocar nada** |
+| 5 | Estuvo guardada en un depósito húmedo | Humedad y **sulfatación**: secar primero, limpiar el verdín con alcohol isopropílico, no cambiar la pieza |
+| 6 | Hace ruido y se apaga | La ventilación como **circuito**: filtros tapados y ventilador trabado |
+| 7 | Se apaga cuando la exigen | **Pasta térmica seca** en un equipo limpio: mantenimiento preventivo cada 2 o 3 años |
+
+Las tres últimas son mantenimiento preventivo y correctivo: polvo, humedad y pasta térmica,
+que es por donde entra la mayoría de las fallas reales de un equipo de escritorio.
 
 ### Puntaje, rachas y combate final
 
@@ -167,10 +266,17 @@ Debería responder `{ "ok": true, "db": true, ... }`.
 glitch-tec/
 ├── index.html              # Shell de la interfaz (menú, modos, escritorio, taller)
 ├── css/                    # Estilos (escritorio, ventanas, CRT, hacker, taller)
+│   ├── base.css            # Sistema visual: paleta, biseles, tipografía, scrollbars
+│   ├── screens.css         # Título, manual, boot, pantalla azul, victoria
+│   ├── desktop.css         # Escritorio, iconos, barra de tareas, menú Inicio, HUD
+│   ├── windows.css         # Chrome de ventanas y aplicaciones internas
+│   ├── effects.css         # Filtro CRT y corrupción
 │   ├── hacker.css          # Personaje, panel de rescate, corrupción de colores
-│   └── tech.css            # Banco de trabajo del modo técnico
+│   ├── tech.css            # Banco de trabajo del modo técnico
+│   └── assets.css          # Contenedores de imágenes, sprites y marcadores
 ├── js/
 │   ├── vendor/p5.min.js    # Motor Processing (p5.js)
+│   ├── assets.js           # Catálogo y contenedores de recursos gráficos
 │   ├── engine.js           # Sketches p5: CRT, CPU/RAM, núcleo
 │   ├── state.js            # Estado global + bus de eventos
 │   ├── game.js             # Orquestador / loop / selección de modo
@@ -179,7 +285,8 @@ glitch-tec/
 │   ├── mail.js             # TEC-Mail (phishing)
 │   ├── boss.js             # Nivel final (purge)
 │   ├── hacker.js           # GL1TCH-M4N: paseo, bloqueo de teclas, colores
-│   ├── tech.js             # Modo Servicio Técnico (4 órdenes de trabajo)
+│   ├── bench3d.js          # Sketch p5 WEBGL: escritorio 3D (gabinete, monitor, herramientas)
+│   ├── tech.js             # Modo Servicio Técnico (7 órdenes de trabajo)
 │   ├── api.js              # Cliente PHP / fallback local
 │   ├── ranking.js          # Pantalla de ranking (global / local, por modo)
 │   └── ...
@@ -243,10 +350,11 @@ git push -u origin main
 
 ## Estado del prototipo (alfa)
 
-Implementado: selección de modo, escritorio WinTEC XP, Terminal, Explorador, pop-ups del malware,
+Implementado: selección de modo, escritorio WinTEC 95, Terminal, Explorador, pop-ups del malware,
 Administrador de tareas, TEC-Mail, purga final, **hacker con bloqueo de teclas y corrupción de
-colores**, **modo Servicio Técnico con 4 órdenes de trabajo**, puntuación/integridad/tiempo,
-**rachas y multiplicadores**, **combate jugador vs. malware**, **ranking global y local**,
+colores**, **modo Servicio Técnico con 7 órdenes de trabajo** en un banco 3D,
+puntuación/integridad/tiempo, **rachas y multiplicadores**, **combate jugador vs. malware**,
+**ranking global y local**,
 p5.js, API PHP y esquema MySQL.
 
 Pendiente (post-alfa): módulos avanzados de ransomware/spyware, más narrativa, más órdenes de

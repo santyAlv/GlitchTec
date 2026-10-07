@@ -1,33 +1,64 @@
 /* ============================================================
-   Glitch.TEC — efectos CRT / glitch / corrupcion
+   Glitch.TEC — filtro de monitor CRT / glitch / corrupcion
    La intensidad se controla con --glitch (0 a 1) desde JS.
    ============================================================ */
 
+/* ---------------- Vidrio del monitor ---------------- */
 #scanlines {
   position: absolute;
   inset: 0;
   z-index: 9000;
   pointer-events: none;
   background:
+    /* lineas de barrido */
     repeating-linear-gradient(
       180deg,
-      rgba(0,0,0,.16) 0px,
-      rgba(0,0,0,.16) 1px,
+      rgba(0,0,0,.20) 0px,
+      rgba(0,0,0,.20) 1px,
       transparent 1px,
+      transparent 3px
+    ),
+    /* mascara de fosforo: las tres tiras de color del tubo */
+    repeating-linear-gradient(
+      90deg,
+      rgba(255,0,0,.045) 0px,
+      rgba(0,255,0,.045) 1px,
+      rgba(0,0,255,.045) 2px,
       transparent 3px
     );
   mix-blend-mode: multiply;
-  opacity: .55;
+  opacity: .6;
+  animation: crtFlicker 5.5s steps(2) infinite;
+}
+/* Parpadeo minimo del tubo */
+@keyframes crtFlicker {
+  0%, 96%, 100% { opacity: .6; }
+  97%           { opacity: .52; }
+  98%           { opacity: .66; }
 }
 
-/* Vinieta + curvatura simulada */
+/* Vinieta + brillo del vidrio curvo */
 #scanlines::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,.55) 100%);
+  background:
+    radial-gradient(ellipse at 32% 12%, rgba(255,255,255,.06) 0%, transparent 42%),
+    radial-gradient(ellipse at center, transparent 54%, rgba(0,0,0,.62) 100%);
 }
 
+/* Esquinas del tubo: el marco negro del monitor */
+#scanlines::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow:
+    inset 0 0 34px rgba(0,0,0,.55),
+    inset 0 0 4px rgba(0,0,0,.9);
+  border-radius: 8px;
+}
+
+/* ---------------- Corrupcion ---------------- */
 #glitch-overlay {
   position: absolute;
   inset: 0;
@@ -46,14 +77,14 @@
   75%     { transform: translate(-1px, -1px); }
 }
 
-/* Barra de tearing que cruza la pantalla cuando la infeccion sube */
+/* Barra de desincronizacion vertical que cruza la pantalla */
 #glitch-overlay::before {
   content: "";
   position: absolute;
   left: 0; right: 0;
   height: 9%;
-  background: rgba(255,255,255,.055);
-  box-shadow: 0 0 30px rgba(86,216,255,.22);
+  background: rgba(255,255,255,.06);
+  box-shadow: 0 0 30px rgba(79,210,255,.2);
   animation: tear calc(9s - var(--glitch, 0) * 6s) linear infinite;
   opacity: calc(var(--glitch, 0));
 }
@@ -62,16 +93,16 @@
   100% { top: 112%; }
 }
 
-/* Sacudida global (se aplica al recibir daño) */
-#crt.shake { animation: shake .34s cubic-bezier(.36,.07,.19,.97); }
+/* Sacudida global (al recibir daño) */
+#crt.shake { animation: shake .34s steps(2) 3; }
 @keyframes shake {
-  10%,90% { transform: translate(-2px, 0); }
-  20%,80% { transform: translate(4px, 1px); }
-  30%,50%,70% { transform: translate(-6px, -1px); }
-  40%,60% { transform: translate(6px, 1px); }
+  0%, 100% { transform: translate(0, 0); }
+  25%      { transform: translate(-4px, 1px); }
+  50%      { transform: translate(5px, -1px); }
+  75%      { transform: translate(-3px, -1px); }
 }
 
-/* Ruptura de color severa (nivel de infeccion alto) */
+/* Ruptura de color severa (infeccion alta) */
 #crt.corrupt #desktop {
   filter: saturate(calc(1 - var(--glitch, 0) * .55)) contrast(calc(1 + var(--glitch, 0) * .3));
 }
@@ -81,8 +112,16 @@
   90% { filter: drop-shadow(1.5px 0 0 rgba(255,0,64,.5)) drop-shadow(-1.5px 0 0 rgba(0,255,196,.5)); }
   94% { filter: drop-shadow(-2px 0 0 rgba(255,0,64,.45)) drop-shadow(2px 0 0 rgba(0,255,196,.45)); }
 }
+/* Con el sistema corrompido hasta las barras de titulo se pudren */
+#crt.corrupt .win-bar,
+#crt.corrupt #taskbar { animation: barRot 6s steps(4) infinite; }
+@keyframes barRot {
+  0%, 82%, 100% { filter: none; }
+  86%  { filter: hue-rotate(50deg); }
+  92%  { filter: hue-rotate(-70deg) saturate(1.5); }
+}
 
-/* Flash blanco / rojo puntual */
+/* Destello puntual */
 #flash {
   position: absolute;
   inset: 0;
@@ -91,14 +130,14 @@
   opacity: 0;
   background: #fff;
 }
-#flash.hit  { animation: flashHit .3s ease-out; background: #ff2f47; }
-#flash.gain { animation: flashHit .3s ease-out; background: #35ff7a; }
+#flash.hit  { animation: flashHit .3s steps(3); background: #ff2f47; }
+#flash.gain { animation: flashHit .3s steps(3); background: #2bf07a; }
 @keyframes flashHit {
   0%   { opacity: .34; }
   100% { opacity: 0; }
 }
 
-/* Texto glitcheado reutilizable */
+/* Texto con temblor de sincronismo */
 .glitch-text {
   position: relative;
   animation: textJit 2.2s steps(3) infinite;
@@ -109,7 +148,7 @@
   98% { transform: translate(1px, 0); }
 }
 
-/* Cursor parpadeante para el boot */
+/* Cursor del arranque */
 .blink { animation: blink 1s steps(2) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 

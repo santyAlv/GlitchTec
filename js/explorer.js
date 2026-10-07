@@ -32,6 +32,20 @@
     return GT.ui.icons.doc;
   }
 
+  /* El mismo criterio, pero para la pieza gráfica: el icono que se ve es el
+     arte final si ya existe, y si no el dibujo provisional de arriba. Los dos
+     entran en el mismo contenedor, así que la rejilla no se mueve. */
+  function assetFor(node) {
+    if (node.type === 'dir') return node.locked ? 'fs.carpeta-lock' : 'fs.carpeta';
+    if (node.scanned && node.malicious) return 'fs.peligro';
+    if (node.kind === 'exe' || node.kind === 'bin') return 'fs.ejecutable';
+    if (node.kind === 'img') return 'fs.imagen';
+    if (node.kind === 'zip' || node.kind === 'rar') return 'fs.comprimido';
+    if (node.kind === 'mp3' || node.kind === 'wav') return 'fs.musica';
+    if (node.corrupt) return 'fs.roto';
+    return 'fs.documento';
+  }
+
   exp.open = function (startPath) {
     if (startPath) path = startPath.slice();
 
@@ -54,7 +68,7 @@
     GT.ui.openWindow({
       id: WIN_ID,
       title: 'Mi PC',
-      icon: GT.ui.icons.folder,
+      icon: GT.ui.icons.folder, asset: 'app.explorador',
       width: 600, height: 400,
       x: 220, y: 110,
       body: body
@@ -97,7 +111,8 @@
       if (child.locked) cls += ' locked';
       if (GT.fs.hasDoubleExtension(name) || (child.scanned && child.malicious)) cls += ' danger';
       item.className = cls;
-      item.innerHTML = iconFor(child, name) + '<span>' + GT.escapeHtml(name) + '</span>';
+      item.innerHTML = GT.ui.slot(assetFor(child), iconFor(child, name), 'lg', name) +
+                       '<span>' + GT.escapeHtml(name) + '</span>';
 
       item.addEventListener('click', function () {
         selected = { name: name, node: child };
@@ -190,7 +205,7 @@
     GT.ui.openWindow({
       id: id,
       title: name + ' — Bloc de notas',
-      icon: GT.ui.icons.doc,
+      icon: GT.ui.icons.doc, asset: 'fs.documento',
       width: 520, height: 340,
       body: pre
     });

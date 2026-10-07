@@ -148,7 +148,13 @@
       '<div class="popup-bar"><span>' + GT.escapeHtml(t.title) + '</span>' +
         '<button class="popup-x" title="Cerrar">X</button></div>' +
       '<div class="popup-body">' +
-        '<div class="popup-ico">' + (t.evil ? '☠' : '!') + '</div>' +
+        '<div class="popup-ico">' +
+          GT.assets.html(t.evil ? 'aviso.malware' : 'aviso.alerta', {
+            size: 'xl',
+            alt: t.evil ? 'Malware' : 'Advertencia',
+            fallback: '<span class="ico-glifo">' + (t.evil ? '☠' : '!') + '</span>'
+          }) +
+        '</div>' +
         '<div class="popup-txt"><b>' + GT.escapeHtml(t.head) + '</b>' +
           GT.escapeHtml(t.text) + '</div>' +
       '</div>' +

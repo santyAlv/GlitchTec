@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="css/effects.css">
 <link rel="stylesheet" href="css/hacker.css">
 <link rel="stylesheet" href="css/tech.css">
+<link rel="stylesheet" href="css/assets.css">
 </head>
 <body>
 
@@ -71,7 +72,7 @@
       <div class="modes-grid">
 
         <div class="mode-card software" data-action="play" data-mode="virus" role="button" tabindex="0">
-          <span class="mode-ico">☠</span>
+          <span class="mode-ico"><svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M3 2h10v8H3zM5 10h6v4H5z" fill="#e8e8e0"/><path d="M5 5h2v2H5zM9 5h2v2H9z" fill="#14181a"/><path d="M7 8h2v1H7z" fill="#14181a"/><path d="M6 10h1v4H6zM9 10h1v4H9z" fill="#8e9398"/></svg></span>
           <span class="mode-tag">MODO 1 · SOFTWARE</span>
           <span class="mode-name">PC CORROMPIDA</span>
           <span class="mode-desc">
@@ -88,7 +89,7 @@
         </div>
 
         <div class="mode-card tecnico" data-action="play" data-mode="tecnico" role="button" tabindex="0">
-          <span class="mode-ico">🛠</span>
+          <span class="mode-ico"><svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M2 11h2v2H2zM4 9h2v2H4zM6 7h2v2H6zM8 5h2v2H8z" fill="#d8dcd8"/><path d="M9 2h4v2H9zM11 4h2v3h-2z" fill="#ffd968"/><path d="M1 12h3v3H1z" fill="#8e9398"/></svg></span>
           <span class="mode-tag">MODO 2 · HARDWARE</span>
           <span class="mode-name">SERVICIO TÉCNICO</span>
           <span class="mode-desc">
@@ -96,7 +97,7 @@
             por qué fallan: inspeccionar, probar, reparar y explicar la falla.
           </span>
           <ul class="mode-list">
-            <li>4 órdenes de trabajo con fallas distintas</li>
+            <li>7 órdenes de trabajo con fallas distintas</li>
             <li>Diagnóstico por pasos: mirar, descartar, probar</li>
             <li>Cambiar piezas sanas te cuesta plata y reputación</li>
             <li>Cerrás cada orden explicando qué era</li>
@@ -184,15 +185,27 @@
         <article class="doc-card">
           <h3>8. Modo Servicio Técnico</h3>
           <p>El otro modo de juego. Sos el técnico del taller: te entran equipos rotos y tenés
-             que descubrir por qué fallan.</p>
+             que descubrir por qué fallan. Estás sentado frente a un <b>escritorio en 3D</b>
+             con el equipo del cliente, un <b>monitor de prueba</b> y las
+             <b>herramientas sobre la mesa</b>.</p>
           <ul class="cmd-list">
+            <li><b>Agarrá una herramienta</b> (destornillador, aire comprimido, pasta térmica,
+                tester, disco de respaldo). Sin la herramienta correcta no se puede hacer el trabajo</li>
+            <li><b>Sacá la tapa</b> con el destornillador: con la tapa puesta no se toca el interior</li>
+            <li><b>Girá el gabinete</b> (arrastrándolo o con el botón) para llegar a los
+                conectores de atrás: la ficha de corriente, el interruptor y los puertos de video</li>
+            <li><b>Tocá una pieza</b> del equipo y se abren las cosas que podés hacerle</li>
             <li><b>Inspeccionar</b> es gratis pero consume minutos de taller</li>
-            <li><b>Actuar</b> sobre lo que encontraste: reconectar, reasentar, limpiar, cambiar</li>
-            <li><b>Probar</b> el equipo: si sigue fallando, cambia el síntoma</li>
-            <li><b>Cerrar la orden</b> explicando cuál era la falla</li>
+            <li><b>Encender y probar</b>: el monitor muestra lo que mostraría el equipo de verdad
+                (POST, pitidos, código de error, arranque, apagón). El síntoma se <i>lee</i> de ahí</li>
+            <li><b>Cerrar la orden</b>: señalás en el equipo la pieza que falló y asentás la causa</li>
           </ul>
           <p>Cambiar una pieza sana te cuesta plata y <b>reputación</b>. Si la reputación llega
              a 0%, se termina la partida.</p>
+          <p>Son <b>siete órdenes</b>: arrancan por alimentación y POST, y terminan en
+             mantenimiento, que es de donde sale la mayoría de las fallas reales —
+             <b>polvo</b> tapando la ventilación, <b>humedad y sulfatación</b> en los contactos
+             y <b>pasta térmica seca</b> en un equipo que por fuera está impecable.</p>
         </article>
       </div>
 
@@ -214,6 +227,12 @@
   <section id="screen-credits" class="screen">
     <div class="doc">
       <h2 class="doc-title">// EQUIPO</h2>
+
+      <!-- Contenedor declarativo: js/assets.js lo completa al cargar. Es una
+           pieza apaisada, así que usa el contenedor banner. Si el archivo no
+           está, queda el marcador y la pantalla no se mueve. -->
+      <div class="credits-logo"><span data-asset="sys.logo" data-size="banner" data-alt="Glitch.TEC"></span></div>
+
       <ul class="credits">
         <li><span>Alvarez Santiago</span><em>Back-End</em></li>
         <li><span>Cora Alex</span><em>Front-End</em></li>
@@ -328,7 +347,7 @@
 
     <!-- Barra de tareas -->
     <div id="taskbar">
-      <button id="start-btn"><span class="flag"></span>inicio</button>
+      <button id="start-btn"><span class="flag"></span>Inicio</button>
       <div id="task-buttons"></div>
       <div id="tray">
         <button id="mute-btn" title="Silenciar">♪</button>
@@ -340,7 +359,7 @@
     <div id="start-menu" class="hidden">
       <div class="sm-head">
         <div class="sm-avatar">E</div>
-        <div class="sm-user">estudiante<small>WinTEC XP</small></div>
+        <div class="sm-user">WinTEC<small>95</small></div>
       </div>
       <div class="sm-body" id="sm-programs"></div>
       <div class="sm-foot">
@@ -379,7 +398,7 @@
         </div>
         <div class="tech-metric">
           <label>ÓRDENES</label>
-          <span class="val" id="tech-val-solved">0 / 4</span>
+          <span class="val" id="tech-val-solved">0 / 7</span>
         </div>
         <div class="tech-metric rep">
           <label>REPUTACIÓN DEL TALLER</label>
@@ -395,7 +414,39 @@
       <aside class="tech-col" id="tech-ticket"></aside>
 
       <section class="tech-col" id="tech-bench">
-        <div id="tech-pc"></div>
+
+        <!-- El escritorio del taller en 3D: lo dibuja p5.js en WEBGL
+             (js/bench3d.js). El gabinete, el monitor y las herramientas
+             sobre la mesa son el tablero del modo: se agarra una
+             herramienta, se gira el equipo y se trabaja encima. -->
+        <div class="bench-rig">
+          <div id="tech-rig"></div>
+
+          <div class="rig-bar">
+            <button class="rig-power" id="tech-power">⏻ ENCENDER Y PROBAR</button>
+            <button class="rig-turn" id="tech-turn">⟲ GIRAR EL GABINETE</button>
+            <span class="rig-views">
+              <button class="view-btn is-sel" id="tech-view-general">BANCO</button>
+              <button class="view-btn" id="tech-view-gabinete">GABINETE</button>
+              <button class="view-btn" id="tech-view-interior">INTERIOR</button>
+              <button class="view-btn" id="tech-view-monitor">MONITOR</button>
+            </span>
+          </div>
+
+          <!-- Las mismas herramientas que están sobre la mesa -->
+          <div class="rig-tools" id="tech-tools"></div>
+
+          <span class="rig-hint" id="tech-rig-hint">Agarrá una herramienta y tocá la pieza del equipo. El gabinete se puede girar arrastrándolo.</span>
+        </div>
+
+        <!-- Zonas del equipo: las mismas piezas del dibujo, en lista,
+             para poder llegar a todas sin depender del mouse. -->
+        <nav class="zone-tabs" id="tech-zones"></nav>
+
+        <!-- Herramientas de la pieza seleccionada -->
+        <div id="tech-tray"></div>
+
+        <!-- Cierre de la orden (ficha de servicio) -->
         <div id="tech-actions"></div>
       </section>
 
@@ -429,8 +480,8 @@
 
   <!-- ============ PANTALLA 7: VICTORIA ============ -->
   <section id="screen-win" class="screen">
-    <div class="doc win">
-      <h2 class="doc-title win-title">// SISTEMA RESTAURADO</h2>
+    <div class="doc doc-win">
+      <h2 class="doc-title doc-title-win">// SISTEMA RESTAURADO</h2>
       <p class="win-lead">El proceso hostil fue eliminado. Tu PC vuelve a ser tuya.</p>
       <ul class="bsod-stats" id="win-stats"></ul>
       <div class="win-learn">
@@ -479,6 +530,7 @@
      ============================================================ -->
 <script src="js/vendor/p5.min.js"></script>
 <script src="js/state.js"></script>
+<script src="js/assets.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/ui.js"></script>
@@ -491,6 +543,7 @@
 <script src="js/hacker.js"></script>
 <script src="js/levels.js"></script>
 <script src="js/boss.js"></script>
+<script src="js/bench3d.js"></script>
 <script src="js/tech.js"></script>
 <script src="js/api.js"></script>
 <script src="js/ranking.js"></script>
