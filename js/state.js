@@ -34,6 +34,13 @@
     DISK_FULL_DAMAGE: 1,             // integridad por segundo con el disco lleno
     JUNK_RATE: 1.6 * 1048576,        // bytes por segundo que escribe CADA proceso hostil
 
+    /* Herramientas de mantenimiento (ver js/sysutils.js) */
+    RESTORE_POINT_SIZE: 16 * 1048576,   // lo que ocupa en C: cada punto de restauracion
+    RESTORE_MAX: 6,                     // cantidad maxima de puntos guardados
+    BACKUP_CAPACITY: 1024 * 1048576,    // tamanio de la particion D:, donde van los backups
+    FREEZE_DELAY: 0.6,                  // segundos entre que queda un solo proceso hostil y la tildada
+    FREEZE_DRAIN: 0.5,                  // integridad por segundo con el sistema tildado
+
     /* Puntaje por velocidad y rachas (ver GT.correct mas abajo) */
     SPEED_WINDOW: 30,         // segundos: si respondes antes, cobras bonus por agilidad
     STREAK_STEP: 3,           // cada 3 aciertos seguidos sube el multiplicador...

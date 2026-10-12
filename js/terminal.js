@@ -73,6 +73,24 @@
      son valores como cualquier otro. */
   var COMMANDS = {};
 
+  /* Los comandos de este archivo son los de siempre. Los modulos que traen
+     los suyos (mantenimiento, ransomware, asistente) se enchufan por aca en
+     vez de venir a editar esta tabla:
+
+        GT.terminal.register('backup', { desc, run, help }, ['respaldo']);
+
+     help es opcional: { section, usage, text } suma una linea al comando
+     "help" bajo esa seccion. Los alias apuntan al mismo objeto. */
+  var extraHelp = {};         // seccion -> [ { usage, text } ]
+
+  term.register = function (name, def, aliases) {
+    COMMANDS[name] = def;
+    (aliases || []).forEach(function (a) { COMMANDS[a] = def; });
+    if (def.help) {
+      (extraHelp[def.help.section] || (extraHelp[def.help.section] = [])).push(def.help);
+    }
+  };
+
   /* Atajo: la raiz del sistema de archivos vive en el estado de la partida, y
      cambia en cada partida nueva. Por eso es una funcion y no una variable
      guardada: si la cacheara, despues de reiniciar seguiria apuntando al arbol
@@ -103,13 +121,20 @@
         ['unlock <clave>',      'desbloquea una carpeta protegida'],
         ['ps',                  'lista los procesos en ejecucion'],
         ['kill <pid>',          'termina un proceso por su identificador'],
-        ['purge',               'intenta purgar el malware (solo al final)'],
+        ['purge',               'intenta purgar el malware (solo al final)']
+      ];
+      /* Las secciones que sumaron otros modulos con term.register */
+      Object.keys(extraHelp).forEach(function (section) {
+        rows.push([section]);
+        extraHelp[section].forEach(function (h) { rows.push([h.usage, h.text]); });
+      });
+      rows = rows.concat([
         ['PARTIDA'],
         ['objetivos',           'muestra los objetivos del nivel actual'],
         ['pista',               'pide una pista (cuesta ' + GT.CONFIG.HINT_COST + ' puntos)'],
         ['cls',                 'limpia la pantalla'],
         ['whoami / ver',        'informacion del usuario y del sistema']
-      ];
+      ]);
       rows.forEach(function (r) {
         if (r.length === 1) { print(''); print(' ' + r[0], 'dim'); return; }
         print('  ' + pad(r[0], 22) + r[1]);
@@ -652,10 +677,15 @@
       print('');
       print(' ' + pad('PID', 8) + pad('NOMBRE', 24) + pad('CPU', 7) + pad('RAM', 10) + 'FIRMA', 'title');
       print(' ' + '-'.repeat(62), 'dim');
+      /* Con el sistema tildado, ps marca al programa que quedo colgado. A
+         proposito NO dice quien lo bloquea: eso lo averigua diag. */
+      var frozen = GT.sys && GT.sys.isFrozen() ? GT.state.sys.frozen : null;
       list.forEach(function (p) {
+        var hung = frozen && frozen.victim && frozen.victim.pid === p.pid;
         print(' ' + pad(p.pid, 8) + pad(p.name, 24) + pad(p.cpu + '%', 7) +
-              pad(p.ram + ' MB', 10) + (p.signed ? 'WinTEC Corp.' : 'SIN FIRMA'),
-              p.signed ? '' : 'warn');
+              pad(p.ram + ' MB', 10) + (p.signed ? 'WinTEC Corp.' : 'SIN FIRMA') +
+              (hung ? '   << NO RESPONDE' : ''),
+              hung ? 'err' : p.signed ? '' : 'warn');
       });
       print('');
       print(' Usa "kill <pid>" para terminar un proceso.', 'dim');
@@ -688,9 +718,20 @@
   COMMANDS.purge = {
     desc: 'Purga final del malware.',
     run: function () {
-      if (GT.state.level < 4) {
+      if (GT.state.level < GT.levels.PURGE_LEVEL) {
         print('purge: el nucleo del malware todavia esta protegido.', 'err');
         print('Primero hay que contener los procesos y cortar la via de entrada.', 'dim');
+        GT.audio.error();
+        return;
+      }
+      /* El nucleo se reinstala solo mientras le quede de donde: la purga
+         recien arranca cuando el jugador le corto esas vias con las
+         herramientas de mantenimiento (ver js/sysutils.js). */
+      var blockers = GT.sys.purgeBlockers();
+      if (blockers.length) {
+        print('purge: el nucleo se vuelve a instalar solo. Todavia:', 'err');
+        blockers.forEach(function (b) { print('   - ' + b, 'warn'); });
+        print('Cortale esas vias y volve a intentar.', 'dim');
         GT.audio.error();
         return;
       }

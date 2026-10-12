@@ -157,6 +157,14 @@
       '  objetivos         objetivos del nivel\n' +
       '  pista             ayuda (cuesta ' + GT.CONFIG.HINT_COST + ' puntos)\n' +
       '  cls               limpiar pantalla\n\n' +
+      'MANTENIMIENTO DEL SISTEMA\n' +
+      '  backup            copiar tus archivos a otra partición (D:)\n' +
+      '  restore           volver la configuración del sistema a una\n' +
+      '                    fecha anterior (punto de restauración)\n' +
+      '  part              ver y borrar particiones del disco\n' +
+      '  diag              por qué el sistema está lento o tildado\n' +
+      '  Un backup guarda TUS archivos. Un punto de restauración\n' +
+      '  guarda la configuración del SISTEMA. No son lo mismo.\n\n' +
       'EL HACKER\n' +
       '  Se pasea por la pantalla y cada tanto te ataca:\n' +
       '  · te BLOQUEA TECLAS: para recuperarlas respondé bien la\n' +
@@ -205,6 +213,7 @@
     GT.resetState();
     GT.state.mode = mode;
     GT.fs.mount();                 // arbol de archivos y cuota de disco de la partida
+    GT.sys.reset();                // backups, puntos de restauracion y particiones
     GT.state.running = true;
 
     /* Cada modulo sabe como limpiarse a si mismo; yo solo les aviso. Este es
@@ -295,6 +304,7 @@
         GT.popups.tick(dt);
         GT.procs.tick(dt);
         GT.fs.tick(dt);
+        GT.sys.tick(dt);
         GT.boss.tick(dt);
         GT.hacker.tick(dt);
         updateHud();
@@ -321,7 +331,7 @@
 
     var def = GT.levels.DEFS[s.level];
 
-    document.getElementById('hud-level').textContent = 'NIVEL ' + s.level + ' / 4';
+    document.getElementById('hud-level').textContent = 'NIVEL ' + s.level + ' / ' + GT.levels.COUNT;
     document.getElementById('hud-levelname').textContent = def ? def.name : '—';
 
     var integ = Math.max(0, Math.round(s.integrity));
@@ -495,7 +505,7 @@
         'Presioná REINTENTAR para restaurar el último punto seguro.'
       );
       document.getElementById('lose-stats').innerHTML =
-        row('Nivel alcanzado', sum.level + ' / 4') +
+        row('Nivel alcanzado', sum.level + ' / ' + GT.levels.COUNT) +
         row('Puntaje', sum.base) +
         row('Tiempo sobrevivido', GT.formatTime(sum.elapsed)) +
         row('Errores cometidos', sum.mistakes) +

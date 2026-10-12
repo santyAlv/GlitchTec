@@ -313,6 +313,16 @@
 
   GT.on('fs', function (e) { if (e.op === 'remove') checkClean(); });
 
+  /* Con el sistema tildado (ver js/sysutils.js) la interfaz grafica no
+     responde: los botones del Administrador no hacen nada y hay que salir
+     por la Terminal. Devuelve true si el click se tiene que ignorar. */
+  function guiFrozen() {
+    if (!GT.sys || !GT.sys.isFrozen()) return false;
+    GT.audio.error();
+    GT.ui.toast('El Administrador de tareas no responde. Probá desde la Terminal.', 'warn');
+    return true;
+  }
+
   /* ============================================================
      Ventana
      ============================================================ */
@@ -363,6 +373,7 @@
 
     document.getElementById('tm-kill').addEventListener('click', function () {
       if (selectedPid === null) return;
+      if (guiFrozen()) return;
       procs.kill(selectedPid);
       selectedPid = null;
       document.getElementById('tm-kill').disabled = true;
@@ -466,6 +477,7 @@
       });
 
       tr.addEventListener('dblclick', function () {
+        if (guiFrozen()) return;
         procs.kill(p.pid);
         selectedPid = null;
         render();
@@ -493,5 +505,7 @@
 
   procs.render = render;
   procs.getCpu = function () { return cpu; };
+  procs.getRam = function () { return ram; };
+  procs.RAM_TOTAL = RAM_TOTAL;
 
 })(window, document);

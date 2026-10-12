@@ -58,7 +58,7 @@
               content: '[Binario del sistema]\r\n'
             },
             'sistema.cab': {
-              type: 'file', name: 'sistema.cab', kind: 'sys', size: 1268776960, system: true,
+              type: 'file', name: 'sistema.cab', kind: 'sys', size: 1218445312, system: true,
               info: 'Archivos de instalacion de WinTEC 95.',
               content: '[Archivo comprimido del sistema]\r\n'
             },
