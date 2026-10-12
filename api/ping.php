@@ -5,7 +5,7 @@
  *
  * "cuentas" avisa si la base ya tiene la estructura de usuarios (la tabla
  * usuarios y la columna partidas.user_id). Si la base se creó con un esquema
- * anterior hay que correr la migración del final de sql/schema.sql.
+ * anterior hay que importar sql/migracion_usuarios.sql.
  */
 declare(strict_types=1);
 

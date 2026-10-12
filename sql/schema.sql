@@ -179,11 +179,7 @@ VALUES
 --   ADD KEY idx_ranking (status, modo, score);
 
 -- Migración para las cuentas de usuario (login y registro)
--- La tabla usuarios se crea sola con el CREATE TABLE IF NOT EXISTS de arriba;
--- lo que hay que agregar a mano en una base ya creada es la columna y la
--- clave foránea de partidas:
--- ALTER TABLE partidas
---   ADD COLUMN user_id INT UNSIGNED NULL AFTER id,
---   ADD KEY idx_user (user_id),
---   ADD CONSTRAINT fk_partidas_usuario
---     FOREIGN KEY (user_id) REFERENCES usuarios(id) ON DELETE SET NULL;
+-- Esta va en un archivo aparte porque, además del ALTER, tiene que crear la
+-- tabla usuarios ANTES de poder apuntarle con la clave foránea. En una base
+-- ya creada alcanza con importar:
+--   sql/migracion_usuarios.sql

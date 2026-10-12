@@ -88,7 +88,7 @@
          en vez de dejar que las partidas fallen sin explicacion. */
       if (data && data.db && data.cuentas === false) {
         console.warn('[Glitch.TEC] A la base le falta la estructura de usuarios: ' +
-                     'corré la migración del final de sql/schema.sql');
+                     'importá sql/migracion_usuarios.sql');
       }
       return !offline;
     }).catch(function () {
