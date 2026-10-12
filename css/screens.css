@@ -299,6 +299,24 @@
 }
 .player-field input:focus { outline: 1px dotted var(--ink); outline-offset: -4px; }
 
+/* ================= CUENTA (maqueta provisional) ================= */
+/* Lo mínimo para que los formularios de js/auth.js se puedan usar. El diseño
+   de la pantalla de login y registro (issue #21) reemplaza este bloque. */
+.auth-form { display: flex; flex-direction: column; gap: 10px; max-width: 360px; padding: 4px 12px 12px; }
+.auth-form[hidden] { display: none; }
+.auth-field { display: flex; flex-direction: column; gap: 4px; font-size: 10px; letter-spacing: 1px; color: var(--ink-dim); }
+.auth-field input {
+  padding: 6px 8px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 0;
+  box-shadow: var(--bevel-in);
+}
+.auth-field input:focus { outline: 1px dotted var(--ink); outline-offset: -4px; }
+.auth-field small { min-height: 1.2em; letter-spacing: 0; color: #a3121b; }
+
 /* ================= BOOT (POST del equipo) ================= */
 #screen-boot { background: #000; background-image: none; }
 #screen-boot::before { display: none; }

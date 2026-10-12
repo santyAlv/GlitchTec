@@ -1,11 +1,14 @@
 <?php
 /**
  * Glitch.TEC — inicia una partida
- * POST { player_name, mode, started_at }  →  { ok, id, token }
+ * POST { player_name, mode, started_at }  →  { ok, id, token, user }
+ *
+ * Si el navegador tiene una sesión iniciada, la partida queda asociada a esa
+ * cuenta (partidas.user_id). Si no, se juega como invitado, igual que antes.
  */
 declare(strict_types=1);
 
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_error('Método no permitido', 405);
@@ -33,11 +36,21 @@ $mode = ($mode === 'tecnico') ? 'tecnico' : 'virus';
 $token = bin2hex(random_bytes(16));
 
 try {
+    /* ¿Quién juega? Sale de la SESIÓN, nunca del cuerpo del pedido. Y si hay
+       cuenta, el nombre del ranking es el de la cuenta: así nadie con sesión
+       iniciada puede anotar la partida a nombre de otro escribiendo cualquier
+       cosa en player_name. */
+    $user = usuario_actual();
+    $uid  = $user ? (int)$user['id'] : null;
+    if ($user) {
+        $name = (string)$user['username'];
+    }
+
     $stmt = db()->prepare(
-        'INSERT INTO partidas (player_name, modo, token, started_at, status)
-         VALUES (:name, :modo, :token, NOW(), \'running\')'
+        'INSERT INTO partidas (user_id, player_name, modo, token, started_at, status)
+         VALUES (:uid, :name, :modo, :token, NOW(), \'running\')'
     );
-    $stmt->execute([':name' => $name, ':modo' => $mode, ':token' => $token]);
+    $stmt->execute([':uid' => $uid, ':name' => $name, ':modo' => $mode, ':token' => $token]);
     /* lastInsertId() devuelve el id AUTO_INCREMENT que acaba de generar el
        INSERT. Es por conexion, no global, asi que no hay riesgo de que me
        devuelva el id de la partida de otro jugador que entro al mismo tiempo.
@@ -52,10 +65,10 @@ try {
     );
     $ev->execute([
         ':pid'    => $id,
-        ':detail' => json_encode(['player' => $name, 'mode' => $mode], JSON_UNESCAPED_UNICODE),
+        ':detail' => json_encode(['player' => $name, 'mode' => $mode, 'user_id' => $uid], JSON_UNESCAPED_UNICODE),
     ]);
 
-    json_out(['ok' => true, 'id' => $id, 'token' => $token]);
+    json_out(['ok' => true, 'id' => $id, 'token' => $token, 'user' => $user ? (string)$user['username'] : null]);
 } catch (Throwable $e) {
     json_error('No se pudo crear la partida: ' . $e->getMessage(), 500);
 }
