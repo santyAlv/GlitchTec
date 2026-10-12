@@ -344,6 +344,123 @@
       costo: 0, arregla: 'so',
       hecho: 'Reinstalás el sistema desde cero.',
       nada: 'Formateaste sin diagnosticar: perdiste 40 minutos y la falla sigue igual, porque era de hardware.'
+    },
+
+    /* ============================================================
+       LABORATORIO DE REDES
+       Los pasos de la orden de red. Las piezas nuevas son tres zonas:
+       'patch' (el cable y sus fichas RJ45), 'nic' (la placa de red,
+       adentro del gabinete) y 'switch'. El cable y el switch no están
+       en el gabinete: se trabajan sobre la mesa.
+       ============================================================ */
+
+    /* ---------------- Inspección: red ---------------- */
+    preguntar_red: {
+      g: 'inspeccion', label: 'Preguntar qué pasó antes de que dejara de andar', min: 2, parte: 'cliente',
+      ok: 'Aportan dos datos: todo empezó con la tormenta eléctrica del martes, y al cable lo "arregló" ' +
+          'alguien de mantenimiento armándole una ficha nueva.'
+    },
+    ver_adaptador: {
+      g: 'inspeccion', label: 'Ver los adaptadores de red que reconoce el sistema', min: 3, parte: 'software',
+      detecta: 'nic',
+      ok: 'El sistema lista el adaptador Ethernet y lo muestra habilitado.',
+      mal: 'El sistema no lista ningún adaptador Ethernet: ni siquiera ve que haya una placa de red.'
+    },
+    ver_config_ip: {
+      g: 'inspeccion', label: 'Revisar la configuración IP del equipo', min: 4, parte: 'software',
+      ok: 'La configuración está bien: toma la dirección sola por DHCP, igual que el resto del laboratorio. ' +
+          'El problema no es de configuración, es físico.'
+    },
+    ver_nic: {
+      g: 'inspeccion', label: 'Revisar la placa de red en su zócalo', min: 4, parte: 'nic',
+      req: 'abrir', detecta: 'nic',
+      ok: 'La placa está firme en el zócalo y sin marcas: se ve sana.',
+      mal: 'El conector de la placa de red tiene una marca negra y huele a quemado: la descarga de la ' +
+           'tormenta entró por el cable de red.'
+    },
+    ver_conector: {
+      g: 'inspeccion', label: 'Mirar de cerca las fichas RJ45 del cable', min: 2, parte: 'patch',
+      detecta: 'rj45',
+      ok: 'Las dos fichas están bien armadas: los ocho hilos llegan al fondo, en orden, y la traba muerde la vaina.',
+      mal: 'Una ficha está mal crimpada: dos hilos quedaron cortos y no llegan a los contactos, los pines ' +
+           'dorados están desparejos y la vaina del cable ni entra en la ficha.'
+    },
+    probar_cable: {
+      tool: 'lantester', g: 'inspeccion', label: 'Pasar el probador de cables de red', min: 3, parte: 'patch',
+      detecta: 'rj45',
+      ok: 'Las ocho luces prenden en orden de los dos lados: el cable está bien.',
+      mal: 'El probador prende 1, 2, 4, 5, 7 y 8 y saltea el 3 y el 6: esos dos hilos no hacen contacto. ' +
+           'Justo son parte de los pares que llevan los datos.'
+    },
+    ver_leds_switch: {
+      g: 'inspeccion', label: 'Mirar las luces de los puertos del switch', min: 2, parte: 'switch',
+      detecta: 'puerto',
+      ok: 'Todos los puertos con cable tienen su luz prendida y parpadeando.',
+      mal: 'El puerto 1 no prende ni con un cable que en los otros puertos anda, y el plástico de ' +
+           'alrededor está amarronado: ese puerto está quemado.'
+    },
+    medir_temp_switch: {
+      tool: 'tester', g: 'inspeccion', label: 'Medir la temperatura del switch funcionando', min: 6, parte: 'switch',
+      detecta: 'vent_switch',
+      ok: 'La carcasa se queda en 41 °C: temperatura normal.',
+      mal: 'La carcasa llega a 78 °C en veinte minutos y el switch se reinicia solo. Mientras reinicia, ' +
+           'se cae toda la red.'
+    },
+    ver_vent_switch: {
+      g: 'inspeccion', label: 'Revisar las rejillas y el ventilador del switch', min: 3, parte: 'switch',
+      detecta: 'vent_switch',
+      ok: 'Las rejillas están despejadas y el ventilador interno gira parejo.',
+      mal: 'Las rejillas están tapadas de pelusa y el ventilador apenas mueve aire. Adentro de un ' +
+           'armario cerrado, no tiene cómo enfriarse.'
+    },
+
+    /* ---------------- Acciones: red ---------------- */
+    crimpar_rj45: {
+      tool: 'crimpeadora', g: 'accion', label: 'Cortar la ficha y armar un conector RJ45 nuevo', min: 8,
+      parte: 'patch', costo: 300, arregla: 'rj45',
+      hecho: 'Cortás la ficha, ordenás los hilos en T568B (blanco-naranja, naranja, blanco-verde, azul, ' +
+             'blanco-azul, verde, blanco-marrón, marrón), los llevás hasta el fondo y crimpeás. ' +
+             'Ahora el probador prende las ocho luces en orden.',
+      nada: 'La ficha estaba bien armada: gastaste un conector y ocho minutos.'
+    },
+    cambiar_patch: {
+      g: 'accion', label: 'Cambiar el cable por un patch cord de fábrica', min: 2, parte: 'patch',
+      costo: 2500, arregla: 'rj45',
+      hecho: 'Ponés un patch cord de fábrica. Anda, aunque armar la ficha salía la décima parte.',
+      nada: 'El cable andaba: cambiaste una pieza sana.'
+    },
+    mover_puerto: {
+      g: 'accion', label: 'Pasar el cable a un puerto libre y anular el quemado', min: 2, parte: 'switch',
+      costo: 0, arregla: 'puerto',
+      hecho: 'Pasás el cable al puerto 5 y le ponés al puerto 1 una etiqueta de ANULADO. El switch ' +
+             'sigue sirviendo con los otros siete.',
+      nada: 'Cambiaste el cable de puerto y todo sigue igual: el puerto no era el problema.'
+    },
+    cambiar_nic: {
+      tool: 'destornillador', g: 'accion', label: 'Cambiar la placa de red', min: 10, parte: 'nic',
+      req: 'abrir', costo: 18000, arregla: 'nic',
+      hecho: 'Sacás la placa quemada y montás una nueva en el zócalo. El sistema la reconoce al arrancar.',
+      nada: 'La placa de red andaba: cambiaste una pieza sana.'
+    },
+    limpiar_vent_switch: {
+      tool: 'aire', g: 'accion', label: 'Limpiar las rejillas y el ventilador del switch', min: 10,
+      parte: 'switch', costo: 0, arregla: 'vent_switch',
+      hecho: 'Aire comprimido en las rejillas y en el ventilador: vuelve a pasar el aire. Y queda ' +
+             'anotado en la orden que el switch no puede vivir dentro de un armario cerrado.',
+      nada: 'El switch ya estaba limpio.'
+    },
+    cambiar_vent_switch: {
+      tool: 'destornillador', g: 'accion', label: 'Cambiar el ventilador interno del switch', min: 14,
+      parte: 'switch', costo: 6000, arregla: 'vent_switch_roto',
+      hecho: 'Montás un ventilador nuevo dentro del switch.',
+      nada: 'El ventilador giraba: lo que no dejaba pasar el aire era la pelusa de las rejillas.'
+    },
+    cambiar_switch: {
+      g: 'accion', label: 'Cambiar el switch por uno nuevo', min: 6, parte: 'switch',
+      costo: 65000, arregla: 'switch_muerto',
+      hecho: 'Ponés un switch nuevo.',
+      nada: 'El switch servía: con un puerto anulado y la ventilación limpia le quedaban años. ' +
+            'Le cobraste al colegio un equipo que no hacía falta.'
     }
   };
 
@@ -627,6 +744,68 @@
       },
       leccion: 'Limpiar el polvo no alcanza: la pasta térmica se seca y cambiarla es mantenimiento ' +
                'preventivo, cada dos o tres años, no cuando el equipo ya se apaga.'
+    },
+
+    /* ---------------- CASO 8 · LABORATORIO DE REDES ---------------- */
+    /* La orden más larga del taller: cuatro fallas juntas, todas de capa
+       física, y ninguna dentro del sistema operativo. El orden de "fallas"
+       es el orden en que una tapa a la otra: con la placa quemada el sistema
+       ni ve la red; con la placa nueva recién aparece "cable desconectado";
+       con el cable bien armado sigue sin enlace por el puerto quemado; y con
+       enlace, la red se cae cuando el switch levanta temperatura.
+       Dos cosas que esta orden usa y las otras no:
+         piezas      varias respuestas válidas al señalar la pieza que falló
+         pantallaOk  la secuencia del monitor cuando el equipo ya anda */
+    {
+      id: 'c8',
+      titulo: 'El laboratorio se quedó sin red',
+      cliente: 'Preceptoría — Laboratorio de Informática',
+      equipo: 'PC del docente, switch de 8 puertos y el cable de red del aula',
+      relato: '"Desde la tormenta del martes la máquina del profe no tiene internet. Y las demás se ' +
+              'desconectan todas juntas a media mañana y vuelven solas al rato. Le trajimos la PC, ' +
+              'el switch y el cable."',
+      antecedente: 'Antecedente: hubo una tormenta eléctrica, al cable lo "reparó" mantenimiento y el ' +
+                   'switch vive dentro de un armario cerrado. En redes se revisa primero lo físico: ' +
+                   '¿hay luz de enlace?',
+      presupuesto: 80,
+      fallas: ['nic', 'rj45', 'puerto', 'vent_switch'],
+      piezas: ['switch', 'nic', 'patch'],
+      sintomas: {
+        nic: 'El equipo arranca normal, pero no tiene red y el sistema no lista ningún adaptador Ethernet.',
+        rj45: 'Con la placa nueva el sistema ya ve el adaptador, pero dice "cable de red desconectado": ' +
+              'no hay luz de enlace.',
+        puerto: 'El cable ya está bien armado y sigue sin haber enlace: la luz del puerto 1 del switch ' +
+                'no prende.',
+        vent_switch: 'Ahora hay red y navega. A los veinte minutos se corta para todas las máquinas ' +
+                     'juntas y vuelve sola al rato.'
+      },
+      exito: 'Ping al servidor sin perder un paquete y una hora de prueba con las ocho bocas ocupadas: ' +
+             'el switch se queda en 43 °C y la red no se cae.',
+      pantallaOk: 'ok_red',
+      pasos: ['preguntar_red', 'ver_adaptador', 'ver_config_ip', 'ver_cable', 'ver_conector', 'probar_cable',
+              'ver_leds_switch', 'medir_temp_switch', 'ver_vent_switch', 'abrir', 'ver_nic',
+              'crimpar_rj45', 'cambiar_patch', 'mover_puerto', 'limpiar_vent_switch', 'cambiar_vent_switch',
+              'cambiar_switch', 'cambiar_nic', 'reinstalar_so'],
+      diagnostico: {
+        pregunta: 'La red del laboratorio tenía varias fallas juntas. ¿Cuál es la explicación correcta?',
+        opciones: [
+          'Un virus había desconfigurado la red: alcanzaba con reinstalar el sistema',
+          'La descarga quemó la placa de red y un puerto del switch; además había una ficha RJ45 mal ' +
+            'armada y el switch recalentaba por falta de ventilación',
+          'El switch estaba roto entero y había que cambiarlo por uno nuevo',
+          'La configuración IP estaba mal: faltaba ponerle una dirección fija'
+        ],
+        correcta: 1,
+        porque: 'Eran cuatro fallas y las cuatro <b>físicas</b>. Una descarga que entra por el cable de ' +
+                'red quema los <b>dos extremos</b>: la placa de la PC y el puerto del switch. La ficha ' +
+                'armada a las apuradas dejaba dos hilos sin contacto, y el switch, encerrado y con las ' +
+                'rejillas tapadas, se reiniciaba por temperatura y volteaba a todo el laboratorio. ' +
+                'Ninguna se arreglaba desde el sistema: en redes se diagnostica <b>de abajo hacia arriba</b>, ' +
+                'primero placa, cable, ficha, puerto y luz de enlace, y recién después la configuración. ' +
+                'Y el switch no se tiraba: con un puerto anulado y aire, seguía sirviendo.'
+      },
+      leccion: 'En redes se diagnostica de abajo hacia arriba: primero lo físico (placa, cable, ficha, ' +
+               'puerto, luz de enlace) y recién después la configuración.'
     }
   ];
 
@@ -639,8 +818,8 @@
      directamente sobre el equipo; las otras dos no están en el
      gabinete: el cliente y el software del equipo.
      ============================================================ */
-  var ZONE_ORDER = ['cliente', 'cable', 'fuente', 'boton', 'monitor',
-                    'placa', 'ram', 'cooler', 'gpu', 'disco', 'software'];
+  var ZONE_ORDER = ['cliente', 'cable', 'fuente', 'boton', 'monitor', 'patch', 'switch',
+                    'placa', 'ram', 'cooler', 'gpu', 'nic', 'disco', 'software'];
 
   var ZONE_LABEL = {
     cliente:  'CLIENTE',
@@ -653,7 +832,12 @@
     cooler:   'CPU Y DISIPADOR',
     gpu:      'PLACA DE VIDEO',
     disco:    'DISCO',
-    software: 'SISTEMA'
+    software: 'SISTEMA',
+
+    /* Laboratorio de redes */
+    patch:    'CABLE DE RED',
+    nic:      'PLACA DE RED',
+    'switch': 'SWITCH'
   };
 
   /* ============================================================
@@ -683,7 +867,15 @@
     sulfato:     'lenta',
     sulfato_ram: 'post_ram',
     filtro:      'apagon',
-    vent_trabado: 'apagon'
+    vent_trabado: 'apagon',
+
+    /* Red. La ficha mal armada y el puerto quemado dan la MISMA pantalla
+       ("cable desconectado"): desde la PC no se distinguen, hay que ir a
+       mirar el cable y el switch. */
+    nic:         'sin_adaptador',
+    rj45:        'sin_red',
+    puerto:      'sin_red',
+    vent_switch: 'red_cae'
   };
 
   /* ============================================================
@@ -972,6 +1164,7 @@
   function trayNote() {
     if (zone === 'cliente') return 'preguntas al cliente, antes de tocar el equipo';
     if (zone === 'software') return 'el equipo prendido, del lado del sistema';
+    if ((zone === 'patch' || zone === 'switch') && !zoneState[zone]) return 'sobre la mesa, al lado del equipo';
     if (!GT.bench.isOpen() && insideZone(zone)) return 'hay que abrir el gabinete para llegar acá';
     var st = zoneState[zone];
     if (st === 'bad') return 'falla detectada en esta pieza';
@@ -981,7 +1174,7 @@
   }
 
   function insideZone(z) {
-    return ['fuente', 'placa', 'ram', 'cooler', 'gpu', 'disco'].indexOf(z) !== -1;
+    return ['fuente', 'placa', 'ram', 'cooler', 'gpu', 'disco', 'nic'].indexOf(z) !== -1;
   }
 
   function money(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
@@ -1258,7 +1451,9 @@
     logLine('<b>› Encender y probar el equipo</b> <i>(2 min)</i>', 'step');
 
     var falla = firstPending();
-    var kind = falla ? (FAULT_SCREEN[falla] || 'sin_senal') : 'ok';
+    /* Sin fallas pendientes va la secuencia de "equipo andando": la genérica,
+       o la propia de la orden si definió una (pantallaOk). */
+    var kind = falla ? (FAULT_SCREEN[falla] || 'sin_senal') : (cur.pantallaOk || 'ok');
 
     testing = true;
     setHint('Prueba en curso: mirá el monitor.');
@@ -1371,14 +1566,16 @@
     if (phase !== 'diagnostico' || pickedPart !== null) return;
 
     pickedPart = z;
-    pickOk = (z === cur.pieza);
+    /* Una orden con varias fallas en piezas distintas declara "piezas": vale
+       señalar cualquiera de ellas. Las demás declaran una sola, "pieza". */
+    pickOk = cur.piezas ? cur.piezas.indexOf(z) !== -1 : (z === cur.pieza);
     GT.bench.setPickMode(false);
     GT.bench.select(z);
 
     if (pickOk) {
       GT.addScore(120, 'pieza señalada correctamente');
       GT.audio.ok();
-      logLine('✔ Señalaste ' + ZONE_LABEL[z] + ': era esa.', 'ok');
+      logLine('✔ Señalaste ' + ZONE_LABEL[z] + (cur.piezas ? ': ahí había una falla.' : ': era esa.'), 'ok');
     } else {
       GT.addScore(-60, 'pieza mal señalada');
       GT.audio.error();
@@ -1538,6 +1735,16 @@
              (st.tool ? ' Vas a necesitar ' + GT.bench.toolName(st.tool).toLowerCase() + '.' : '');
     }
     return 'Encendé y probá el equipo: el síntoma que quede en el monitor te dice por dónde seguir.';
+  };
+
+  /** Atajo de desarrollo: carga directo una orden (1 = la primera) sin tener
+      que cerrar las anteriores. Para probar o maquetar una orden puntual,
+      desde la consola del navegador y con el taller abierto:
+          GlitchTec.tech.jump(8)                                            */
+  tech.jump = function (n) {
+    if (!running || GT.state.finished) return false;
+    loadCase(Math.max(1, Math.min(CASES.length, parseInt(n, 10) || 1)) - 1);
+    return true;
   };
 
   /* Utilidades para el resumen final */

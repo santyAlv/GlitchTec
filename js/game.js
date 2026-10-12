@@ -46,10 +46,11 @@
     { t: '  Aire comprimido ........ OK', c: 'ok', d: 110 },
     { t: '  Pasta térmica .......... OK', c: 'ok', d: 110 },
     { t: '  Disco externo (backup).. OK', c: 'ok', d: 110 },
-    { t: '  Multímetro ............. OK', c: 'ok', d: 200 },
+    { t: '  Multímetro ............. OK', c: 'ok', d: 110 },
+    { t: '  Crimpeadora y probador . OK', c: 'ok', d: 200 },
     { t: '', d: 80 },
     { t: 'Sincronizando órdenes de trabajo pendientes...', d: 460 },
-    { t: '  7 equipos esperando en el mostrador', c: 'warn', d: 420 },
+    { t: '  ' + GT.tech.totalCases + ' equipos esperando en el mostrador', c: 'warn', d: 420 },
     { t: '', d: 100 },
     { t: 'Técnico de turno: vos. Buena suerte.', c: 'ok', d: 640 },
     { t: '', d: 200 }
@@ -564,7 +565,7 @@
     document.querySelector('#screen-win .doc-title-win').textContent =
       tecnico ? '// TODOS LOS EQUIPOS ENTREGADOS' : '// SISTEMA RESTAURADO';
     document.querySelector('#screen-win .win-lead').textContent = tecnico
-      ? 'Cerraste las siete órdenes. Siete clientes se van con su equipo andando.'
+      ? 'Cerraste las ' + GT.tech.totalCases + ' órdenes del taller. Cada cliente se va con su equipo andando.'
       : 'El proceso hostil fue eliminado. Tu PC vuelve a ser tuya.';
 
     document.getElementById('win-stats').innerHTML =

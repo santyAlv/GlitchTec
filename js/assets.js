@@ -101,7 +101,16 @@
     'hw.disco':      'disco.png',
     'hw.cable':      'cabl.png',
     'hw.placa':      null,
-    'hw.fuente':     null
+    'hw.fuente':     null,
+
+    /* ---- laboratorio de redes: piezas y herramientas que todavía no
+            tienen arte ---- */
+    'hw.nic':         null,            // placa de red
+    'hw.rj45':        null,            // ficha RJ45
+    'hw.utp':         null,            // cable de red (patch cord)
+    'hw.switch':      null,
+    'hw.crimpeadora': null,
+    'hw.lantester':   null             // probador de cables de red
   };
 
   /* Medidas de los contenedores. Son las únicas permitidas: así ninguna
