@@ -65,6 +65,7 @@
     'fs.ejecutable':   null,
     'fs.roto':         'error-file.png',
     'fs.peligro':      'fire.png',
+    'fs.cifrado':      null,            // archivo secuestrado por el ransomware (.locked)
 
     /* ---- avisos y diálogos del sistema ---- */
     'aviso.alerta':   'alerta.png',

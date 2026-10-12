@@ -81,7 +81,7 @@
             correos y una purga final para sacarlo.
           </span>
           <ul class="mode-list">
-            <li>4 niveles: reconocimiento, contención, phishing y purga</li>
+            <li>5 niveles: reconocimiento, contención, phishing, secuestro y purga</li>
             <li>Terminal con comandos reales</li>
             <li>El hacker se pasea por la pantalla y te amenaza</li>
             <li>Te bloquea teclas y te da vuelta los colores</li>
@@ -167,6 +167,7 @@
             <li><b>Reconocimiento</b> — encontrar el archivo infectado</li>
             <li><b>Contención</b> — matar los procesos del malware</li>
             <li><b>Phishing</b> — clasificar correos reales y falsos</li>
+            <li><b>Secuestro</b> — un ransomware cifra tus archivos y hay un reloj corriendo</li>
             <li><b>Purga</b> — enfrentamiento final</li>
           </ol>
         </article>
@@ -581,7 +582,8 @@
        audio/engine/ui   servicios base que usa todo el resto
        filesystem        lo necesitan terminal y explorador
        modulos de juego  terminal, explorador, procesos, mantenimiento,
-                         mail, pop-ups, hacker, niveles, jefe, taller
+                         mail, pop-ups, hacker, ransomware, niveles, jefe,
+                         taller
        api.js            cliente del backend
        auth.js           cuentas de usuario (usa api.js)
        ranking.js        pantalla de posiciones (usa api.js)
@@ -608,6 +610,7 @@
 <script src="js/mail.js"></script>
 <script src="js/popups.js"></script>
 <script src="js/hacker.js"></script>
+<script src="js/ransom.js"></script>
 <script src="js/levels.js"></script>
 <script src="js/boss.js"></script>
 <script src="js/bench3d.js"></script>

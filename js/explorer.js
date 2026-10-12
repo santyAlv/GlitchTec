@@ -27,6 +27,7 @@
      por ultimo el documento generico como caso por defecto. */
   function iconFor(node, name) {
     if (node.type === 'dir') return node.locked ? GT.ui.icons.folderLock : GT.ui.icons.folder;
+    if (node.encrypted) return GT.ui.icons.skull;
     if (node.scanned && node.malicious) return GT.ui.icons.danger;
     if (node.kind === 'exe' || node.kind === 'bin') return GT.ui.icons.exe;
     return GT.ui.icons.doc;
@@ -37,6 +38,7 @@
      entran en el mismo contenedor, así que la rejilla no se mueve. */
   function assetFor(node) {
     if (node.type === 'dir') return node.locked ? 'fs.carpeta-lock' : 'fs.carpeta';
+    if (node.encrypted) return 'fs.cifrado';
     if (node.scanned && node.malicious) return 'fs.peligro';
     if (node.kind === 'exe' || node.kind === 'bin') return 'fs.ejecutable';
     if (node.kind === 'img') return 'fs.imagen';
@@ -152,7 +154,8 @@
       var item = document.createElement('button');
       var cls = 'exp-item';
       if (child.locked) cls += ' locked';
-      if (GT.fs.hasDoubleExtension(name) || (child.scanned && child.malicious)) cls += ' danger';
+      if (child.encrypted) cls += ' encrypted';
+      if (GT.fs.hasDoubleExtension(name) || child.encrypted || (child.scanned && child.malicious)) cls += ' danger';
       item.className = cls;
       item.innerHTML = GT.ui.slot(assetFor(child), iconFor(child, name), 'lg', name) +
                        '<span>' + GT.escapeHtml(name) + '</span>';
@@ -215,6 +218,14 @@
       selected = null;
       exp.refresh();
       GT.audio.click();
+      return;
+    }
+
+    /* Un archivo secuestrado no se abre: lo unico que hay para ver es la
+       nota de rescate. */
+    if (child.encrypted || child.ransomNote) {
+      GT.audio.error();
+      GT.ransom.openNote();
       return;
     }
 

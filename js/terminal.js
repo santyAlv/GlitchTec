@@ -91,6 +91,14 @@
     }
   };
 
+  /* GUARDIAS: funciones que pueden frenar un comando antes de que corra.
+     Reciben (nombre, argumentos) y devuelven el mensaje con el que se frena,
+     o nada para dejarlo pasar. Asi un modulo puede deshabilitar comandos
+     ajenos por un rato (el ransomware apagando el antivirus) sin que esos
+     comandos tengan que saber que el ransomware existe. */
+  var guards = [];
+  term.guard = function (fn) { guards.push(fn); };
+
   /* Atajo: la raiz del sistema de archivos vive en el estado de la partida, y
      cambia en cada partida nueva. Por eso es una funcion y no una variable
      guardada: si la cacheara, despues de reiniciar seguiria apuntando al arbol
@@ -123,8 +131,12 @@
         ['kill <pid>',          'termina un proceso por su identificador'],
         ['purge',               'intenta purgar el malware (solo al final)']
       ];
-      /* Las secciones que sumaron otros modulos con term.register */
+      /* Lo que sumaron otros modulos con term.register. Los comandos que
+         declararon la seccion SEGURIDAD van pegados a ella (es la ultima de
+         arriba); el resto arma su propia seccion. */
+      (extraHelp.SEGURIDAD || []).forEach(function (h) { rows.push([h.usage, h.text]); });
       Object.keys(extraHelp).forEach(function (section) {
+        if (section === 'SEGURIDAD') return;
         rows.push([section]);
         extraHelp[section].forEach(function (h) { rows.push([h.usage, h.text]); });
       });
@@ -865,6 +877,15 @@
       print('Escribi "help" para ver la lista de comandos.', 'dim');
       GT.audio.error();
       return;
+    }
+
+    for (var g = 0; g < guards.length; g++) {
+      var veto = guards[g](name, args);
+      if (veto) {
+        print(veto, 'err');
+        GT.audio.error();
+        return;
+      }
     }
 
     cmd.run(args);

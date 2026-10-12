@@ -154,6 +154,7 @@
       '  scan <archivo>    analizar amenazas\n' +
       '  unlock <clave>    desbloquear carpeta protegida\n' +
       '  ps / kill <pid>   ver y terminar procesos\n' +
+      '  decrypt <clave>   descifrar los archivos secuestrados\n' +
       '  objetivos         objetivos del nivel\n' +
       '  pista             ayuda (cuesta ' + GT.CONFIG.HINT_COST + ' puntos)\n' +
       '  cls               limpiar pantalla\n\n' +
@@ -214,6 +215,7 @@
     GT.state.mode = mode;
     GT.fs.mount();                 // arbol de archivos y cuota de disco de la partida
     GT.sys.reset();                // backups, puntos de restauracion y particiones
+    GT.ransom.reset();
     GT.state.running = true;
 
     /* Cada modulo sabe como limpiarse a si mismo; yo solo les aviso. Este es
@@ -305,6 +307,7 @@
         GT.procs.tick(dt);
         GT.fs.tick(dt);
         GT.sys.tick(dt);
+        GT.ransom.tick(dt);
         GT.boss.tick(dt);
         GT.hacker.tick(dt);
         updateHud();
@@ -332,7 +335,11 @@
     var def = GT.levels.DEFS[s.level];
 
     document.getElementById('hud-level').textContent = 'NIVEL ' + s.level + ' / ' + GT.levels.COUNT;
-    document.getElementById('hud-levelname').textContent = def ? def.name : '—';
+    /* En el nivel del ransomware el nombre lleva pegado el reloj del rescate:
+       es lo que apura al jugador y tiene que estar siempre a la vista, aunque
+       haya cerrado la nota. */
+    document.getElementById('hud-levelname').textContent = (def ? def.name : '—') +
+      (GT.ransom.isActive() ? ' · ' + GT.formatTime(Math.max(0, GT.ransom.timeLeft())) : '');
 
     var integ = Math.max(0, Math.round(s.integrity));
     var barI = document.getElementById('bar-integrity');

@@ -117,6 +117,24 @@
 
   procs.stop = function () { active = false; };
 
+  /** Garantiza que haya una lista de procesos aunque la simulacion del nivel
+      2 no haya corrido: la arma solo con los legitimos. */
+  procs.ensureList = function () {
+    if (list.length) return;
+    LEGIT.forEach(function (p) { list.push(clone(p, { signed: true, malicious: false })); });
+    recalc();
+  };
+
+  /** Suma un proceso hostil a la lista desde otro modulo (el cifrador del
+      nivel de ransomware). Devuelve el proceso ya creado, con su PID. */
+  procs.inject = function (def) {
+    var p = clone(def, { signed: false, malicious: true, pid: nextPid++ });
+    list.push(p);
+    recalc();
+    render();
+    return p;
+  };
+
   procs.reset = function () {
     list = [];
     lastSig = '';

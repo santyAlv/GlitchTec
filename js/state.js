@@ -41,6 +41,13 @@
     FREEZE_DELAY: 0.6,                  // segundos entre que queda un solo proceso hostil y la tildada
     FREEZE_DRAIN: 0.5,                  // integridad por segundo con el sistema tildado
 
+    /* Nivel de ransomware (ver js/ransom.js) */
+    RANSOM_TIME: 240,          // segundos hasta que destruye el primer archivo
+    RANSOM_REPEAT: 45,         // y despues, uno cada tantos segundos
+    RANSOM_SPREAD: 20,         // cada cuanto cifra un archivo mas mientras el proceso viva
+    RANSOM_LOSS_DAMAGE: 12,    // integridad que cuesta cada archivo perdido
+    RANSOM_WRONG_KEY: 4,       // integridad que cuesta probar una clave equivocada
+
     /* Puntaje por velocidad y rachas (ver GT.correct mas abajo) */
     SPEED_WINDOW: 30,         // segundos: si respondes antes, cobras bonus por agilidad
     STREAK_STEP: 3,           // cada 3 aciertos seguidos sube el multiplicador...
@@ -228,9 +235,9 @@
   /* Premios de la racha, alternados: a los 3 aciertos escudo, a los 5 tiempo
      extra, a los 8 escudo, a los 10 tiempo... (n % 5 da 3, 0, 3, 0...).
      El tiempo extra va al reloj que este apurando al jugador: si el jefe
-     esta activo se lo sumo a su cuenta regresiva; si no, le descuento esos
-     segundos al reloj de la partida, que es lo que mira el bonus por tiempo
-     del final. */
+     esta activo se lo sumo a su cuenta regresiva, y lo mismo con el reloj del
+     rescate en el nivel del ransomware; si no, le descuento esos segundos al
+     reloj de la partida, que es lo que mira el bonus por tiempo del final. */
   function streakReward(n) {
     var c = GT.CONFIG;
     var s = GT.state;
@@ -241,6 +248,8 @@
     } else if (n % 5 === 0) {
       if (GT.boss && GT.boss.isActive()) {
         GT.boss.addTime(c.EXTRA_TIME);
+      } else if (GT.ransom && GT.ransom.isActive()) {
+        GT.ransom.addTime(c.EXTRA_TIME);
       } else {
         s.elapsed = Math.max(0, s.elapsed - c.EXTRA_TIME);
         s.puzzleStart = s.elapsed;

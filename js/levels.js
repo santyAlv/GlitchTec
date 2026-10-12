@@ -125,9 +125,9 @@
       ],
       outro: [
         { text: 'Basta. Ya no me divertís.' },
-        { text: 'Vení al núcleo si tenés tanto coraje. Terminal. Escribí purge. Te espero.' },
+        { text: 'Si no me puedo quedar con tu máquina, me quedo con lo que hay adentro. Andá a mirar tus documentos.' },
         { friendly: true, who: 'SISTEMA',
-          text: 'Última fase: escribí  purge  en la Terminal para atacar el núcleo del malware.' }
+          text: 'Alerta: un proceso nuevo está cifrando los archivos del usuario.' }
       ],
       hint: function () {
         var f = doneMap();
@@ -138,7 +138,45 @@
     },
 
     /* ---------------- NIVEL 4 ---------------- */
+    /* Ransomware. La mecanica esta en js/ransom.js; aca van los objetivos,
+       el relato y las pistas. El objetivo de recuperar los archivos lleva
+       contador, pero su total lo maneja ransom.js porque se mueve: el
+       cifrador puede sumar archivos y el reloj puede destruirlos. */
     4: {
+      name: 'Secuestro',
+      bonus: 450,
+      objectives: [
+        { id: 'l4_note',    text: 'Leer la nota de rescate y negarse a pagar' },
+        { id: 'l4_kill',    text: 'Terminar el proceso que cifra los archivos (ps / kill)' },
+        { id: 'l4_key',     text: 'Calcular la clave de descifrado' },
+        { id: 'l4_decrypt', text: 'Recuperar los archivos secuestrados', count: 0, total: 4 }
+      ],
+      intro: [
+        { text: 'Tus archivos ahora terminan en .locked. Sin mi clave son ruido.' },
+        { text: 'Tenés un reloj en pantalla. Cada vez que llegue a cero, borro uno. Para siempre. O me pagás.' },
+        { friendly: true, who: 'SISTEMA',
+          text: 'No pagues: nada lo obliga a devolver nada. Bloqueó el Administrador de tareas y el correo, pero la Terminal sigue viva. Primero frená el proceso que cifra, después recuperá los archivos.' }
+      ],
+      outro: [
+        { text: 'La clave estaba en mi memoria. No tendría que haber quedado ahí.' },
+        { text: 'Bien. Me queda el núcleo. Vení a buscarme, si te animás.' },
+        { friendly: true, who: 'SISTEMA',
+          text: 'Archivos recuperados y herramientas desbloqueadas. Queda la última fase: purgar el núcleo del malware.' }
+      ],
+      hint: function () {
+        var f = doneMap();
+        if (!f.l4_note) return 'Abrí la nota de rescate (está en la ventana GL1TCH-LOCK, o doble click en un archivo .locked) y elegí NO PAGAR.';
+        if (!f.l4_kill) return 'El Administrador de tareas está bloqueado, pero la Terminal no: ' +
+                               'ps  lista los procesos. Buscá el que no tiene firma y terminalo con  kill <pid> .';
+        if (!f.l4_key)  return 'Leé  type \\Sistema\\volcado.dmp . La clave es el XOR de los dos números: ' +
+                               'comparalos bit a bit (iguales = 0, distintos = 1), pasá el resultado a decimal y usá  decrypt <clave> .';
+        return 'decrypt <clave>  descifra sólo la carpeta donde estás parado: entrá con  cd  a cada carpeta que tenga ' +
+               'archivos .locked. El que tiene la cabecera dañada sólo vuelve con  backup restore <n> .';
+      }
+    },
+
+    /* ---------------- NIVEL 5 ---------------- */
+    5: {
       name: 'Purga',
       bonus: 500,
       objectives: [
@@ -171,6 +209,7 @@
      vez de tener un "4" escrito cada uno por su lado. */
   levels.COUNT = Object.keys(DEFS).length;
   levels.PURGE_LEVEL = levels.COUNT;
+  levels.RANSOM_LEVEL = 4;
 
   /* Convierte la lista de objetivos en un objeto { id: true/false } para
      poder preguntar  f.l1_help  en vez de recorrer el array cada vez. Lo usan
@@ -223,11 +262,19 @@
       GT.ui.toast('Última fase: cortale las vías de regreso y después  purge', 'warn');
     }
 
+    /* El ransomware cifra apenas empieza su nivel (se ve detras del dialogo)
+       y vuelve a bloquear los iconos que las lineas de arriba acaban de
+       habilitar. En cualquier otro nivel se asegura de quedar apagado. */
+    if (n === levels.RANSOM_LEVEL) GT.ransom.start();
+    else GT.ransom.stop();
+
     GT.ui.say(def.intro, function () {
       if (n === 1) {
         GT.popups.start();
         GT.terminal.open();
       }
+      // El reloj del rescate arranca cuando el jugador ya leyo de que se trata
+      if (n === levels.RANSOM_LEVEL) GT.ransom.arm();
     });
   };
 
