@@ -253,7 +253,7 @@
   sys.backups = function () { return st().backups.slice(); };
 
   var BACKUP_ERRORS = {
-    'sin-unidad':    'No hay ninguna unidad de respaldo: la particion D: ya no existe.',
+    'sin-unidad':    'No hay ninguna unidad de respaldo: la particion D: ya no existe. Se puede crear otra con:  part create',
     'no-carpeta':    'Indica una carpeta que exista. Ejemplo:  backup create \\Documentos',
     'bloqueada':     'Esa carpeta esta protegida por clave.',
     'sistema':       'Esa carpeta tiene archivos del sistema: eso se resguarda con un punto de restauracion (restore), no con un backup.',
@@ -360,6 +360,10 @@
     var list = st().restorePoints;
     for (var i = 0; i < list.length; i++) {
       if (list[i].id === id) {
+        /* Solo se borran los puntos que creo el jugador. Si pudiera borrar
+           los que traia la PC, podria quedarse sin ningun punto anterior a
+           la infeccion y el nivel de la purga no tendria salida. */
+        if (!list[i].manual) return { error: 'protegido' };
         list.splice(i, 1);
         delete GT.fs.ensureDir(RESTORE_DIR).children[rpFileName(id)];
         GT.emit('fs', { op: 'remove', path: RESTORE_DIR.slice(), name: rpFileName(id) });
@@ -427,6 +431,11 @@
 
     if (sub === 'delete' || sub === 'borrar') {
       var out2 = sys.restoreDelete(parseInt(args[1], 10));
+      if (out2.error === 'protegido') {
+        print('Ese punto lo creo el sistema y no se puede borrar: solo los que creaste vos.', 'err');
+        GT.audio.error();
+        return;
+      }
       if (out2.error) { print('No existe un punto con ese numero.', 'err'); GT.audio.error(); return; }
       print('Punto eliminado. Se liberaron ' + GT.fs.humanSize(GT.CONFIG.RESTORE_POINT_SIZE) + '.', 'ok');
       return;
@@ -511,6 +520,23 @@
     return { ok: true, part: p, result: 'ok', lostBackups: lost };
   };
 
+  /** Crea de nuevo la particion de datos D: en el espacio sin asignar. Es la
+      vuelta atras de haberla borrado: vuelve vacia, las copias que tenia no. */
+  sys.partitionCreate = function () {
+    if (backupPartition()) return { error: 'ya-existe' };
+    var list = st().partitions;
+    /* El numero mas chico que no este en uso, como hace una tabla de
+       particiones de verdad. */
+    var n = 1;
+    while (findPartition(n)) n++;
+    var p = { n: n, letter: 'D:', label: 'RESPALDO', fs: 'FAT32', size: GT.CONFIG.BACKUP_CAPACITY, kind: 'datos',
+              note: 'Particion de datos. Aca se guardan las copias de seguridad.' };
+    list.push(p);
+    list.sort(function (a, b) { return a.n - b.n; });
+    GT.emit('sys', { op: 'part-create', part: p });
+    return { ok: true, part: p };
+  };
+
   sys.hiddenPartition = function () {
     var list = st().partitions;
     for (var i = 0; i < list.length; i++) if (list[i].kind === 'oculta') return list[i];
@@ -534,8 +560,18 @@
       });
       print('  ' + pad('', 24) + pad('', 9) + pad(GT.fs.humanSize(40 * 1024 * MB - used), 11) + 'sin asignar', 'dim');
       print('');
-      print('  part info <n> | part delete <n>', 'dim');
+      print('  part info <n> | part delete <n> | part create', 'dim');
       print('');
+      return;
+    }
+
+    if (sub === 'create' || sub === 'crear') {
+      var made = sys.partitionCreate();
+      if (made.error) { print('Ya hay una particion de datos (D:). No hace falta otra.', 'warn'); return; }
+      print('Particion ' + made.part.n + ' creada en el espacio sin asignar: D: [RESPALDO], ' +
+            GT.fs.humanSize(made.part.size) + ', FAT32.', 'ok');
+      print('Esta vacia: lo que habia en la anterior no vuelve.', 'dim');
+      GT.audio.ok();
       return;
     }
 
@@ -603,7 +639,7 @@
       return;
     }
 
-    print('Uso: part list | part info <n> | part delete <n>', 'warn');
+    print('Uso: part list | part info <n> | part delete <n> | part create', 'warn');
   }
 
   /** Lo que todavia protege al nucleo. Lo consulta el comando purge. */
@@ -776,7 +812,7 @@
 
   GT.terminal.register('part', {
     desc: 'Particiones del disco.', run: cmdPart,
-    help: { section: SECTION, usage: 'part', text: 'particiones del disco (list / info / delete)' }
+    help: { section: SECTION, usage: 'part', text: 'particiones del disco (list / info / delete / create)' }
   }, ['diskpart', 'particiones']);
 
   GT.terminal.register('diag', {

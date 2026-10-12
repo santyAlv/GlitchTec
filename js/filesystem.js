@@ -70,8 +70,10 @@
           }
         },
 
+        /* La carpeta misma esta atada al objetivo del backup del nivel 1: si
+           se pudiera borrar o renombrar antes, ya no habria que respaldar. */
         'Documentos': {
-          type: 'dir', name: 'Documentos', children: {
+          type: 'dir', name: 'Documentos', objective: 'l1_backup', children: {
 
             'leeme.txt': {
               type: 'file', name: 'leeme.txt', kind: 'txt', size: 1204, objective: 'l1_note',
