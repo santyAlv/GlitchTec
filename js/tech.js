@@ -1506,6 +1506,40 @@
     loadCase(caseIdx + 1);
   }
 
+  /** Pista para la orden en curso. La usa el asistente TEC-Bot (js/chatbot.js).
+      No dice cuál es la falla: dice por dónde seguir buscando, que es lo que
+      haría un técnico con más experiencia parado al lado. */
+  tech.getHint = function () {
+    if (!running || !cur) return null;
+    if (phase === 'diagnostico') {
+      return 'El equipo ya anda. Falta cerrar la orden: señalá la pieza que falló y elegí la causa.';
+    }
+    if (phase !== 'trabajo') return 'Esta orden ya está cerrada: entregá el equipo y llamá al siguiente.';
+
+    var falla = firstPending();
+    if (!falla) return 'No queda nada por reparar. Encendé y probá el equipo para confirmarlo.';
+
+    /* Falla ya encontrada: lo que falta es resolverla. */
+    if (found[falla]) {
+      return 'Ya encontraste una falla. Ahora hay que resolverla con la acción que corresponde a esa pieza, ' +
+             'sin cambiar nada que no haga falta. Después, encendé y probá de nuevo.';
+    }
+
+    /* Falla sin encontrar: nombro la zona de una inspección que la detecta
+       y que todavía no se hizo. */
+    var pendiente = cur.pasos.filter(function (id) {
+      var st = STEPS[id];
+      return st && st.g === 'inspeccion' && st.detecta === falla && !doneSteps[id];
+    })[0];
+    if (pendiente) {
+      var st = STEPS[pendiente];
+      return 'Leé otra vez lo que muestra el monitor y revisá la zona ' + ZONE_LABEL[st.parte] + '.' +
+             (st.req && !doneSteps[st.req] ? ' Para llegar ahí primero hay que ' + STEPS[st.req].label.toLowerCase() + '.' : '') +
+             (st.tool ? ' Vas a necesitar ' + GT.bench.toolName(st.tool).toLowerCase() + '.' : '');
+    }
+    return 'Encendé y probá el equipo: el síntoma que quede en el monitor te dice por dónde seguir.';
+  };
+
   /* Utilidades para el resumen final */
   tech.totalCases = CASES.length;
   tech.solved = function () { return GT.state.techSolved || 0; };

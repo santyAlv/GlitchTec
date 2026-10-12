@@ -48,6 +48,9 @@
     RANSOM_LOSS_DAMAGE: 12,    // integridad que cuesta cada archivo perdido
     RANSOM_WRONG_KEY: 4,       // integridad que cuesta probar una clave equivocada
 
+    /* Asistente TEC-Bot (ver js/chatbot.js) */
+    BOT_HINTS_PER_LEVEL: 2,    // pistas sin costo que da por nivel
+
     /* Puntaje por velocidad y rachas (ver GT.correct mas abajo) */
     SPEED_WINDOW: 30,         // segundos: si respondes antes, cobras bonus por agilidad
     STREAK_STEP: 3,           // cada 3 aciertos seguidos sube el multiplicador...
@@ -123,6 +126,9 @@
       /* Almacenamiento. Los arma GT.fs.mount() al empezar la partida. */
       fsRoot: null,             // arbol de carpetas y archivos de la unidad C:
       disk: null,               // cuota de la unidad: { capacity, level }
+
+      /* Asistente: cupo de pistas gratis del nivel en curso */
+      bot: { level: -1, used: 0, total: 0 },
 
       /* Rachas */
       streak: 0,                // aciertos seguidos (un error la corta)

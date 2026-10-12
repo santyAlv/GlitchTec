@@ -54,6 +54,7 @@
     'app.manual':     null,
     'app.papelera':   null,            // no hay papelera dibujada todavía
     'app.pc':         'pc.png',
+    'app.asistente':  null,              // TEC-Bot, el asistente de soporte
 
     /* ---- sistema de archivos (explorador) ---- */
     'fs.carpeta':      'carpeta.png',

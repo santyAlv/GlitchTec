@@ -410,6 +410,8 @@
   }
 
   /** Imprime el error de una operacion de archivos y hace el sonido. */
+  term.plain = plain;
+
   function fail(res) {
     print(plain(GT.fs.explain(res)), 'err');
     if (res.error === 'bloqueado') print('Usa:  unlock <clave>', 'warn');

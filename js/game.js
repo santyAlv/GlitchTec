@@ -122,6 +122,11 @@
     });
 
     GT.ui.registerIcon({
+      id: 'bot', label: 'TEC-Bot', icon: GT.bot.ICON, asset: 'app.asistente',
+      hint: 'Asistente de soporte', onOpen: function () { GT.bot.open(); }
+    });
+
+    GT.ui.registerIcon({
       id: 'manual', label: 'Manual', icon: GT.ui.icons.book, asset: 'app.manual',
       hint: 'Ayuda y comandos', onOpen: openManual
     });
@@ -166,6 +171,10 @@
       '  diag              por qué el sistema está lento o tildado\n' +
       '  Un backup guarda TUS archivos. Un punto de restauración\n' +
       '  guarda la configuración del SISTEMA. No son lo mismo.\n\n' +
+      'TEC-BOT\n' +
+      '  El asistente del escritorio (o  bot <pregunta>  en la Terminal)\n' +
+      '  explica comandos y conceptos. Con  bot pista  te da una\n' +
+      '  ayuda del nivel sin costo: ' + GT.CONFIG.BOT_HINTS_PER_LEVEL + ' por nivel.\n\n' +
       'EL HACKER\n' +
       '  Se pasea por la pantalla y cada tanto te ataca:\n' +
       '  · te BLOQUEA TECLAS: para recuperarlas respondé bien la\n' +
