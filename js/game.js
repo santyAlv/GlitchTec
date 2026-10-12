@@ -149,6 +149,8 @@
       '  dir               contenido de la carpeta actual\n' +
       '  cd <carpeta>      entrar   (cd .. vuelve atrás)\n' +
       '  type <archivo>    leer un archivo de texto\n' +
+      '  del <archivo>     borrar un archivo (del *.tmp borra varios)\n' +
+      '  espacio           espacio usado y libre en el disco\n' +
       '  scan <archivo>    analizar amenazas\n' +
       '  unlock <clave>    desbloquear carpeta protegida\n' +
       '  ps / kill <pid>   ver y terminar procesos\n' +
@@ -202,7 +204,7 @@
 
     GT.resetState();
     GT.state.mode = mode;
-    GT.state.fsRoot = GT.fs.create();
+    GT.fs.mount();                 // arbol de archivos y cuota de disco de la partida
     GT.state.running = true;
 
     /* Cada modulo sabe como limpiarse a si mismo; yo solo les aviso. Este es
@@ -292,6 +294,7 @@
       } else {
         GT.popups.tick(dt);
         GT.procs.tick(dt);
+        GT.fs.tick(dt);
         GT.boss.tick(dt);
         GT.hacker.tick(dt);
         updateHud();

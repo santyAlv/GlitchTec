@@ -154,6 +154,15 @@
 
   procs.list = function () { return list.slice(); };
 
+  /** El proceso con ese PID, o null si no esta corriendo. Lo usa el sistema
+      de archivos para saber si un archivo sigue "en uso". */
+  procs.get = function (pid) {
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].pid === pid) return list[i];
+    }
+    return null;
+  };
+
   procs.remainingHostile = function () {
     return list.filter(function (p) { return p.malicious; }).length;
   };
@@ -188,6 +197,10 @@
          si el jugador se queda mirando, la CPU se satura sola y empieza a
          perder integridad. El Math.min lo topea para que no llegue al infinito. */
       if (p.malicious) p.baseCpu = Math.min(p.baseCpu + dt * 0.35, p.baseCpu + 12);
+      /* Y ademas de CPU, come disco: cada proceso hostil escribe basura en
+         C:\Sistema\Temp. Son dos relojes distintos corriendo contra el
+         jugador, y los dos se frenan igual: matando el proceso. */
+      if (p.malicious) GT.fs.growJunk(p, GT.CONFIG.JUNK_RATE * dt);
     });
     recalc();
 
@@ -260,6 +273,10 @@
     recalc();
     render();
 
+    /* Aviso por el bus que este proceso ya no existe. Lo escuchan los modulos
+       que dependen de un proceso puntual sin que yo tenga que conocerlos. */
+    GT.emit('proc-killed', p);
+
     if (p.malicious) {
       GT.audio.kill();
       GT.correct(120, 'proceso hostil eliminado');
@@ -268,6 +285,7 @@
       GT.learn(p.family + ': ' + p.lesson);
       GT.terminal.notify('[OK] ' + p.name + ' terminado. ' + p.family, 'ok');
       GT.levels.progress('l2_kill', 1);
+      checkClean();
       return { status: 'malicious', name: p.name, family: p.family };
     }
 
@@ -280,6 +298,20 @@
     GT.ui.toast('✘ ' + p.name + ' era legítimo. Revisá la firma digital.', 'bad');
     return { status: 'legit', name: p.name };
   };
+
+  /* El objetivo "limpiar la basura" del nivel 2 se cumple cuando pasan las
+     DOS cosas: no queda ningun proceso hostil escribiendo y no queda basura
+     en el disco. Lo reviso cada vez que muere un proceso o se borra algo; el
+     orden natural es ese (primero matar, despues borrar) porque mientras el
+     proceso vive su archivo esta en uso y no se deja borrar. */
+  function checkClean() {
+    if (!active || GT.state.finished) return;
+    if (procs.remainingHostile() > 0 || GT.fs.junkBytes() > 0) return;
+    GT.levels.complete('l2_clean');
+    GT.learn('Matar el proceso frena el daño, pero lo que ya escribió en el disco hay que borrarlo aparte.');
+  }
+
+  GT.on('fs', function (e) { if (e.op === 'remove') checkClean(); });
 
   /* ============================================================
      Ventana

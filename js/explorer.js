@@ -57,6 +57,7 @@
       '<div class="exp-toolbar">' +
         '<button class="exp-btn" data-nav="up">▲ Arriba</button>' +
         '<button class="exp-btn" data-nav="root">C:\\</button>' +
+        '<button class="exp-btn" data-nav="del" disabled>✕ Eliminar</button>' +
         '<div class="exp-path" id="exp-path"></div>' +
       '</div>' +
       '<div class="exp-main">' +
@@ -80,9 +81,47 @@
     body.querySelector('[data-nav="root"]').addEventListener('click', function () {
       path = []; selected = null; exp.refresh(); GT.audio.click();
     });
+    body.querySelector('[data-nav="del"]').addEventListener('click', deleteSelected);
 
     exp.refresh();
   };
+
+  /* Borrar desde el Explorador pasa por la MISMA funcion que el "del" de la
+     Terminal (GT.fs.remove), asi que las reglas son identicas: lo que no deja
+     borrar una, no lo deja borrar la otra. Aca una carpeta se borra con todo
+     lo que tiene adentro, como en cualquier explorador grafico. */
+  function deleteSelected() {
+    if (!selected) return;
+    var res = GT.fs.remove(path, selected.name, { recursive: true });
+    if (res.error) {
+      GT.audio.error();
+      GT.ui.toast(GT.fs.explain(res), 'warn');
+      return;
+    }
+    GT.audio.click();
+    GT.ui.toast('Eliminado: ' + res.name + ' (' + GT.fs.humanSize(res.freed) + ' liberados)', 'info');
+  }
+
+  /* "3 elemento(s) · 1.60 GB usados de 2.00 GB · 412.0 MB libres" */
+  function statusText(count) {
+    var u = GT.fs.usage();
+    return count + ' elemento(s)  ·  ' + GT.fs.humanSize(u.used) + ' usados de ' +
+           GT.fs.humanSize(u.capacity) + '  ·  ' + GT.fs.humanSize(u.free) + ' libres';
+  }
+
+  /* El disco cambio (alguien creo, borro o movio algo, desde aca o desde la
+     Terminal): me redibujo para mostrar lo que hay ahora. */
+  GT.on('fs', function () { exp.refresh(); });
+
+  /* El aviso periodico de la cuota solo toca el texto de la barra de estado:
+     redibujar la carpeta entera una vez por segundo le sacaria la seleccion
+     al jugador mientras elige un archivo. */
+  GT.on('disk', function () {
+    var statusEl = document.getElementById('exp-status');
+    if (!statusEl || !GT.ui.isOpen(WIN_ID)) return;
+    var node = GT.fs.getNode(root(), path);
+    statusEl.textContent = statusText(node ? Object.keys(node.children || {}).length : 0);
+  });
 
   exp.refresh = function () {
     if (!GT.ui.isOpen(WIN_ID)) return;
@@ -94,6 +133,10 @@
     if (!filesEl) return;
 
     var node = GT.fs.getNode(root(), path);
+    /* La carpeta que estaba mirando ya no existe (la borraron o la movieron
+       desde la Terminal): vuelvo a la raiz en vez de quedarme en la nada. */
+    if (!node || node.type !== 'dir') { path = []; selected = null; node = root(); }
+    if (selected && !node.children[selected.name]) selected = null;
     pathEl.textContent = GT.fs.pathString(path);
     GT.ui.getWindow(WIN_ID).setTitle(path.length ? path[path.length - 1] : 'Mi PC');
 
@@ -126,7 +169,7 @@
       filesEl.appendChild(item);
     });
 
-    statusEl.textContent = names.length + ' elemento(s)';
+    statusEl.textContent = statusText(names.length);
     renderSide();
 
     /* renderSide esta declarada ADENTRO de refresh a proposito: necesita ver
@@ -135,11 +178,16 @@
        me permite llamarla arriba aunque este escrita aca abajo. */
     function renderSide() {
       var html = '';
+      var delBtn = document.querySelector('.exp [data-nav="del"]');
+      if (delBtn) delBtn.disabled = !(selected && node.children[selected.name]);
+
       if (selected && node.children[selected.name]) {
         var n = selected.node;
         html += '<h4>Detalles</h4>';
+        /* De una carpeta muestro lo que ocupa TODO su contenido: es el dato
+           que sirve para decidir que borrar cuando falta lugar. */
         html += '<p><b>' + GT.escapeHtml(selected.name) + '</b>' +
-                (n.type === 'dir' ? 'Carpeta' : GT.fs.humanSize(n.size)) + '</p>';
+                (n.type === 'dir' ? 'Carpeta · ' : '') + GT.fs.humanSize(GT.fs.sizeOf(n)) + '</p>';
         if (GT.fs.hasDoubleExtension(selected.name)) {
           html += '<h4>⚠ Advertencia</h4><p>Este archivo tiene <b>doble extensión</b>. ' +
                   'Analizalo desde la Terminal con <b>scan ' + GT.escapeHtml(selected.name) + '</b>.</p>';

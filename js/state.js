@@ -28,6 +28,12 @@
     HINT_COST: 40,
     TICK_MS: 250,
 
+    /* Disco de la PC corrompida (ver js/filesystem.js) */
+    DISK_CAPACITY: 2048 * 1048576,   // tamanio de la unidad C:, en bytes (2 GB)
+    DISK_WARN: 0.9,                  // desde el 90% de uso el sistema avisa
+    DISK_FULL_DAMAGE: 1,             // integridad por segundo con el disco lleno
+    JUNK_RATE: 1.6 * 1048576,        // bytes por segundo que escribe CADA proceso hostil
+
     /* Puntaje por velocidad y rachas (ver GT.correct mas abajo) */
     SPEED_WINDOW: 30,         // segundos: si respondes antes, cobras bonus por agilidad
     STREAK_STEP: 3,           // cada 3 aciertos seguidos sube el multiplicador...
@@ -99,6 +105,10 @@
       objectives: [],           // objetivos del nivel actual
       flags: {},                // marcas de progreso libres (ej. archivo escaneado)
       learned: [],              // conceptos educativos desbloqueados
+
+      /* Almacenamiento. Los arma GT.fs.mount() al empezar la partida. */
+      fsRoot: null,             // arbol de carpetas y archivos de la unidad C:
+      disk: null,               // cuota de la unidad: { capacity, level }
 
       /* Rachas */
       streak: 0,                // aciertos seguidos (un error la corta)

@@ -78,11 +78,13 @@
       bonus: 350,
       objectives: [
         { id: 'l2_open', text: 'Abrir el Administrador de tareas' },
-        { id: 'l2_kill', text: 'Terminar los procesos sin firma digital', count: 0, total: 4 }
+        { id: 'l2_kill', text: 'Terminar los procesos sin firma digital', count: 0, total: 4 },
+        { id: 'l2_clean', text: 'Borrar la basura que dejaron en C:\\Sistema\\Temp' }
       ],
       intro: [
         { text: 'Contá conmigo: cuatro procesos míos, y suben la CPU cada segundo que dudás.' },
         { text: 'Ah, y algunos tienen nombres parecidos a los tuyos. Suerte con eso.' },
+        { text: 'Mientras lo pensás, te voy llenando el disco. Archivo por archivo.' },
         { friendly: true, who: 'SISTEMA',
           text: 'Los procesos legítimos están firmados por "WinTEC Corp.". Los del malware no tienen firma. Terminalos con el botón o con  kill <pid>  en la Terminal.' }
       ],
@@ -95,8 +97,10 @@
       hint: function () {
         var f = doneMap();
         if (!f.l2_open) return 'Doble click en el icono "Administrador de tareas" del escritorio.';
-        return 'Mirá la columna FIRMA DIGITAL: los que dicen "Sin firma ✘" son del malware. ' +
-               'Ojo con svch0st.exe, tiene un CERO en lugar de la letra O.';
+        if (!f.l2_kill) return 'Mirá la columna FIRMA DIGITAL: los que dicen "Sin firma ✘" son del malware. ' +
+                               'Ojo con svch0st.exe, tiene un CERO en lugar de la letra O.';
+        return 'Los procesos llenaron el disco de archivos temporales. En la Terminal:  ' +
+               'cd \\Sistema\\Temp   y después   del *.tmp   (con  espacio  ves cuánto ocupan).';
       }
     },
 
