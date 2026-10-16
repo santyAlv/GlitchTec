@@ -73,6 +73,32 @@
      son valores como cualquier otro. */
   var COMMANDS = {};
 
+  /* Los comandos de este archivo son los de siempre. Los modulos que traen
+     los suyos (mantenimiento, ransomware, asistente) se enchufan por aca en
+     vez de venir a editar esta tabla:
+
+        GT.terminal.register('backup', { desc, run, help }, ['respaldo']);
+
+     help es opcional: { section, usage, text } suma una linea al comando
+     "help" bajo esa seccion. Los alias apuntan al mismo objeto. */
+  var extraHelp = {};         // seccion -> [ { usage, text } ]
+
+  term.register = function (name, def, aliases) {
+    COMMANDS[name] = def;
+    (aliases || []).forEach(function (a) { COMMANDS[a] = def; });
+    if (def.help) {
+      (extraHelp[def.help.section] || (extraHelp[def.help.section] = [])).push(def.help);
+    }
+  };
+
+  /* GUARDIAS: funciones que pueden frenar un comando antes de que corra.
+     Reciben (nombre, argumentos) y devuelven el mensaje con el que se frena,
+     o nada para dejarlo pasar. Asi un modulo puede deshabilitar comandos
+     ajenos por un rato (el ransomware apagando el antivirus) sin que esos
+     comandos tengan que saber que el ransomware existe. */
+  var guards = [];
+  term.guard = function (fn) { guards.push(fn); };
+
   /* Atajo: la raiz del sistema de archivos vive en el estado de la partida, y
      cambia en cada partida nueva. Por eso es una funcion y no una variable
      guardada: si la cacheara, despues de reiniciar seguiria apuntando al arbol
@@ -84,24 +110,46 @@
     desc: 'Muestra esta lista de comandos.',
     run: function () {
       print('COMANDOS DISPONIBLES', 'title');
-      print('');
+      /* La lista va por secciones: con mas de veinte comandos, una sola
+         columna larga no se puede leer. Una fila de un solo elemento es un
+         titulo de seccion. */
       var rows = [
-        ['help',            'lista de comandos'],
-        ['dir',             'muestra el contenido de la carpeta actual'],
-        ['cd <carpeta>',    'entra a una carpeta  ("cd .." vuelve atras)'],
-        ['type <archivo>',  'muestra el contenido de un archivo de texto'],
-        ['scan <archivo>',  'analiza un archivo en busca de amenazas'],
-        ['unlock <clave>',  'desbloquea una carpeta protegida'],
-        ['ps',              'lista los procesos en ejecucion'],
-        ['kill <pid>',      'termina un proceso por su identificador'],
-        ['purge',           'intenta purgar el malware (solo al final)'],
-        ['objetivos',       'muestra los objetivos del nivel actual'],
-        ['pista',           'pide una pista (cuesta ' + GT.CONFIG.HINT_COST + ' puntos)'],
-        ['cls',             'limpia la pantalla'],
-        ['whoami / ver',    'informacion del usuario y del sistema']
+        ['ARCHIVOS'],
+        ['dir',                 'muestra el contenido de la carpeta actual'],
+        ['cd <carpeta>',        'entra a una carpeta  ("cd .." vuelve atras)'],
+        ['type <archivo>',      'muestra el contenido de un archivo de texto'],
+        ['del <archivo>',       'borra un archivo  (acepta comodines: del *.tmp)'],
+        ['copy <orig> <dest>',  'copia un archivo'],
+        ['move <orig> <dest>',  'mueve un archivo o una carpeta'],
+        ['ren <viejo> <nuevo>', 'cambia el nombre'],
+        ['md / rd <carpeta>',   'crea / borra una carpeta'],
+        ['espacio',             'espacio usado y libre en el disco'],
+        ['SEGURIDAD'],
+        ['scan <archivo>',      'analiza un archivo en busca de amenazas'],
+        ['unlock <clave>',      'desbloquea una carpeta protegida'],
+        ['ps',                  'lista los procesos en ejecucion'],
+        ['kill <pid>',          'termina un proceso por su identificador'],
+        ['purge',               'intenta purgar el malware (solo al final)']
       ];
+      /* Lo que sumaron otros modulos con term.register. Los comandos que
+         declararon la seccion SEGURIDAD van pegados a ella (es la ultima de
+         arriba); el resto arma su propia seccion. */
+      (extraHelp.SEGURIDAD || []).forEach(function (h) { rows.push([h.usage, h.text]); });
+      Object.keys(extraHelp).forEach(function (section) {
+        if (section === 'SEGURIDAD') return;
+        rows.push([section]);
+        extraHelp[section].forEach(function (h) { rows.push([h.usage, h.text]); });
+      });
+      rows = rows.concat([
+        ['PARTIDA'],
+        ['objetivos',           'muestra los objetivos del nivel actual'],
+        ['pista',               'pide una pista (cuesta ' + GT.CONFIG.HINT_COST + ' puntos)'],
+        ['cls',                 'limpia la pantalla'],
+        ['whoami / ver',        'informacion del usuario y del sistema']
+      ]);
       rows.forEach(function (r) {
-        print('  ' + pad(r[0], 18) + r[1]);
+        if (r.length === 1) { print(''); print(' ' + r[0], 'dim'); return; }
+        print('  ' + pad(r[0], 22) + r[1]);
       });
       print('');
       print('Tip: usa las flechas ARRIBA/ABAJO para repetir comandos.', 'dim');
@@ -167,6 +215,9 @@
 
       print('');
       print('   ' + files + ' archivo(s)   ' + dirs + ' directorio(s)', 'dim');
+      /* Como el dir de verdad: abajo de todo, cuanto lugar queda en la unidad */
+      print('   ' + GT.fs.humanSize(GT.fs.free()) + ' libres en la unidad',
+            GT.fs.free() <= 0 ? 'err' : 'dim');
 
       if (cwd.length === 1 && cwd[0] === 'Descargas') {
         GT.levels.complete('l1_dir');
@@ -309,12 +360,15 @@
       lo mismo (encontrar el archivo, avisar si no existe, avisar si en realidad
       es una carpeta). Devuelve null cuando algo fallo —y YA imprimio el error—
       asi el que la llama solo tiene que hacer  if (!found) return;  */
-  function locateFile(name) {
-    var node = GT.fs.getNode(root(), cwd);
-    var real = GT.fs.findChildName(node, name);
+  function locateFile(arg) {
+    var t = splitTarget(arg);
+    if (t.error) { fail(t); return null; }
+
+    var node = GT.fs.getNode(root(), t.dir);
+    var real = GT.fs.findChildName(node, t.name);
 
     if (!real) {
-      print('No se encuentra el archivo "' + name + '" en ' + GT.fs.pathString(cwd), 'err');
+      print('No se encuentra el archivo "' + t.name + '" en ' + GT.fs.pathString(t.dir), 'err');
       print('Usa "dir" para ver que hay en esta carpeta.', 'dim');
       GT.audio.error();
       return null;
@@ -325,8 +379,259 @@
       GT.audio.error();
       return null;
     }
-    return { name: real, node: child };
+    return { name: real, node: child, dir: t.dir };
   }
+
+  /* Separa lo que escribio el jugador en CARPETA + NOMBRE, para que los
+     comandos acepten rutas y no solo nombres de la carpeta actual:
+       "leeme.txt"              -> carpeta actual      + leeme.txt
+       "Sistema\Temp\x.tmp"     -> C:\Sistema\Temp     + x.tmp
+       "\Documentos\leeme.txt"  -> C:\Documentos       + leeme.txt
+     Corto en la ULTIMA barra: todo lo de antes es la carpeta (y la resuelve
+     resolvePath, con sus ".." y sus carpetas bloqueadas) y lo de despues es
+     el nombre. Si la carpeta no existe devuelvo ese mismo error. */
+  function splitTarget(arg) {
+    var norm = String(arg).replace(/\//g, '\\');
+    var cut = norm.lastIndexOf('\\');
+    if (cut === -1) return { dir: cwd.slice(), name: norm };
+
+    var res = GT.fs.resolvePath(root(), cwd, norm.slice(0, cut) || '\\');
+    if (res.error) return res;
+    return { dir: res.path, name: norm.slice(cut + 1) };
+  }
+
+  /* Las operaciones de archivos devuelven sus mensajes con acentos, porque
+     tambien los muestra el Explorador. La consola no los usa (ni la ñ), asi
+     que se los saco antes de imprimir: normalize('NFD') separa cada letra de
+     su acento y el regex borra los acentos sueltos. */
+  function plain(text) {
+    return String(text).replace(/ñ/g, 'ni').replace(/Ñ/g, 'NI')
+                       .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  /** Imprime el error de una operacion de archivos y hace el sonido. */
+  term.plain = plain;
+
+  function fail(res) {
+    print(plain(GT.fs.explain(res)), 'err');
+    if (res.error === 'bloqueado') print('Usa:  unlock <clave>', 'warn');
+    if (res.error === 'no-vacio') print('Para borrarla con todo lo que tiene adentro:  rd ' + res.name + ' /s', 'dim');
+    if (res.error === 'sin-espacio') print('Mira que ocupa lugar con:  espacio', 'dim');
+    GT.audio.error();
+  }
+
+  /* ---------- del ---------- */
+  COMMANDS.del = {
+    desc: 'Borra un archivo.',
+    run: function (args) {
+      if (!args.length) { print('Uso: del <archivo>     (acepta comodines: del *.tmp)', 'warn'); return; }
+
+      var t = splitTarget(args.join(' '));
+      if (t.error) { fail(t); return; }
+      var dirNode = GT.fs.getNode(root(), t.dir);
+
+      /* Comodines: armo la lista de nombres que coinciden y los borro de a
+         uno. Sin comodin la lista tiene un solo elemento, asi que el camino
+         es el mismo para los dos casos. */
+      var names = /[*?]/.test(t.name) ? matchNames(dirNode, t.name) : [t.name];
+      if (!names.length) { print('Ningun archivo coincide con "' + t.name + '".', 'warn'); return; }
+
+      var done = 0, freed = 0;
+      names.forEach(function (n) {
+        var real = GT.fs.findChildName(dirNode, n);
+        if (real && dirNode.children[real].type === 'dir') {
+          print('"' + real + '" es una carpeta: se borra con rd.', 'err');
+          return;
+        }
+        var res = GT.fs.remove(t.dir, n);
+        if (res.error) { fail(res); return; }
+        done++;
+        freed += res.freed;
+        print('Eliminado: ' + res.name + '  (' + GT.fs.humanSize(res.freed) + ')', 'ok');
+      });
+
+      if (done) {
+        if (done > 1) print(done + ' archivos eliminados, ' + GT.fs.humanSize(freed) + ' liberados.', 'dim');
+        GT.audio.click();
+      }
+    }
+  };
+  COMMANDS.erase = COMMANDS.del;
+  COMMANDS.rm = COMMANDS.del;
+
+  /* "*.tmp" -> /^.*\.tmp$/i . Primero escapo todo lo que en un regex tiene
+     significado propio (el punto, sobre todo: sin escapar, "*.tmp" tambien
+     engancharia "xtmp") y despues convierto los dos comodines: * es
+     "cualquier cantidad de caracteres" y ? es "uno solo". */
+  function matchNames(dirNode, pattern) {
+    var rx = new RegExp('^' + pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&')
+                                     .replace(/\*/g, '.*').replace(/\?/g, '.') + '$', 'i');
+    return Object.keys(dirNode.children || {}).filter(function (k) {
+      return dirNode.children[k].type !== 'dir' && rx.test(k);
+    });
+  }
+
+  /* ---------- md / rd ---------- */
+  COMMANDS.md = {
+    desc: 'Crea una carpeta.',
+    run: function (args) {
+      if (!args.length) { print('Uso: md <carpeta>', 'warn'); return; }
+      var t = splitTarget(args.join(' '));
+      if (t.error) { fail(t); return; }
+      var res = GT.fs.makeDir(t.dir, t.name);
+      if (res.error) { fail(res); return; }
+      print('Carpeta creada: ' + GT.fs.pathString(t.dir.concat(res.name)), 'ok');
+      GT.audio.click();
+    }
+  };
+  COMMANDS.mkdir = COMMANDS.md;
+
+  COMMANDS.rd = {
+    desc: 'Borra una carpeta.',
+    run: function (args) {
+      /* El /s se puede escribir antes o despues del nombre: lo saco de la
+         lista de argumentos y me quedo con lo demas como ruta. */
+      var recursive = args.some(function (a) { return a.toLowerCase() === '/s'; });
+      var rest = args.filter(function (a) { return a.toLowerCase() !== '/s'; });
+      if (!rest.length) { print('Uso: rd <carpeta>     (rd <carpeta> /s la borra con su contenido)', 'warn'); return; }
+
+      var t = splitTarget(rest.join(' '));
+      if (t.error) { fail(t); return; }
+      var dirNode = GT.fs.getNode(root(), t.dir);
+      var real = GT.fs.findChildName(dirNode, t.name);
+      if (real && dirNode.children[real].type !== 'dir') {
+        print('"' + real + '" es un archivo: se borra con del.', 'err');
+        GT.audio.error();
+        return;
+      }
+      /* No dejo borrar la carpeta donde estoy parado (ni una que la contiene):
+         el prompt quedaria apuntando a un lugar que ya no existe. */
+      var target = t.dir.concat(real || t.name).join('\\').toLowerCase();
+      var here = cwd.join('\\').toLowerCase();
+      if (here === target || here.indexOf(target + '\\') === 0) {
+        print('No se puede borrar la carpeta en la que estas parado. Sali con "cd .." primero.', 'err');
+        GT.audio.error();
+        return;
+      }
+
+      var res = GT.fs.remove(t.dir, t.name, { recursive: recursive });
+      if (res.error) { fail(res); return; }
+      print('Carpeta eliminada: ' + res.name + '  (' + GT.fs.humanSize(res.freed) + ' liberados)', 'ok');
+      GT.audio.click();
+    }
+  };
+  COMMANDS.rmdir = COMMANDS.rd;
+
+  /* ---------- ren ---------- */
+  COMMANDS.ren = {
+    desc: 'Cambia el nombre de un archivo o carpeta.',
+    run: function (args) {
+      if (args.length < 2) { print('Uso: ren <nombre actual> <nombre nuevo>', 'warn'); return; }
+      var t = splitTarget(args[0]);
+      if (t.error) { fail(t); return; }
+      var res = GT.fs.rename(t.dir, t.name, args[1]);
+      if (res.error) { fail(res); return; }
+      print(res.from + '  ->  ' + res.name, 'ok');
+      /* Cambiarle la extension a un archivo NO cambia lo que es: es la misma
+         leccion de la doble extension, vista desde el otro lado. */
+      if (res.node.type !== 'dir' && extOf(res.from) !== extOf(res.name)) {
+        print('Ojo: cambiar la extension no convierte el archivo, solo cambia con que se intenta abrir.', 'dim');
+      }
+      GT.audio.click();
+    }
+  };
+  COMMANDS.rename = COMMANDS.ren;
+
+  function extOf(name) {
+    var m = String(name).toLowerCase().match(/\.([a-z0-9]+)$/);
+    return m ? m[1] : '';
+  }
+
+  /* ---------- copy / move ---------- */
+  /* Las dos reciben  <origen> <destino>  y el destino puede ser una carpeta
+     (el archivo conserva su nombre) o una ruta con nombre nuevo. Esta funcion
+     resuelve esa ambiguedad para las dos:
+       copy leeme.txt \Descargas          -> a C:\Descargas, se llama leeme.txt
+       copy leeme.txt \Descargas\nota.txt -> a C:\Descargas, se llama nota.txt
+       copy leeme.txt copia.txt           -> a la carpeta actual, copia.txt   */
+  function resolveDest(arg) {
+    var asDir = GT.fs.resolvePath(root(), cwd, arg);
+    if (!asDir.error) return { dir: asDir.path, name: null };     // es una carpeta que existe
+    if (asDir.error === 'bloqueado') return asDir;
+    return splitTarget(arg);                                      // es carpeta + nombre nuevo
+  }
+
+  function transfer(op, args, verb) {
+    if (args.length < 2) { print('Uso: ' + verb + ' <origen> <destino>', 'warn'); return; }
+    var src = splitTarget(args[0]);
+    if (src.error) { fail(src); return; }
+    var dst = resolveDest(args[1]);
+    if (dst.error) { fail(dst); return; }
+
+    var res = op(src.dir, src.name, dst.dir, dst.name);
+    if (res.error) { fail(res); return; }
+    print('  ' + GT.fs.pathString(src.dir.concat(src.name)) + '  ->  ' +
+          GT.fs.pathString(dst.dir.concat(res.name)), 'ok');
+    GT.audio.click();
+    return res;
+  }
+
+  COMMANDS.copy = {
+    desc: 'Copia un archivo.',
+    run: function (args) {
+      var res = transfer(GT.fs.copy, args, 'copy');
+      if (res) print('  1 archivo copiado (' + GT.fs.humanSize(res.node.size) + '). Quedan ' +
+                     GT.fs.humanSize(GT.fs.free()) + ' libres.', 'dim');
+    }
+  };
+  COMMANDS.cp = COMMANDS.copy;
+
+  COMMANDS.move = {
+    desc: 'Mueve un archivo o una carpeta.',
+    run: function (args) { transfer(GT.fs.move, args, 'move'); }
+  };
+  COMMANDS.mv = COMMANDS.move;
+
+  /* ---------- espacio ---------- */
+  COMMANDS.espacio = {
+    desc: 'Espacio usado y libre en el disco.',
+    run: function () {
+      var u = GT.fs.usage();
+      /* Barra de 30 casilleros: los llenos son la parte proporcional al uso */
+      var cells = 30;
+      var full = Math.round(u.percent / 100 * cells);
+      var cls = u.free <= 0 ? 'err' : (u.percent >= GT.CONFIG.DISK_WARN * 100 ? 'warn' : 'ok');
+
+      print('');
+      print(' Unidad C:  [WINTEC]', 'title');
+      print('  Capacidad ....... ' + GT.fs.humanSize(u.capacity));
+      print('  Usado ........... ' + GT.fs.humanSize(u.used) + '  (' + u.percent + '%)', cls);
+      print('  Libre ........... ' + GT.fs.humanSize(u.free), cls);
+      print('  [' + '#'.repeat(full) + '.'.repeat(cells - full) + ']', cls);
+      print('');
+
+      /* Lo que mas ocupa: el tamanio de cada carpeta de la raiz, de mayor a
+         menor. Es por donde se empieza a buscar cuando falta lugar. */
+      print(' Lo que mas ocupa:', 'dim');
+      var rootNode = root();
+      Object.keys(rootNode.children).map(function (k) {
+        return { name: k, size: GT.fs.sizeOf(rootNode.children[k]) };
+      }).sort(function (a, b) { return b.size - a.size; }).forEach(function (e) {
+        print('  ' + pad(GT.fs.humanSize(e.size), 12) + '\\' + e.name);
+      });
+
+      var junk = GT.fs.junkBytes();
+      if (junk > 0) {
+        print('');
+        print(' [!] ' + GT.fs.humanSize(junk) + ' de archivos temporales en ' +
+              GT.fs.pathString(GT.fs.JUNK_DIR), 'warn');
+        print('     No tienen datos utiles. Se borran con:  del *.tmp', 'dim');
+      }
+      print('');
+    }
+  };
+  COMMANDS.df = COMMANDS.espacio;
+  COMMANDS.chkdsk = COMMANDS.espacio;
 
   /* ---------- unlock ---------- */
   COMMANDS.unlock = {
@@ -386,10 +691,15 @@
       print('');
       print(' ' + pad('PID', 8) + pad('NOMBRE', 24) + pad('CPU', 7) + pad('RAM', 10) + 'FIRMA', 'title');
       print(' ' + '-'.repeat(62), 'dim');
+      /* Con el sistema tildado, ps marca al programa que quedo colgado. A
+         proposito NO dice quien lo bloquea: eso lo averigua diag. */
+      var frozen = GT.sys && GT.sys.isFrozen() ? GT.state.sys.frozen : null;
       list.forEach(function (p) {
+        var hung = frozen && frozen.victim && frozen.victim.pid === p.pid;
         print(' ' + pad(p.pid, 8) + pad(p.name, 24) + pad(p.cpu + '%', 7) +
-              pad(p.ram + ' MB', 10) + (p.signed ? 'WinTEC Corp.' : 'SIN FIRMA'),
-              p.signed ? '' : 'warn');
+              pad(p.ram + ' MB', 10) + (p.signed ? 'WinTEC Corp.' : 'SIN FIRMA') +
+              (hung ? '   << NO RESPONDE' : ''),
+              hung ? 'err' : p.signed ? '' : 'warn');
       });
       print('');
       print(' Usa "kill <pid>" para terminar un proceso.', 'dim');
@@ -422,9 +732,20 @@
   COMMANDS.purge = {
     desc: 'Purga final del malware.',
     run: function () {
-      if (GT.state.level < 4) {
+      if (GT.state.level < GT.levels.PURGE_LEVEL) {
         print('purge: el nucleo del malware todavia esta protegido.', 'err');
         print('Primero hay que contener los procesos y cortar la via de entrada.', 'dim');
+        GT.audio.error();
+        return;
+      }
+      /* El nucleo se reinstala solo mientras le quede de donde: la purga
+         recien arranca cuando el jugador le corto esas vias con las
+         herramientas de mantenimiento (ver js/sysutils.js). */
+      var blockers = GT.sys.purgeBlockers();
+      if (blockers.length) {
+        print('purge: el nucleo se vuelve a instalar solo. Todavia:', 'err');
+        blockers.forEach(function (b) { print('   - ' + b, 'warn'); });
+        print('Cortale esas vias y volve a intentar.', 'dim');
         GT.audio.error();
         return;
       }
@@ -525,6 +846,11 @@
      Pasos: 1) hago eco de lo escrito, 2) lo guardo en el historial,
             3) lo parseo en comando + argumentos, 4) lo busco y lo ejecuto. */
   term.run = function (raw) {
+    /* Si la carpeta donde estaba parado dejo de existir (la movieron o la
+       borraron desde el Explorador), vuelvo a la raiz antes de hacer nada:
+       todos los comandos dan por hecho que cwd apunta a una carpeta real. */
+    if (!GT.fs.getNode(root(), cwd)) { cwd = []; updatePrompt(); }
+
     var line = String(raw).trim();
     print(GT.fs.pathString(cwd) + '>' + line, 'cmd');   // eco, como la consola real
     if (!line) return;                                  // Enter en vacio: nada
@@ -553,6 +879,15 @@
       print('Escribi "help" para ver la lista de comandos.', 'dim');
       GT.audio.error();
       return;
+    }
+
+    for (var g = 0; g < guards.length; g++) {
+      var veto = guards[g](name, args);
+      if (veto) {
+        print(veto, 'err');
+        GT.audio.error();
+        return;
+      }
     }
 
     cmd.run(args);

@@ -45,7 +45,8 @@
         { id: 'l1_scan',    text: 'Analizar el archivo con doble extensión' },
         { id: 'l1_log',     text: 'Leer C:\\Sistema\\registro.log' },
         { id: 'l1_unlock',  text: 'Desbloquear la carpeta cuarentena' },
-        { id: 'l1_payload', text: 'Analizar payload.bin' }
+        { id: 'l1_payload', text: 'Analizar payload.bin' },
+        { id: 'l1_backup',  text: 'Respaldar tus documentos (backup)' }
       ],
       intro: [
         { text: 'Hola, estudiante. Gracias por abrir esa foto tan linda que te mandaron.' },
@@ -68,6 +69,7 @@
         if (!f.l1_log)     return 'Andá a C:\\Sistema con  cd \\Sistema  y leé:  type registro.log';
         if (!f.l1_unlock)  return 'El log dice bin2dec(101101). Pasá 101101 de binario a decimal y usá:  unlock <numero>';
         if (!f.l1_payload) return 'Entrá con  cd cuarentena  y ejecutá:  scan payload.bin';
+        if (!f.l1_backup)  return 'Antes de pelear contra el malware, copiá tus archivos a otra partición:  backup create \\Documentos';
         return 'Ya completaste todo este nivel.';
       }
     },
@@ -78,11 +80,14 @@
       bonus: 350,
       objectives: [
         { id: 'l2_open', text: 'Abrir el Administrador de tareas' },
-        { id: 'l2_kill', text: 'Terminar los procesos sin firma digital', count: 0, total: 4 }
+        { id: 'l2_kill', text: 'Terminar los procesos sin firma digital', count: 0, total: 4 },
+        { id: 'l2_freeze', text: 'Destrabar el sistema cuando se tilde (diag)' },
+        { id: 'l2_clean', text: 'Borrar la basura que dejaron en C:\\Sistema\\Temp' }
       ],
       intro: [
         { text: 'Contá conmigo: cuatro procesos míos, y suben la CPU cada segundo que dudás.' },
         { text: 'Ah, y algunos tienen nombres parecidos a los tuyos. Suerte con eso.' },
+        { text: 'Mientras lo pensás, te voy llenando el disco. Archivo por archivo.' },
         { friendly: true, who: 'SISTEMA',
           text: 'Los procesos legítimos están firmados por "WinTEC Corp.". Los del malware no tienen firma. Terminalos con el botón o con  kill <pid>  en la Terminal.' }
       ],
@@ -95,8 +100,12 @@
       hint: function () {
         var f = doneMap();
         if (!f.l2_open) return 'Doble click en el icono "Administrador de tareas" del escritorio.';
-        return 'Mirá la columna FIRMA DIGITAL: los que dicen "Sin firma ✘" son del malware. ' +
-               'Ojo con svch0st.exe, tiene un CERO en lugar de la letra O.';
+        if (GT.sys.isFrozen()) return 'El escritorio se tildó pero la Terminal sigue viva. Escribí  diag : te dice qué proceso ' +
+                                      'BLOQUEA al sistema. Terminá ese con  kill <pid> , no el que quedó colgado.';
+        if (!f.l2_kill) return 'Mirá la columna FIRMA DIGITAL: los que dicen "Sin firma ✘" son del malware. ' +
+                               'Ojo con svch0st.exe, tiene un CERO en lugar de la letra O.';
+        return 'Los procesos llenaron el disco de archivos temporales. En la Terminal:  ' +
+               'cd \\Sistema\\Temp   y después   del *.tmp   (con  espacio  ves cuánto ocupan).';
       }
     },
 
@@ -116,9 +125,9 @@
       ],
       outro: [
         { text: 'Basta. Ya no me divertís.' },
-        { text: 'Vení al núcleo si tenés tanto coraje. Terminal. Escribí purge. Te espero.' },
+        { text: 'Si no me puedo quedar con tu máquina, me quedo con lo que hay adentro. Andá a mirar tus documentos.' },
         { friendly: true, who: 'SISTEMA',
-          text: 'Última fase: escribí  purge  en la Terminal para atacar el núcleo del malware.' }
+          text: 'Alerta: un proceso nuevo está cifrando los archivos del usuario.' }
       ],
       hint: function () {
         var f = doneMap();
@@ -129,26 +138,78 @@
     },
 
     /* ---------------- NIVEL 4 ---------------- */
+    /* Ransomware. La mecanica esta en js/ransom.js; aca van los objetivos,
+       el relato y las pistas. El objetivo de recuperar los archivos lleva
+       contador, pero su total lo maneja ransom.js porque se mueve: el
+       cifrador puede sumar archivos y el reloj puede destruirlos. */
     4: {
+      name: 'Secuestro',
+      bonus: 450,
+      objectives: [
+        { id: 'l4_note',    text: 'Leer la nota de rescate y negarse a pagar' },
+        { id: 'l4_kill',    text: 'Terminar el proceso que cifra los archivos (ps / kill)' },
+        { id: 'l4_key',     text: 'Calcular la clave de descifrado' },
+        { id: 'l4_decrypt', text: 'Recuperar los archivos secuestrados', count: 0, total: 4 }
+      ],
+      intro: [
+        { text: 'Tus archivos ahora terminan en .locked. Sin mi clave son ruido.' },
+        { text: 'Tenés un reloj en pantalla. Cada vez que llegue a cero, borro uno. Para siempre. O me pagás.' },
+        { friendly: true, who: 'SISTEMA',
+          text: 'No pagues: nada lo obliga a devolver nada. Bloqueó el Administrador de tareas y el correo, pero la Terminal sigue viva. Primero frená el proceso que cifra, después recuperá los archivos.' }
+      ],
+      outro: [
+        { text: 'La clave estaba en mi memoria. No tendría que haber quedado ahí.' },
+        { text: 'Bien. Me queda el núcleo. Vení a buscarme, si te animás.' },
+        { friendly: true, who: 'SISTEMA',
+          text: 'Archivos recuperados y herramientas desbloqueadas. Queda la última fase: purgar el núcleo del malware.' }
+      ],
+      hint: function () {
+        var f = doneMap();
+        if (!f.l4_note) return 'Abrí la nota de rescate (está en la ventana GL1TCH-LOCK, o doble click en un archivo .locked) y elegí NO PAGAR.';
+        if (!f.l4_kill) return 'El Administrador de tareas está bloqueado, pero la Terminal no: ' +
+                               'ps  lista los procesos. Buscá el que no tiene firma y terminalo con  kill <pid> .';
+        if (!f.l4_key)  return 'Leé  type \\Sistema\\volcado.dmp . La clave es el XOR de los dos números: ' +
+                               'comparalos bit a bit (iguales = 0, distintos = 1), pasá el resultado a decimal y usá  decrypt <clave> .';
+        return 'decrypt <clave>  descifra sólo la carpeta donde estás parado: entrá con  cd  a cada carpeta que tenga ' +
+               'archivos .locked. El que tiene la cabecera dañada sólo vuelve con  backup restore <n> .';
+      }
+    },
+
+    /* ---------------- NIVEL 5 ---------------- */
+    5: {
       name: 'Purga',
       bonus: 500,
       objectives: [
-        { id: 'l4_open', text: 'Escribir "purge" en la Terminal' },
-        { id: 'l4_boss', text: 'Reducir la integridad del malware a 0' }
+        { id: 'purge_restore', text: 'Restaurar el sistema a un punto anterior a la infección (restore)' },
+        { id: 'purge_part',    text: 'Eliminar la partición oculta del malware (part)' },
+        { id: 'purge_open',    text: 'Escribir "purge" en la Terminal' },
+        { id: 'purge_boss',    text: 'Reducir la integridad del malware a 0' }
       ],
       intro: [
         { text: 'Estoy en el núcleo del sistema. Para sacarme tenés que demostrar que entendiste algo.' },
         { text: 'Preguntas hasta que uno de los dos caiga. Cada acierto me borra un pedazo. Cada error me devuelve fuerzas y te borra a vos.' },
+        { text: 'Ah, un detalle: si me borrás, me vuelvo a instalar. Dejé una entrada en el arranque y una copia mía donde no mirás nunca.' },
         { friendly: true, who: 'SISTEMA',
-          text: 'Escribí  purge  en la Terminal para iniciar la secuencia final.' }
+          text: 'Antes de purgar hay que cortarle esas dos vías: restaurá el sistema a un punto anterior a la infección ( restore ) y borrá su partición oculta ( part ). Después, escribí  purge .' }
       ],
       hint: function () {
+        var f = doneMap();
+        if (!f.purge_restore) return 'Escribí  restore list . La infección fue ayer a las 12:06 (está en registro.log): ' +
+                                     'elegí el último punto ANTERIOR a esa hora con  restore apply <n> .';
+        if (!f.purge_part)    return 'Escribí  part list . Hay una partición sin letra ni etiqueta que nadie creó: ' +
+                                     'mirala con  part info <n>  y borrala con  part delete <n> .';
         return 'Escribí  purge  en la Terminal. Después respondé con lo que aprendiste en los niveles anteriores.';
       }
     }
   };
 
   levels.DEFS = DEFS;
+  /* Cuantos niveles hay y cual es el de la purga, calculados de la tabla:
+     el HUD, la Terminal y las herramientas de mantenimiento preguntan aca en
+     vez de tener un "4" escrito cada uno por su lado. */
+  levels.COUNT = Object.keys(DEFS).length;
+  levels.PURGE_LEVEL = levels.COUNT;
+  levels.RANSOM_LEVEL = 4;
 
   /* Convierte la lista de objetivos en un objeto { id: true/false } para
      poder preguntar  f.l1_help  en vez de recorrer el array cada vez. Lo usan
@@ -197,15 +258,23 @@
       GT.mail.init();
       GT.ui.pulseIcon('mail', true);
     }
-    if (n === 4) {
-      GT.ui.toast('Escribí  purge  en la Terminal', 'warn');
+    if (n === levels.PURGE_LEVEL) {
+      GT.ui.toast('Última fase: cortale las vías de regreso y después  purge', 'warn');
     }
+
+    /* El ransomware cifra apenas empieza su nivel (se ve detras del dialogo)
+       y vuelve a bloquear los iconos que las lineas de arriba acaban de
+       habilitar. En cualquier otro nivel se asegura de quedar apagado. */
+    if (n === levels.RANSOM_LEVEL) GT.ransom.start();
+    else GT.ransom.stop();
 
     GT.ui.say(def.intro, function () {
       if (n === 1) {
         GT.popups.start();
         GT.terminal.open();
       }
+      // El reloj del rescate arranca cuando el jugador ya leyo de que se trata
+      if (n === levels.RANSOM_LEVEL) GT.ransom.arm();
     });
   };
 
@@ -361,9 +430,9 @@
 
   /** El jefe final avisa por aca cuando el malware muere. */
   levels.finishBoss = function () {
-    var o = levels.find('l4_boss');
+    var o = levels.find('purge_boss');
     if (o) { o.done = true; o.count = o.total; }
-    levels.renderObjectives('l4_boss');
+    levels.renderObjectives('purge_boss');
     GT.emit('victory');
   };
 

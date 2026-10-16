@@ -46,10 +46,11 @@
     { t: '  Aire comprimido ........ OK', c: 'ok', d: 110 },
     { t: '  Pasta térmica .......... OK', c: 'ok', d: 110 },
     { t: '  Disco externo (backup).. OK', c: 'ok', d: 110 },
-    { t: '  Multímetro ............. OK', c: 'ok', d: 200 },
+    { t: '  Multímetro ............. OK', c: 'ok', d: 110 },
+    { t: '  Crimpeadora y probador . OK', c: 'ok', d: 200 },
     { t: '', d: 80 },
     { t: 'Sincronizando órdenes de trabajo pendientes...', d: 460 },
-    { t: '  7 equipos esperando en el mostrador', c: 'warn', d: 420 },
+    { t: '  ' + GT.tech.totalCases + ' equipos esperando en el mostrador', c: 'warn', d: 420 },
     { t: '', d: 100 },
     { t: 'Técnico de turno: vos. Buena suerte.', c: 'ok', d: 640 },
     { t: '', d: 200 }
@@ -122,6 +123,11 @@
     });
 
     GT.ui.registerIcon({
+      id: 'bot', label: 'TEC-Bot', icon: GT.bot.ICON, asset: 'app.asistente',
+      hint: 'Asistente de soporte', onOpen: function () { GT.bot.open(); }
+    });
+
+    GT.ui.registerIcon({
       id: 'manual', label: 'Manual', icon: GT.ui.icons.book, asset: 'app.manual',
       hint: 'Ayuda y comandos', onOpen: openManual
     });
@@ -149,12 +155,27 @@
       '  dir               contenido de la carpeta actual\n' +
       '  cd <carpeta>      entrar   (cd .. vuelve atrás)\n' +
       '  type <archivo>    leer un archivo de texto\n' +
+      '  del <archivo>     borrar un archivo (del *.tmp borra varios)\n' +
+      '  espacio           espacio usado y libre en el disco\n' +
       '  scan <archivo>    analizar amenazas\n' +
       '  unlock <clave>    desbloquear carpeta protegida\n' +
       '  ps / kill <pid>   ver y terminar procesos\n' +
+      '  decrypt <clave>   descifrar los archivos secuestrados\n' +
       '  objetivos         objetivos del nivel\n' +
       '  pista             ayuda (cuesta ' + GT.CONFIG.HINT_COST + ' puntos)\n' +
       '  cls               limpiar pantalla\n\n' +
+      'MANTENIMIENTO DEL SISTEMA\n' +
+      '  backup            copiar tus archivos a otra partición (D:)\n' +
+      '  restore           volver la configuración del sistema a una\n' +
+      '                    fecha anterior (punto de restauración)\n' +
+      '  part              ver y borrar particiones del disco\n' +
+      '  diag              por qué el sistema está lento o tildado\n' +
+      '  Un backup guarda TUS archivos. Un punto de restauración\n' +
+      '  guarda la configuración del SISTEMA. No son lo mismo.\n\n' +
+      'TEC-BOT\n' +
+      '  El asistente del escritorio (o  bot <pregunta>  en la Terminal)\n' +
+      '  explica comandos y conceptos. Con  bot pista  te da una\n' +
+      '  ayuda del nivel sin costo: ' + GT.CONFIG.BOT_HINTS_PER_LEVEL + ' por nivel.\n\n' +
       'EL HACKER\n' +
       '  Se pasea por la pantalla y cada tanto te ataca:\n' +
       '  · te BLOQUEA TECLAS: para recuperarlas respondé bien la\n' +
@@ -202,7 +223,9 @@
 
     GT.resetState();
     GT.state.mode = mode;
-    GT.state.fsRoot = GT.fs.create();
+    GT.fs.mount();                 // arbol de archivos y cuota de disco de la partida
+    GT.sys.reset();                // backups, puntos de restauracion y particiones
+    GT.ransom.reset();
     GT.state.running = true;
 
     /* Cada modulo sabe como limpiarse a si mismo; yo solo les aviso. Este es
@@ -292,6 +315,9 @@
       } else {
         GT.popups.tick(dt);
         GT.procs.tick(dt);
+        GT.fs.tick(dt);
+        GT.sys.tick(dt);
+        GT.ransom.tick(dt);
         GT.boss.tick(dt);
         GT.hacker.tick(dt);
         updateHud();
@@ -318,8 +344,12 @@
 
     var def = GT.levels.DEFS[s.level];
 
-    document.getElementById('hud-level').textContent = 'NIVEL ' + s.level + ' / 4';
-    document.getElementById('hud-levelname').textContent = def ? def.name : '—';
+    document.getElementById('hud-level').textContent = 'NIVEL ' + s.level + ' / ' + GT.levels.COUNT;
+    /* En el nivel del ransomware el nombre lleva pegado el reloj del rescate:
+       es lo que apura al jugador y tiene que estar siempre a la vista, aunque
+       haya cerrado la nota. */
+    document.getElementById('hud-levelname').textContent = (def ? def.name : '—') +
+      (GT.ransom.isActive() ? ' · ' + GT.formatTime(Math.max(0, GT.ransom.timeLeft())) : '');
 
     var integ = Math.max(0, Math.round(s.integrity));
     var barI = document.getElementById('bar-integrity');
@@ -492,7 +522,7 @@
         'Presioná REINTENTAR para restaurar el último punto seguro.'
       );
       document.getElementById('lose-stats').innerHTML =
-        row('Nivel alcanzado', sum.level + ' / 4') +
+        row('Nivel alcanzado', sum.level + ' / ' + GT.levels.COUNT) +
         row('Puntaje', sum.base) +
         row('Tiempo sobrevivido', GT.formatTime(sum.elapsed)) +
         row('Errores cometidos', sum.mistakes) +
@@ -535,7 +565,7 @@
     document.querySelector('#screen-win .doc-title-win').textContent =
       tecnico ? '// TODOS LOS EQUIPOS ENTREGADOS' : '// SISTEMA RESTAURADO';
     document.querySelector('#screen-win .win-lead').textContent = tecnico
-      ? 'Cerraste las siete órdenes. Siete clientes se van con su equipo andando.'
+      ? 'Cerraste las ' + GT.tech.totalCases + ' órdenes del taller. Cada cliente se va con su equipo andando.'
       : 'El proceso hostil fue eliminado. Tu PC vuelve a ser tuya.';
 
     document.getElementById('win-stats').innerHTML =
@@ -596,6 +626,7 @@
       if (action === 'help')    { GT.ui.setScreen('screen-help'); }
       if (action === 'credits') { GT.ui.setScreen('screen-credits'); }
       if (action === 'ranking') { GT.ranking.open(); }
+      if (action === 'auth')    { GT.auth.open(); }
       if (action === 'back')    { GT.ui.setScreen('screen-title'); }
       if (action === 'menu')    { hardStop(); GT.ui.setScreen('screen-title'); }
       if (action === 'restart') { var m = GT.state.mode; hardStop(); game.start(m); }

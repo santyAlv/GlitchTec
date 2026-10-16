@@ -117,6 +117,24 @@
 
   procs.stop = function () { active = false; };
 
+  /** Garantiza que haya una lista de procesos aunque la simulacion del nivel
+      2 no haya corrido: la arma solo con los legitimos. */
+  procs.ensureList = function () {
+    if (list.length) return;
+    LEGIT.forEach(function (p) { list.push(clone(p, { signed: true, malicious: false })); });
+    recalc();
+  };
+
+  /** Suma un proceso hostil a la lista desde otro modulo (el cifrador del
+      nivel de ransomware). Devuelve el proceso ya creado, con su PID. */
+  procs.inject = function (def) {
+    var p = clone(def, { signed: false, malicious: true, pid: nextPid++ });
+    list.push(p);
+    recalc();
+    render();
+    return p;
+  };
+
   procs.reset = function () {
     list = [];
     lastSig = '';
@@ -154,6 +172,15 @@
 
   procs.list = function () { return list.slice(); };
 
+  /** El proceso con ese PID, o null si no esta corriendo. Lo usa el sistema
+      de archivos para saber si un archivo sigue "en uso". */
+  procs.get = function (pid) {
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].pid === pid) return list[i];
+    }
+    return null;
+  };
+
   procs.remainingHostile = function () {
     return list.filter(function (p) { return p.malicious; }).length;
   };
@@ -188,6 +215,10 @@
          si el jugador se queda mirando, la CPU se satura sola y empieza a
          perder integridad. El Math.min lo topea para que no llegue al infinito. */
       if (p.malicious) p.baseCpu = Math.min(p.baseCpu + dt * 0.35, p.baseCpu + 12);
+      /* Y ademas de CPU, come disco: cada proceso hostil escribe basura en
+         C:\Sistema\Temp. Son dos relojes distintos corriendo contra el
+         jugador, y los dos se frenan igual: matando el proceso. */
+      if (p.malicious) GT.fs.growJunk(p, GT.CONFIG.JUNK_RATE * dt);
     });
     recalc();
 
@@ -260,6 +291,10 @@
     recalc();
     render();
 
+    /* Aviso por el bus que este proceso ya no existe. Lo escuchan los modulos
+       que dependen de un proceso puntual sin que yo tenga que conocerlos. */
+    GT.emit('proc-killed', p);
+
     if (p.malicious) {
       GT.audio.kill();
       GT.correct(120, 'proceso hostil eliminado');
@@ -268,6 +303,7 @@
       GT.learn(p.family + ': ' + p.lesson);
       GT.terminal.notify('[OK] ' + p.name + ' terminado. ' + p.family, 'ok');
       GT.levels.progress('l2_kill', 1);
+      checkClean();
       return { status: 'malicious', name: p.name, family: p.family };
     }
 
@@ -280,6 +316,30 @@
     GT.ui.toast('✘ ' + p.name + ' era legítimo. Revisá la firma digital.', 'bad');
     return { status: 'legit', name: p.name };
   };
+
+  /* El objetivo "limpiar la basura" del nivel 2 se cumple cuando pasan las
+     DOS cosas: no queda ningun proceso hostil escribiendo y no queda basura
+     en el disco. Lo reviso cada vez que muere un proceso o se borra algo; el
+     orden natural es ese (primero matar, despues borrar) porque mientras el
+     proceso vive su archivo esta en uso y no se deja borrar. */
+  function checkClean() {
+    if (!active || GT.state.finished) return;
+    if (procs.remainingHostile() > 0 || GT.fs.junkBytes() > 0) return;
+    GT.levels.complete('l2_clean');
+    GT.learn('Matar el proceso frena el daño, pero lo que ya escribió en el disco hay que borrarlo aparte.');
+  }
+
+  GT.on('fs', function (e) { if (e.op === 'remove') checkClean(); });
+
+  /* Con el sistema tildado (ver js/sysutils.js) la interfaz grafica no
+     responde: los botones del Administrador no hacen nada y hay que salir
+     por la Terminal. Devuelve true si el click se tiene que ignorar. */
+  function guiFrozen() {
+    if (!GT.sys || !GT.sys.isFrozen()) return false;
+    GT.audio.error();
+    GT.ui.toast('El Administrador de tareas no responde. Probá desde la Terminal.', 'warn');
+    return true;
+  }
 
   /* ============================================================
      Ventana
@@ -331,6 +391,7 @@
 
     document.getElementById('tm-kill').addEventListener('click', function () {
       if (selectedPid === null) return;
+      if (guiFrozen()) return;
       procs.kill(selectedPid);
       selectedPid = null;
       document.getElementById('tm-kill').disabled = true;
@@ -434,6 +495,7 @@
       });
 
       tr.addEventListener('dblclick', function () {
+        if (guiFrozen()) return;
         procs.kill(p.pid);
         selectedPid = null;
         render();
@@ -461,5 +523,7 @@
 
   procs.render = render;
   procs.getCpu = function () { return cpu; };
+  procs.getRam = function () { return ram; };
+  procs.RAM_TOTAL = RAM_TOTAL;
 
 })(window, document);

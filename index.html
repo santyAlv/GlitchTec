@@ -50,11 +50,12 @@
       <nav class="main-menu">
         <button class="menu-btn" data-action="modes">ELEGIR MODO DE JUEGO</button>
         <button class="menu-btn" data-action="ranking">RANKING</button>
+        <button class="menu-btn" data-action="auth" id="auth-menu-btn">INICIAR SESIÓN</button>
         <button class="menu-btn" data-action="help">INSTRUCCIONES</button>
         <button class="menu-btn" data-action="credits">CRÉDITOS</button>
       </nav>
 
-      <p class="build-tag">prototipo funcional v0.4 (alfa) · PISWD</p>
+      <p class="build-tag">prototipo funcional v0.5 (alfa) · PISWD</p>
     </div>
   </section>
 
@@ -80,7 +81,7 @@
             correos y una purga final para sacarlo.
           </span>
           <ul class="mode-list">
-            <li>4 niveles: reconocimiento, contención, phishing y purga</li>
+            <li>5 niveles: reconocimiento, contención, phishing, secuestro y purga</li>
             <li>Terminal con comandos reales</li>
             <li>El hacker se pasea por la pantalla y te amenaza</li>
             <li>Te bloquea teclas y te da vuelta los colores</li>
@@ -97,7 +98,7 @@
             por qué fallan: inspeccionar, probar, reparar y explicar la falla.
           </span>
           <ul class="mode-list">
-            <li>7 órdenes de trabajo con fallas distintas</li>
+            <li>8 órdenes de trabajo, la última un laboratorio de redes</li>
             <li>Diagnóstico por pasos: mirar, descartar, probar</li>
             <li>Cambiar piezas sanas te cuesta plata y reputación</li>
             <li>Cerrás cada orden explicando qué era</li>
@@ -142,7 +143,10 @@
             <li><code>type &lt;archivo&gt;</code> — leer un archivo</li>
             <li><code>scan &lt;archivo&gt;</code> — analizar amenazas</li>
             <li><code>kill &lt;pid&gt;</code> — terminar un proceso</li>
+            <li><code>del</code> · <code>copy</code> · <code>move</code> · <code>espacio</code> — manejar archivos y disco</li>
+            <li><code>backup</code> · <code>restore</code> · <code>part</code> · <code>diag</code> — mantenimiento del sistema</li>
             <li><code>pista</code> — ayuda (cuesta puntos)</li>
+            <li><code>bot &lt;pregunta&gt;</code> — el asistente TEC-Bot: explica y da 2 pistas gratis por nivel</li>
           </ul>
         </article>
 
@@ -166,6 +170,7 @@
             <li><b>Reconocimiento</b> — encontrar el archivo infectado</li>
             <li><b>Contención</b> — matar los procesos del malware</li>
             <li><b>Phishing</b> — clasificar correos reales y falsos</li>
+            <li><b>Secuestro</b> — un ransomware cifra tus archivos y hay un reloj corriendo</li>
             <li><b>Purga</b> — enfrentamiento final</li>
           </ol>
         </article>
@@ -202,10 +207,13 @@
           </ul>
           <p>Cambiar una pieza sana te cuesta plata y <b>reputación</b>. Si la reputación llega
              a 0%, se termina la partida.</p>
-          <p>Son <b>siete órdenes</b>: arrancan por alimentación y POST, y terminan en
+          <p>Son <b>ocho órdenes</b>: arrancan por alimentación y POST, y siguen con
              mantenimiento, que es de donde sale la mayoría de las fallas reales —
              <b>polvo</b> tapando la ventilación, <b>humedad y sulfatación</b> en los contactos
              y <b>pasta térmica seca</b> en un equipo que por fuera está impecable.</p>
+          <p>La última es el <b>laboratorio de redes</b>: una PC, un switch y un cable con
+             cuatro fallas juntas. Suma dos herramientas, la <b>crimpeadora</b> y el
+             <b>probador de cables</b>, y una regla: en redes se revisa primero lo físico.</p>
         </article>
       </div>
 
@@ -279,6 +287,70 @@
 
       <div class="doc-actions">
         <button class="menu-btn" data-action="modes">JUGAR</button>
+        <button class="menu-btn ghost" data-action="back">VOLVER</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PANTALLA 3C: CUENTA (LOGIN / REGISTRO) ============
+       MAQUETA PROVISIONAL. La lógica está en js/auth.js y se agarra de los
+       id y de los data-auth*: el diseño de la issue #21 puede cambiar todo
+       lo demás (estructura, clases, convertirlo en modal) mientras conserve
+       esos ganchos y los name de los campos. -->
+  <section id="screen-auth" class="screen">
+    <div class="doc">
+      <h2 class="doc-title">// CUENTA</h2>
+
+      <p class="rk-note" id="auth-note" aria-live="polite"></p>
+
+      <!-- Sin sesión: formularios -->
+      <div id="auth-forms">
+        <div class="rk-filters">
+          <div class="rk-group" role="group" aria-label="Entrar o crear cuenta">
+            <button class="rk-btn is-on" data-auth-tab="login" aria-pressed="true">INICIAR SESIÓN</button>
+            <button class="rk-btn" data-auth-tab="registro" aria-pressed="false">CREAR CUENTA</button>
+          </div>
+        </div>
+
+        <form id="auth-login" class="auth-form" novalidate>
+          <label class="auth-field"><span>USUARIO O CORREO</span>
+            <input name="login" type="text" maxlength="120" autocomplete="username" spellcheck="false"></label>
+          <label class="auth-field"><span>CONTRASEÑA</span>
+            <input name="password" type="password" maxlength="72" autocomplete="current-password"></label>
+          <button class="menu-btn" type="submit">ENTRAR</button>
+        </form>
+
+        <form id="auth-registro" class="auth-form" novalidate hidden>
+          <label class="auth-field"><span>USUARIO</span>
+            <input name="username" type="text" maxlength="24" autocomplete="username" spellcheck="false">
+            <small data-error="username"></small></label>
+          <label class="auth-field"><span>CORREO ELECTRÓNICO</span>
+            <input name="email" type="email" maxlength="120" autocomplete="email" spellcheck="false">
+            <small data-error="email"></small></label>
+          <label class="auth-field"><span>CONTRASEÑA (8 o más, con letras y números)</span>
+            <input name="password" type="password" maxlength="72" autocomplete="new-password">
+            <small data-error="password"></small></label>
+          <label class="auth-field"><span>REPETIR CONTRASEÑA</span>
+            <input name="password2" type="password" maxlength="72" autocomplete="new-password">
+            <small data-error="password2"></small></label>
+          <button class="menu-btn" type="submit">CREAR CUENTA</button>
+        </form>
+      </div>
+
+      <!-- Con sesión: datos de la cuenta e historial -->
+      <div id="auth-user" hidden>
+        <ul class="credits">
+          <li><span>Usuario</span><em id="auth-username"></em></li>
+          <li><span>Correo</span><em id="auth-email"></em></li>
+        </ul>
+        <ul class="credits" id="auth-history"></ul>
+        <div class="doc-actions">
+          <button class="menu-btn" data-action="modes">JUGAR</button>
+          <button class="menu-btn ghost" id="auth-logout">CERRAR SESIÓN</button>
+        </div>
+      </div>
+
+      <div class="doc-actions">
         <button class="menu-btn ghost" data-action="back">VOLVER</button>
       </div>
     </div>
@@ -377,7 +449,7 @@
         <b>SERVICIO TÉCNICO TEC</b>
         <small>BANCO DE TRABAJO</small>
       </div>
-      <div id="tech-case-title">ORDEN 001 / 004</div>
+      <div id="tech-case-title">ORDEN 001 / 008</div>
 
       <div class="tech-metrics">
         <div class="tech-metric">
@@ -398,7 +470,7 @@
         </div>
         <div class="tech-metric">
           <label>ÓRDENES</label>
-          <span class="val" id="tech-val-solved">0 / 7</span>
+          <span class="val" id="tech-val-solved">0 / 8</span>
         </div>
         <div class="tech-metric rep">
           <label>REPUTACIÓN DEL TALLER</label>
@@ -515,9 +587,12 @@
                   bus de eventos. Sin el, todos los demas explotan.
        audio/engine/ui   servicios base que usa todo el resto
        filesystem        lo necesitan terminal y explorador
-       modulos de juego  terminal, explorador, procesos, mail, pop-ups,
-                         hacker, niveles, jefe, taller
+       modulos de juego  terminal, explorador, procesos, mantenimiento,
+                         mail, pop-ups, hacker, ransomware, niveles, jefe,
+                         taller
+       chatbot.js        asistente TEC-Bot (lee las pistas de niveles y taller)
        api.js            cliente del backend
+       auth.js           cuentas de usuario (usa api.js)
        ranking.js        pantalla de posiciones (usa api.js)
        game.js    ULTIMO SIEMPRE: es el orquestador y necesita que TODOS
                   los modulos existan para poder resetearlos y tickearlos.
@@ -538,14 +613,18 @@
 <script src="js/terminal.js"></script>
 <script src="js/explorer.js"></script>
 <script src="js/processes.js"></script>
+<script src="js/sysutils.js"></script>
 <script src="js/mail.js"></script>
 <script src="js/popups.js"></script>
 <script src="js/hacker.js"></script>
+<script src="js/ransom.js"></script>
 <script src="js/levels.js"></script>
 <script src="js/boss.js"></script>
 <script src="js/bench3d.js"></script>
 <script src="js/tech.js"></script>
+<script src="js/chatbot.js"></script>
 <script src="js/api.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/ranking.js"></script>
 <script src="js/game.js"></script>
 </body>

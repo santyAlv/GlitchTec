@@ -135,7 +135,10 @@
     { id: 'alcohol',        x:  -54, label: 'ALCOHOL ISOPROPÍLICO', col: [150, 196, 210] },
     { id: 'pasta',          x:   50, label: 'PASTA TÉRMICA',        col: [205, 205, 210] },
     { id: 'tester',         x:  154, label: 'TESTER',               col: [220, 170,  40] },
-    { id: 'respaldo',       x:  258, label: 'DISCO DE RESPALDO',    col: [120, 190, 130] }
+    { id: 'respaldo',       x:  258, label: 'DISCO DE RESPALDO',    col: [120, 190, 130] },
+    /* Laboratorio de redes: van en las dos puntas de la mesa */
+    { id: 'crimpeadora',    x: -366, label: 'CRIMPEADORA',          col: [190,  60,  70] },
+    { id: 'lantester',      x:  362, label: 'PROBADOR DE RED',      col: [ 80, 120, 200] }
   ];
 
   var TOOL_NAME = {};
@@ -456,6 +459,15 @@
         p.box(54, 20, 76);
         p.push(); p.translate(0, -11, -10); mat(p, 60, 80, 70);
         p.box(34, 2, 30); p.pop();
+      } else if (t.id === 'crimpeadora') {
+        p.push(); p.translate(-9, 0, 14); p.box(10, 12, 60); p.pop();     // mango
+        p.push(); p.translate(9, 0, 14); p.box(10, 12, 60); p.pop();      // mango
+        p.push(); p.translate(0, 0, -30); mat(p, 150, 156, 162);
+        p.box(30, 14, 34); p.pop();                                        // cabezal
+      } else if (t.id === 'lantester') {
+        p.box(40, 18, 70);
+        p.push(); p.translate(0, -10, -12); mat(p, 70, 220, 110);
+        p.box(26, 2, 8); p.pop();                                          // hilera de luces
       } else {
         p.box(64, 16, 84);
       }
@@ -920,6 +932,42 @@
       { at: 2600, line: 'clic . . . clic . . . reintento de sector', cls: 'bad' },
       { at: 3400, mode: 'desktop' },
       { at: 4100, line: 'WinTEC no responde — uso de disco 100%', cls: 'bad' }
+    ]),
+    /* Red: el equipo arranca bien en todos los casos. Lo que falla aparece
+       recién en el escritorio, cuando intenta salir a la red. */
+    sin_adaptador: withBios([
+      { at: 1200, beep: 'short', line: 'POST OK — 1 pitido corto', cls: 'ok' },
+      { at: 1800, line: 'Iniciando WinTEC . . .', cls: 'dim' },
+      { at: 2500, mode: 'desktop' },
+      { at: 3100, line: 'Red: no se encontró ningún adaptador Ethernet', cls: 'bad' },
+      { at: 3900, line: 'ping 192.168.0.1 — error general de transmisión', cls: 'bad' }
+    ]),
+    sin_red: withBios([
+      { at: 1200, beep: 'short', line: 'POST OK — 1 pitido corto', cls: 'ok' },
+      { at: 1800, line: 'Iniciando WinTEC . . .', cls: 'dim' },
+      { at: 2500, mode: 'desktop' },
+      { at: 3100, line: 'Adaptador Ethernet: cable de red desconectado', cls: 'bad' },
+      { at: 3900, line: 'Luz de enlace apagada — no hay nadie del otro lado', cls: 'warn' }
+    ]),
+    red_cae: withBios([
+      { at: 1200, beep: 'short', line: 'POST OK — 1 pitido corto', cls: 'ok' },
+      { at: 1800, mode: 'desktop' },
+      { at: 2300, line: 'Adaptador Ethernet: conectado · 100 Mbps', cls: 'ok' },
+      { at: 2900, line: 'Respuesta desde 192.168.0.1: tiempo=1ms', cls: 'ok' },
+      { at: 3400, line: 'Respuesta desde 192.168.0.1: tiempo=1ms', cls: 'ok' },
+      { at: 4100, line: '— veinte minutos después —', cls: 'dim' },
+      { at: 4700, line: 'Tiempo de espera agotado para esta solicitud', cls: 'bad' },
+      { at: 5300, line: 'Tiempo de espera agotado para esta solicitud', cls: 'bad' },
+      { at: 6000, line: 'Se cayó la red de todo el laboratorio', cls: 'warn' }
+    ]),
+    ok_red: withBios([
+      { at: 1200, beep: 'short', line: 'POST OK — 1 pitido corto', cls: 'ok' },
+      { at: 1800, mode: 'desktop' },
+      { at: 2300, line: 'Adaptador Ethernet: conectado · 100 Mbps', cls: 'ok' },
+      { at: 2900, line: 'Respuesta desde 192.168.0.1: tiempo=1ms', cls: 'ok' },
+      { at: 3400, line: 'Respuesta desde 192.168.0.1: tiempo=1ms', cls: 'ok' },
+      { at: 3900, line: 'Paquetes: enviados 4, recibidos 4, perdidos 0', cls: 'ok' },
+      { at: 4600, line: 'RED OPERATIVA — una hora de prueba sin cortes', cls: 'ok' }
     ]),
     ok: withBios([
       { at: 1200, line: 'Memoria OK — 16384K', cls: 'ok' },

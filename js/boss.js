@@ -121,7 +121,7 @@
   boss.open = function () {
     if (GT.ui.isOpen(WIN_ID)) { GT.ui.focusWindow(WIN_ID); return; }
 
-    GT.levels.complete('l4_open');
+    GT.levels.complete('purge_open');
     active = true;
 
     var body = document.createElement('div');

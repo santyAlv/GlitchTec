@@ -84,6 +84,12 @@
   api.ping = function () {
     return get('ping.php').then(function (data) {
       offline = !(data && data.ok);
+      /* La base responde pero se creo con un esquema viejo: aviso por consola
+         en vez de dejar que las partidas fallen sin explicacion. */
+      if (data && data.db && data.cuentas === false) {
+        console.warn('[Glitch.TEC] A la base le falta la estructura de usuarios: ' +
+                     'importá sql/migracion_usuarios.sql');
+      }
       return !offline;
     }).catch(function () {
       offline = true;
@@ -98,7 +104,14 @@
     try { localStorage.setItem(PLAYER_KEY, playerName); } catch (e) { /* ignore */ }
   };
 
-  api.getPlayerName = function () { return playerName; };
+  /* Con sesion iniciada el nombre del ranking es el de la cuenta (el servidor
+     hace lo mismo en partida_start.php, asi que escribir otro no serviria).
+     El nombre de invitado queda guardado aparte y vuelve al cerrar sesion. */
+  api.getPlayerName = function () {
+    return (GT.auth && GT.auth.user) ? GT.auth.user.username : playerName;
+  };
+
+  api.getGuestName = function () { return playerName; };
 
   /** Abre una partida nueva (al iniciar el juego).
       Guardo el id que devuelve la base porque todo lo que venga despues
@@ -109,7 +122,7 @@
     matchId = null;
     matchToken = null;
     var payload = {
-      player_name: playerName,
+      player_name: api.getPlayerName(),
       mode: currentMode(),
       started_at: new Date().toISOString()
     };
@@ -152,7 +165,7 @@
     var row = {
       match_id: matchId,
       token: matchToken,
-      player_name: playerName,
+      player_name: api.getPlayerName(),
       mode: summary.mode || currentMode(),
       won: !!summary.won,
       score: summary.total || summary.base || 0,
@@ -228,12 +241,15 @@
     });
   };
 
-  // Al cargar la página, intentar detectar el backend
+  /* Al cargar la página, intentar detectar el backend. Guardo la promesa en
+     api.ready para los modulos que necesitan saber si hay servidor antes de
+     hacer su primer pedido (auth.js pregunta por la sesion recien ahi). */
   if (typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', function () {
-      api.ping().then(function (ok) {
+      api.ready = api.ping().then(function (ok) {
         if (ok) console.info('[Glitch.TEC] API PHP conectada');
         else console.info('[Glitch.TEC] Modo offline (localStorage)');
+        return ok;
       });
     });
   }

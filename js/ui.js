@@ -454,6 +454,7 @@
           ui.toast('Acceso bloqueado: todavía no disponible', 'warn');
           return;
         }
+        if (frozenFor(def)) return;
         b.classList.remove('pulse');
         def.onOpen();
       });
@@ -465,6 +466,16 @@
   }
 
   ui.refreshIcons = renderIcons;
+
+  /* Con el sistema tildado (ver js/sysutils.js) el escritorio no abre nada:
+     lo unico que sigue respondiendo es la Terminal, que es por donde se sale.
+     Devuelve true si el programa NO se tiene que abrir. */
+  function frozenFor(def) {
+    if (def.id === 'terminal' || !GT.sys || !GT.sys.isFrozen()) return false;
+    GT.audio.error();
+    ui.toast('El sistema no responde. La Terminal sigue viva: probá  diag', 'warn');
+    return true;
+  }
 
   /* ============================================================
      Menu Inicio
@@ -483,6 +494,7 @@
                     (def.hint ? '<small>' + GT.escapeHtml(def.hint) + '</small>' : '') + '</span>';
       b.addEventListener('click', function () {
         ui.toggleStartMenu(false);
+        if (frozenFor(def)) return;
         def.onOpen();
       });
       box.appendChild(b);

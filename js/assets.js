@@ -54,6 +54,7 @@
     'app.manual':     null,
     'app.papelera':   null,            // no hay papelera dibujada todavía
     'app.pc':         'pc.png',
+    'app.asistente':  null,              // TEC-Bot, el asistente de soporte
 
     /* ---- sistema de archivos (explorador) ---- */
     'fs.carpeta':      'carpeta.png',
@@ -65,6 +66,7 @@
     'fs.ejecutable':   null,
     'fs.roto':         'error-file.png',
     'fs.peligro':      'fire.png',
+    'fs.cifrado':      null,            // archivo secuestrado por el ransomware (.locked)
 
     /* ---- avisos y diálogos del sistema ---- */
     'aviso.alerta':   'alerta.png',
@@ -99,7 +101,16 @@
     'hw.disco':      'disco.png',
     'hw.cable':      'cabl.png',
     'hw.placa':      null,
-    'hw.fuente':     null
+    'hw.fuente':     null,
+
+    /* ---- laboratorio de redes: piezas y herramientas que todavía no
+            tienen arte ---- */
+    'hw.nic':         null,            // placa de red
+    'hw.rj45':        null,            // ficha RJ45
+    'hw.utp':         null,            // cable de red (patch cord)
+    'hw.switch':      null,
+    'hw.crimpeadora': null,
+    'hw.lantester':   null             // probador de cables de red
   };
 
   /* Medidas de los contenedores. Son las únicas permitidas: así ninguna
