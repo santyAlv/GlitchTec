@@ -213,3 +213,36 @@
 .desk-icon:hover span { background: rgba(255,255,255,.55); }
 .desk-icon.selected span, .desk-icon:focus-visible span { background: var(--indigo); color: #fff; text-shadow: none; outline-color: #fff; }
 
+/* ============================================================
+   PANTALLA DE TÍTULO
+   ============================================================ */
+.game-title {
+  width: min(560px, 88vw);
+  height: min(170px, 26vw);
+  font-size: 0;
+  letter-spacing: 0;
+  color: transparent;
+  text-shadow: none;
+  background: url("../EntidadesGraficas/IdentidadVisual/logo/21.png") center / 100% auto no-repeat;
+  filter: drop-shadow(0 0 22px rgba(74,60,255,.7));
+}
+.game-title::before, .game-title::after { display: none; }
+.game-sub { color: var(--sky); font-family: var(--mono); text-shadow: 0 0 8px var(--indigo); }
+.game-tagline {
+  color: var(--navy);
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy), var(--drop);
+}
+
+.menu-btn {
+  color: var(--navy);
+  background: var(--pink);
+  font-family: var(--mono);
+  letter-spacing: .5px;
+  box-shadow: inset 0 0 0 2px var(--navy), 4px 4px 0 var(--navy);
+  transition: transform .06s steps(2);
+}
+.menu-btn:hover:not(:disabled) { background: #fff; transform: translate(-1px, -1px); }
+.menu-btn:active:not(:disabled) { background: var(--cyan-y); transform: translate(3px, 3px); box-shadow: inset 0 0 0 2px var(--navy); }
+.menu-btn:focus-visible { outline-color: var(--navy); }
+
