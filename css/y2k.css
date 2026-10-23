@@ -120,3 +120,46 @@
   background-position: center;
 }
 
+/* ============================================================
+   VENTANAS
+   ============================================================ */
+.win {
+  padding: 3px;
+  background: var(--face);
+  box-shadow: inset 0 0 0 2px var(--navy), var(--drop);
+}
+.win-bar {
+  height: 24px;
+  flex: 0 0 24px;
+  margin-bottom: 3px;
+  padding: 0 3px 0 6px;
+  background: linear-gradient(90deg, var(--indigo) 0%, var(--purple) 100%);
+  box-shadow: inset 0 0 0 1px var(--navy);
+}
+.win-title {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .5px;
+  text-shadow: 1px 1px 0 var(--navy);
+}
+.win-btns { gap: 3px; }
+.win-btns button {
+  width: 18px; height: 18px;
+  color: var(--navy);
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.win-btns .wb-close { background: var(--pink); }
+.win-btns button:active { box-shadow: var(--bevel-press); padding: 0; }
+.win-body { background: var(--paper); box-shadow: inset 0 0 0 2px var(--navy); }
+
+.win-terminal .win-bar { background: linear-gradient(90deg, var(--navy) 0%, var(--indigo) 100%); }
+.win-terminal.inactive .win-bar { background: linear-gradient(90deg, #394078 0%, #8189c4 100%); }
+.win-terminal .win-body { background: var(--navy); }
+.term-out { color: var(--sky); text-shadow: 0 0 6px rgba(0,187,245,.45); }
+.term-out .l-cmd   { color: var(--cyan-y); }
+.term-out .l-err   { color: var(--pink); }
+.term-out .l-dim   { color: #5f6fc8; }
+.term-out .l-evil  { color: var(--pink); text-shadow: 0 0 9px rgba(255,128,255,.7); }
+.term-out .l-title { color: var(--pink); }
+
