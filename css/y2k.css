@@ -246,3 +246,11 @@
 .menu-btn:active:not(:disabled) { background: var(--cyan-y); transform: translate(3px, 3px); box-shadow: inset 0 0 0 2px var(--navy); }
 .menu-btn:focus-visible { outline-color: var(--navy); }
 
+/* ============================================================
+   CRT: más tenue, la referencia es limpia
+   ============================================================ */
+#scanlines { opacity: .22; mix-blend-mode: normal; background:
+  repeating-linear-gradient(180deg, rgba(0,16,58,.35) 0 1px, transparent 1px 3px); }
+#scanlines::after { background: radial-gradient(ellipse at center, transparent 62%, rgba(0,16,58,.38) 100%); }
+#scanlines::before { box-shadow: none; }
+
