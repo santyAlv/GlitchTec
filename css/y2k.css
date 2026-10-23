@@ -83,3 +83,40 @@
   --drop: 5px 5px 0 var(--navy);
 }
 
+/* ============================================================
+   FONDO: el cielo celeste de la referencia, con el horizonte
+   cian y las manchas violetas, y por debajo la textura de
+   semitonos del fondo oficial.
+   ============================================================ */
+#desktop {
+  background-color: var(--sky);
+  background-image:
+    radial-gradient(ellipse 62% 70% at 28% 108%, var(--purple) 0 62%, transparent 62.4%),
+    radial-gradient(ellipse 70% 80% at 86% 118%, var(--indigo) 0 64%, transparent 64.4%),
+    linear-gradient(180deg, var(--sky) 0 42%, var(--cyan-y) 42% 60%, transparent 60%),
+    linear-gradient(180deg, transparent 60%, var(--indigo) 100%),
+    repeating-linear-gradient(0deg,  rgba(74,60,255,.10) 0 1px, transparent 1px 16px),
+    repeating-linear-gradient(90deg, rgba(74,60,255,.10) 0 1px, transparent 1px 16px);
+  background-size: auto;
+  background-position: 0 0;
+}
+/* Textura del fondo oficial sobre las zonas oscuras */
+#desktop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("../EntidadesGraficas/IdentidadVisual/fondo/backg-nocolor.png") center / cover;
+  mix-blend-mode: soft-light;
+  opacity: .55;
+  pointer-events: none;
+}
+#icon-layer { z-index: 2; }
+
+/* Pantallas completas: el fondo oficial, oscuro */
+.screen {
+  background-color: var(--navy);
+  background-image: url("../EntidadesGraficas/IdentidadVisual/fondo/backg.png");
+  background-size: cover;
+  background-position: center;
+}
+
