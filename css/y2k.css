@@ -309,3 +309,13 @@
 
 #scanlines { opacity: .14; animation: none; }
 
+/* ============================================================
+   El hacker (GL1TCH-M4N): arte del equipo, suavizado normal
+   (el pixelado de arriba es sólo para los iconos chicos)
+   ============================================================ */
+.asset[data-asset="aviso.malware"] img,
+.asset[data-asset="hacker.cuerpo"] img { image-rendering: auto; }
+.hk-fig { filter: drop-shadow(0 0 14px rgba(255,128,255,.6)); }
+.hk-fig:hover { filter: drop-shadow(0 0 20px rgba(0,187,245,.85)); }
+.hk-bubble { color: var(--navy); background: var(--sky); box-shadow: inset 0 0 0 2px var(--navy), 3px 3px 0 var(--purple); }
+.hk-bubble::after { border-top-color: var(--sky); }
