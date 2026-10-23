@@ -1,0 +1,478 @@
+{
+  "sala_pared": {
+    "formas": 1,
+    "origen_en_escena_m": [
+      0,
+      0.32,
+      -0.48
+    ],
+    "tamano_m": [
+      2,
+      1.2,
+      0.02
+    ],
+    "en_juego": true
+  },
+  "escritorio": {
+    "formas": 1,
+    "origen_en_escena_m": [
+      0,
+      -0.014,
+      0.01
+    ],
+    "tamano_m": [
+      1,
+      0.028,
+      0.52
+    ],
+    "en_juego": true
+  },
+  "alfombrilla": {
+    "formas": 1,
+    "origen_en_escena_m": [
+      -0.15,
+      0.001,
+      0.02
+    ],
+    "tamano_m": [
+      0.43,
+      0.004,
+      0.41
+    ],
+    "en_juego": true
+  },
+  "herr_destornillador": {
+    "formas": 2,
+    "origen_en_escena_m": [
+      -0.262,
+      0.008,
+      0.19
+    ],
+    "tamano_m": [
+      0.014,
+      0.016,
+      0.126
+    ],
+    "en_juego": true
+  },
+  "herr_aire": {
+    "formas": 2,
+    "origen_en_escena_m": [
+      -0.158,
+      0.008,
+      0.19
+    ],
+    "tamano_m": [
+      0.03,
+      0.075,
+      0.03
+    ],
+    "en_juego": true
+  },
+  "herr_alcohol": {
+    "formas": 3,
+    "origen_en_escena_m": [
+      -0.054,
+      0.008,
+      0.19
+    ],
+    "tamano_m": [
+      0.048,
+      0.077,
+      0.034
+    ],
+    "en_juego": true
+  },
+  "herr_pasta": {
+    "formas": 1,
+    "origen_en_escena_m": [
+      0.05,
+      0.008,
+      0.19
+    ],
+    "tamano_m": [
+      0.016,
+      0.018,
+      0.076
+    ],
+    "en_juego": true
+  },
+  "herr_tester": {
+    "formas": 2,
+    "origen_en_escena_m": [
+      0.154,
+      0.008,
+      0.19
+    ],
+    "tamano_m": [
+      0.054,
+      0.022,
+      0.076
+    ],
+    "en_juego": true
+  },
+  "herr_respaldo": {
+    "formas": 1,
+    "origen_en_escena_m": [
+      0.258,
+      0.008,
+      0.19
+    ],
+    "tamano_m": [
+      0.064,
+      0.016,
+      0.084
+    ],
+    "en_juego": true
+  },
+  "herr_crimpeadora": {
+    "formas": 3,
+    "origen_en_escena_m": [
+      -0.366,
+      0.008,
+      0.19
+    ],
+    "tamano_m": [
+      0.03,
+      0.014,
+      0.091
+    ],
+    "en_juego": true
+  },
+  "herr_lantester": {
+    "formas": 2,
+    "origen_en_escena_m": [
+      0.362,
+      0.008,
+      0.19
+    ],
+    "tamano_m": [
+      0.04,
+      0.02,
+      0.07
+    ],
+    "en_juego": true
+  },
+  "monitor": {
+    "formas": 1,
+    "origen_en_escena_m": [
+      0.185,
+      0.15,
+      -0.03
+    ],
+    "tamano_m": [
+      0.33,
+      0.26,
+      0.046
+    ],
+    "en_juego": true
+  },
+  "monitor_pantalla": {
+    "formas": 1,
+    "origen_en_escena_m": [
+      0.1795,
+      0.156,
+      -0.0056
+    ],
+    "tamano_m": [
+      0.286,
+      0.208,
+      0
+    ],
+    "en_juego": false
+  },
+  "monitor_soporte": {
+    "formas": 2,
+    "origen_en_escena_m": [
+      0.1839,
+      -0.01,
+      -0.0251
+    ],
+    "tamano_m": [
+      0.19,
+      0.052,
+      0.15
+    ],
+    "en_juego": true
+  },
+  "toma_pared": {
+    "formas": 1,
+    "origen_en_escena_m": [
+      -0.43,
+      0.15,
+      -0.46
+    ],
+    "tamano_m": [
+      0.05,
+      0.07,
+      0.01
+    ],
+    "en_juego": true
+  },
+  "cable_alimentacion": {
+    "formas": 17,
+    "origen_en_escena_m": [
+      0,
+      0,
+      0
+    ],
+    "tamano_m": [
+      0.126,
+      0.2,
+      0.4127
+    ],
+    "en_juego": false
+  },
+  "cable_video": {
+    "formas": 17,
+    "origen_en_escena_m": [
+      0,
+      0,
+      0
+    ],
+    "tamano_m": [
+      0.361,
+      0.0898,
+      0.0587
+    ],
+    "en_juego": false
+  },
+  "gabinete_chasis": {
+    "formas": 15,
+    "origen_en_escena_m": [
+      -0.15,
+      0.18,
+      0
+    ],
+    "tamano_m": [
+      0.317,
+      0.384,
+      0.189
+    ],
+    "en_juego": true
+  },
+  "fuente": {
+    "formas": 2,
+    "origen_en_escena_m": [
+      -0.23,
+      0.308,
+      -0.01
+    ],
+    "tamano_m": [
+      0.12,
+      0.086,
+      0.133
+    ],
+    "en_juego": true
+  },
+  "ventilador_fuente": {
+    "formas": 5,
+    "origen_en_escena_m": [
+      -0.23,
+      0.308,
+      0.06
+    ],
+    "tamano_m": [
+      0.066,
+      0.0645,
+      0.003
+    ],
+    "en_juego": true
+  },
+  "placa_madre": {
+    "formas": 3,
+    "origen_en_escena_m": [
+      -0.14,
+      0.13,
+      -0.032
+    ],
+    "tamano_m": [
+      0.26,
+      0.24,
+      0.016
+    ],
+    "en_juego": true
+  },
+  "cpu_disipador": {
+    "formas": 1,
+    "origen_en_escena_m": [
+      -0.175,
+      0.172,
+      0.014
+    ],
+    "tamano_m": [
+      0.092,
+      0.092,
+      0.056
+    ],
+    "en_juego": true
+  },
+  "ventilador_cpu": {
+    "formas": 5,
+    "origen_en_escena_m": [
+      -0.175,
+      0.172,
+      0.048
+    ],
+    "tamano_m": [
+      0.0584,
+      0.0571,
+      0.003
+    ],
+    "en_juego": true
+  },
+  "ram": {
+    "formas": 2,
+    "origen_en_escena_m": [
+      -0.072,
+      0.17,
+      -0.01
+    ],
+    "tamano_m": [
+      0.052,
+      0.116,
+      0.014
+    ],
+    "en_juego": true
+  },
+  "placa_video": {
+    "formas": 2,
+    "origen_en_escena_m": [
+      -0.145,
+      0.068,
+      -0.004
+    ],
+    "tamano_m": [
+      0.208,
+      0.022,
+      0.066
+    ],
+    "en_juego": true
+  },
+  "disco": {
+    "formas": 1,
+    "origen_en_escena_m": [
+      -0.045,
+      0.04,
+      -0.026
+    ],
+    "tamano_m": [
+      0.072,
+      0.06,
+      0.066
+    ],
+    "en_juego": true
+  },
+  "panel_frontal": {
+    "formas": 2,
+    "origen_en_escena_m": [
+      0.002,
+      0.33,
+      0.01
+    ],
+    "tamano_m": [
+      0.018,
+      0.066,
+      0.076
+    ],
+    "en_juego": true
+  },
+  "led_encendido": {
+    "formas": 1,
+    "origen_en_escena_m": [
+      0.01,
+      0.312,
+      0.01
+    ],
+    "tamano_m": [
+      0.006,
+      0.01,
+      0.01
+    ],
+    "en_juego": false
+  },
+  "fuente_trasera": {
+    "formas": 2,
+    "origen_en_escena_m": [
+      -0.304,
+      0.33,
+      0.022
+    ],
+    "tamano_m": [
+      0.013,
+      0.072,
+      0.068
+    ],
+    "en_juego": true
+  },
+  "entrada_corriente": {
+    "formas": 2,
+    "origen_en_escena_m": [
+      -0.304,
+      0.33,
+      -0.048
+    ],
+    "tamano_m": [
+      0.03,
+      0.072,
+      0.07
+    ],
+    "en_juego": true
+  },
+  "puertos_video": {
+    "formas": 1,
+    "origen_en_escena_m": [
+      -0.304,
+      0.11,
+      -0.01
+    ],
+    "tamano_m": [
+      0.01,
+      0.092,
+      0.09
+    ],
+    "en_juego": true
+  },
+  "conector_video_placa_madre": {
+    "formas": 1,
+    "origen_en_escena_m": [
+      -0.31,
+      0.14,
+      -0.01
+    ],
+    "tamano_m": [
+      0.004,
+      0.018,
+      0.04
+    ],
+    "en_juego": false
+  },
+  "conector_video_placa_de_video": {
+    "formas": 1,
+    "origen_en_escena_m": [
+      -0.31,
+      0.084,
+      -0.01
+    ],
+    "tamano_m": [
+      0.004,
+      0.018,
+      0.046
+    ],
+    "en_juego": false
+  },
+  "tapa_lateral": {
+    "formas": 4,
+    "origen_en_escena_m": [
+      -0.15,
+      0.18,
+      0.096
+    ],
+    "tamano_m": [
+      0.3,
+      0.36,
+      0.0125
+    ],
+    "en_juego": true
+  }
+}
