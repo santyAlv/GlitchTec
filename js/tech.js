@@ -1094,6 +1094,14 @@
     if (phase !== 'trabajo' || testing) return;
     if (!z || zones.indexOf(z) === -1) return;
 
+    /* Segundo toque sobre la pieza que ya estaba elegida, con la mano: la
+       mira de cerca (ficha técnica). Con una herramienta en la mano no, así
+       no se abre por accidente mientras se trabaja. */
+    if (z === zone && GT.bench.held() === 'mano' && GT.detalle && GT.detalle.tiene(z)) {
+      openDetail(z);
+      return;
+    }
+
     zone = z;
     GT.bench.select(GT.bench.has(z) ? z : null);
     GT.audio.click();
@@ -1118,11 +1126,16 @@
       '<div class="tray-head">' +
         '<b>' + ZONE_LABEL[zone] + '</b>' +
         '<span>' + trayNote() + '</span>' +
+        (GT.detalle && GT.detalle.tiene(zone)
+          ? '<button class="tray-detalle" id="tray-detalle">VER DETALLE ▸</button>' : '') +
       '</div>';
 
     html += group('INSPECCIÓN', '(mirar no cuesta plata)', insp);
     html += group('ACCIONES', '(algunas cuestan repuestos)', acts);
     box.innerHTML = html;
+
+    var det = document.getElementById('tray-detalle');
+    if (det) det.addEventListener('click', function () { openDetail(zone); });
 
     var btns = box.querySelectorAll('.tech-btn');
     for (var i = 0; i < btns.length; i++) {
@@ -1171,6 +1184,16 @@
     if (st === 'fixed') return 'pieza reparada';
     if (st === 'ok') return 'revisada, sin novedad';
     return 'sin revisar';
+  }
+
+  /** Abre la ficha técnica de la pieza con lo que el jugador ya sabe de ella. */
+  function openDetail(z) {
+    if (insideZone(z) && !GT.bench.isOpen()) {
+      setHint('Abrí el gabinete (sacá la tapa con el destornillador) para mirar esta pieza de cerca.');
+      return;
+    }
+    GT.audio.open();
+    GT.detalle.open(z, { fallas: cur.fallas, found: found, fixed: fixed, estado: zoneState[z] });
   }
 
   function insideZone(z) {
