@@ -1,0 +1,21 @@
+# Glitch.TEC — modelos del Servicio Técnico
+# Unidades: metros. Eje Y hacia arriba.
+mtllib materiales.mtl
+
+o conector_video_placa_madre.001
+v -0.002 0.009 -0.02
+v -0.002 0.009 0.02
+v -0.002 -0.009 -0.02
+v -0.002 -0.009 0.02
+v 0.002 0.009 -0.02
+v 0.002 0.009 0.02
+v 0.002 -0.009 -0.02
+v 0.002 -0.009 0.02
+usemtl mat_96823c
+s off
+f 3 4 2 1
+f 6 8 7 5
+f 2 6 5 1
+f 7 8 4 3
+f 5 7 3 1
+f 4 8 6 2
