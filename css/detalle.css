@@ -1,0 +1,157 @@
+/* ============================================================
+   Glitch.TEC — ficha técnica de un componente (js/detalle.js)
+   Una ventana del sistema sobre el banco de trabajo.
+   ============================================================ */
+
+.detalle {
+  position: absolute;
+  inset: 0;
+  z-index: 800;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.det-back {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 16, 58, .62);
+}
+
+.det-win {
+  position: relative;
+  width: min(620px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  padding: 3px;
+  background: var(--face);
+  box-shadow: inset 0 0 0 2px var(--navy), 6px 6px 0 var(--navy);
+  animation: detIn .14s steps(3);
+}
+@keyframes detIn { from { opacity: .3; transform: scale(.97); } }
+
+.det-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 24px;
+  padding: 0 3px 0 8px;
+  margin-bottom: 3px;
+  background: linear-gradient(90deg, var(--title-1) 0%, var(--title-2) 100%);
+  box-shadow: inset 0 0 0 1px var(--navy);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: .5px;
+  text-shadow: 1px 1px 0 var(--navy);
+}
+.det-bar span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.det-x {
+  width: 18px; height: 18px;
+  display: grid; place-items: center;
+  font-family: var(--mono); font-weight: bold; font-size: 11px;
+  color: var(--navy);
+  background: var(--pink);
+  box-shadow: inset 0 0 0 2px var(--navy);
+  text-shadow: none;
+}
+.det-x:active { box-shadow: var(--bevel-press); }
+
+.det-body {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  gap: 14px;
+  padding: 12px;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+@media (max-width: 520px) { .det-body { grid-template-columns: 1fr; } }
+
+/* La imagen ampliada: el arte a 96 px sobre un fondo de la paleta */
+.det-img {
+  display: grid;
+  place-items: center;
+  min-height: 132px;
+  background: var(--sky);
+  background-image:
+    repeating-linear-gradient(0deg,  rgba(74,60,255,.12) 0 1px, transparent 1px 12px),
+    repeating-linear-gradient(90deg, rgba(74,60,255,.12) 0 1px, transparent 1px 12px);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.det-img .asset { filter: drop-shadow(3px 3px 0 var(--navy)); }
+
+.det-texto { margin: 0 0 10px; line-height: 1.6; font-size: 12px; color: var(--ink); }
+
+.det-specs {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 3px 12px;
+  font-size: 11px;
+}
+.det-specs dt { color: var(--ink-dim); font-family: var(--mono); letter-spacing: .5px; }
+.det-specs dd { margin: 0; color: var(--ink); font-weight: bold; }
+
+.det-estado {
+  margin-top: 3px;
+  padding: 10px 12px 12px;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.det-estado h4 {
+  margin: 0 0 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: var(--navy);
+}
+.det-estado h4 small { font-weight: normal; letter-spacing: 0; color: var(--ink-soft); }
+.det-estado ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+
+.det-ind {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  font-size: 11.5px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--indigo);
+}
+.det-dot { width: 10px; height: 10px; flex: 0 0 10px; background: var(--ink-soft); box-shadow: inset 0 0 0 2px var(--navy); }
+.det-ind-txt { flex: 1; }
+.det-ind-st { font-family: var(--mono); font-size: 10px; letter-spacing: 1px; }
+
+.det-ind.is-bad   .det-dot { background: var(--pink); }
+.det-ind.is-bad   .det-ind-st { color: #8a1f9e; }
+.det-ind.is-ok    .det-dot { background: var(--cyan-y); }
+.det-ind.is-ok    .det-ind-st { color: #0a6e96; }
+.det-ind.is-fixed .det-dot { background: var(--indigo); }
+.det-ind.is-fixed .det-ind-st { color: var(--indigo); }
+.det-ind.is-unk   .det-ind-st { color: var(--ink-soft); }
+
+.det-foot { display: flex; justify-content: flex-end; padding: 8px 4px 4px; }
+.det-cerrar {
+  padding: 6px 18px;
+  font-family: var(--mono);
+  font-weight: bold;
+  letter-spacing: .5px;
+  color: var(--navy);
+  background: var(--pink);
+  box-shadow: inset 0 0 0 2px var(--navy), 3px 3px 0 var(--navy);
+}
+.det-cerrar:hover { background: #fff; }
+.det-cerrar:active { background: var(--cyan-y); box-shadow: inset 0 0 0 2px var(--navy); transform: translate(2px, 2px); }
+
+/* Botón "ver detalle" de la bandeja de la pieza */
+.tray-detalle {
+  margin-left: auto;
+  padding: 1px 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: .5px;
+  color: var(--navy);
+  background: var(--pink);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.tray-detalle:hover { background: #fff; }
