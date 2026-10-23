@@ -113,7 +113,7 @@
   background: var(--face);
   box-shadow: var(--bevel-out);
 }
-.menu-btn:hover { background: #cbcfcb; }
+.menu-btn:hover { background: #ffffff; }
 .menu-btn:active { box-shadow: var(--bevel-press); padding: 10px 15px 8px 17px; }
 .menu-btn.ghost { color: var(--ink-dim); }
 
@@ -170,7 +170,7 @@
   padding: 0 5px;
   background: var(--face);
   font-size: 11px;
-  color: #7a2f06;
+  color: #6a1fc0;
 }
 .doc-card p { margin: 0; font-size: 11.5px; line-height: 1.65; color: var(--ink); }
 .doc-card b { font-weight: bold; }
@@ -217,7 +217,7 @@
   justify-content: space-between;
   align-items: baseline;
   padding: 7px 8px;
-  border-bottom: 1px solid #e4e4dc;
+  border-bottom: 1px solid #e9f8ff;
 }
 .credits li:last-child { border-bottom: 0; }
 .credits span { font-size: 12px; }
@@ -237,12 +237,12 @@
   background: var(--face);
   box-shadow: var(--bevel-out);
 }
-.rk-btn:hover { background: #cbcfcb; }
+.rk-btn:hover { background: #ffffff; }
 .rk-btn:active { box-shadow: var(--bevel-press); }
-.rk-btn.is-on { background: #b5b9b5; box-shadow: var(--bevel-in); font-weight: bold; }
+.rk-btn.is-on { background: #9fd6f0; box-shadow: var(--bevel-in); font-weight: bold; }
 
 .rk-note { margin: 0 0 10px; font-size: 11.5px; color: var(--ink-dim); }
-.rk-note.warn { color: #7a2f06; }
+.rk-note.warn { color: #6a1fc0; }
 
 /* La tabla es una lista del explorador: papel blanco dentro de un hueco */
 .rk-wrap { overflow-x: auto; background: var(--paper); box-shadow: var(--bevel-in); padding: 2px; }
@@ -262,13 +262,13 @@
   padding: 5px 9px;
   font-family: var(--mono);
   color: var(--ink);
-  border-bottom: 1px solid #e4e4dc;
+  border-bottom: 1px solid #e9f8ff;
   white-space: nowrap;
 }
 .rk-table tr:last-child td { border-bottom: 0; }
 .rk-table td:nth-child(1) { color: var(--ink-soft); width: 1%; }
-.rk-table td:nth-child(4) { color: #7a2f06; }
-.rk-table tr:nth-child(1) td:nth-child(1) { color: #7a2f06; font-weight: bold; }
+.rk-table td:nth-child(4) { color: #6a1fc0; }
+.rk-table tr:nth-child(1) td:nth-child(1) { color: #6a1fc0; font-weight: bold; }
 /* La fila del jugador va seleccionada, como en una lista del sistema */
 .rk-table tr.is-me td { background: var(--sel); color: var(--sel-text); }
 .rk-table tr.is-me td:nth-child(1),
@@ -315,7 +315,7 @@
   box-shadow: var(--bevel-in);
 }
 .auth-field input:focus { outline: 1px dotted var(--ink); outline-offset: -4px; }
-.auth-field small { min-height: 1.2em; letter-spacing: 0; color: #a3121b; }
+.auth-field small { min-height: 1.2em; letter-spacing: 0; color: #8a1f9e; }
 
 /* ================= BOOT (POST del equipo) ================= */
 #screen-boot { background: #000; background-image: none; }
@@ -328,17 +328,17 @@
   font-family: var(--mono);
   font-size: 13.5px;
   line-height: 1.6;
-  color: #d0d6d0;
+  color: #9fd6f0;
   white-space: pre-wrap;
 }
 #boot-log .ok   { color: var(--green); }
 #boot-log .warn { color: var(--amber); }
 #boot-log .err  { color: var(--red); font-weight: bold; }
 #boot-log .dim  { color: #6a6a6a; }
-#boot-log .cur  { background: #d0d6d0; color: #000; }
+#boot-log .cur  { background: #9fd6f0; color: #000; }
 
 /* ================= PANTALLA AZUL ================= */
-#screen-lose { background: #0000aa; background-image: none; }
+#screen-lose { background: #4a3cff; background-image: none; }
 .bsod {
   position: relative;
   z-index: 1;
@@ -346,13 +346,13 @@
   margin: 0 auto;
   padding: 9vh 26px;
   font-family: var(--mono);
-  color: #c8c8c8;
+  color: #ffffff;
   font-size: 14px;
   line-height: 1.9;
 }
 .bsod h2 {
-  background: #c8c8c8;
-  color: #0000aa;
+  background: #ffffff;
+  color: #4a3cff;
   display: inline-block;
   padding: 1px 12px;
   font-size: 15px;
@@ -363,12 +363,12 @@
 .bsod-hint { color: #a8a8ff; margin-top: 20px; }
 .bsod .doc-actions { padding: 24px 0 0; }
 .bsod .menu-btn {
-  color: #c8c8c8;
-  background: #0000aa;
-  box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #5454ff;
+  color: #ffffff;
+  background: #4a3cff;
+  box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #00bbf5;
 }
 .bsod .menu-btn:hover { background: #0000cc; }
-.bsod .menu-btn:active { box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #5454ff; }
+.bsod .menu-btn:active { box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 #00bbf5; }
 
 .bsod-stats {
   list-style: none;
@@ -409,7 +409,7 @@
   padding: 0 5px;
   background: var(--face);
   font-size: 11px;
-  color: #7a2f06;
+  color: #6a1fc0;
 }
 .win-learn ul { margin: 0; padding-left: 18px; font-size: 11.5px; line-height: 1.9; color: var(--ink); }
 
@@ -460,7 +460,7 @@
   background: var(--face);
   box-shadow: var(--bevel-out), 3px 3px 0 rgba(0,0,0,.4);
 }
-.mode-card:hover { background: #cbcfcb; }
+.mode-card:hover { background: #ffffff; }
 .mode-card:active { box-shadow: var(--bevel-press), 1px 1px 0 rgba(0,0,0,.4); }
 
 .mode-ico {
@@ -475,7 +475,7 @@
 }
 .mode-ico svg { width: 30px; height: 30px; image-rendering: pixelated; }
 .mode-card.tecnico .mode-ico {
-  background: #7a4c06;
+  background: #6a1fc0;
   box-shadow: inset -1px -1px 0 #2e1c00, inset 1px 1px 0 #ffcf6b;
 }
 
@@ -516,7 +516,7 @@
   left: 0;
   color: var(--title-1);
 }
-.mode-card.tecnico .mode-list li::before { color: #7a4c06; }
+.mode-card.tecnico .mode-list li::before { color: #6a1fc0; }
 
 .mode-go {
   margin-top: auto;

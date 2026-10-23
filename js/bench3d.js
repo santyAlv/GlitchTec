@@ -196,6 +196,7 @@
     }
     host = document.getElementById(hostId);
     if (!host || sketch) return;
+    pedirModelos();
 
     /* Los carteles van en HTML encima del canvas: el texto 3D de p5
        necesita una fuente cargada y además se lee peor. */
@@ -400,12 +401,140 @@
     p.pointLight(64, 72, 78, 220, -260, 640);   // relleno desde el banco
   }
 
+  /* Etiqueta de pieza para el exportador de modelos (tools/exportar_modelos.js).
+     p5 no tiene p.group, así que dentro del juego esto no hace nada. */
+  function grp(p, nombre) { if (p.group) p.group(nombre); }
+
+  /* ============================================================
+     Modelos OBJ (EntidadesGraficas/diseños3d/piezas)
+     Cada pieza puede reemplazarse por un modelo editado a mano. El OBJ
+     está en METROS, con Y hacia arriba y el origen en el punto donde el
+     juego ubica la pieza; acá se convierte a las unidades de la escena
+     (milímetros de juguete, Y hacia abajo).
+
+     No uso p5.loadModel porque junta todo en una sola malla y pierde los
+     colores. Este lector separa la pieza por material (usemtl), así cada
+     parte conserva su color y el estado de la orden (roto / reparado)
+     puede teñirla igual que a las cajas.
+
+     Si un archivo falta (o se abre index.html con doble click y el
+     navegador no deja leerlo), esa pieza se sigue dibujando con cajas.
+     ============================================================ */
+  var MODELOS_BASE = 'EntidadesGraficas/dise%C3%B1os3d/piezas/';   // la ñ va codificada, como en assets.js
+  var MODELOS_ESCALA = 1000;          // metros -> unidades de la escena
+  var MODELOS_PIEZAS = [
+    'sala_pared', 'escritorio', 'alfombrilla', 'gabinete_chasis', 'tapa_lateral',
+    'fuente', 'placa_madre', 'cpu_disipador', 'ram', 'placa_video', 'disco',
+    'panel_frontal', 'fuente_trasera', 'entrada_corriente', 'puertos_video',
+    'ventilador_fuente', 'ventilador_cpu', 'monitor', 'monitor_soporte', 'toma_pared'
+  ].concat(TOOLS.map(function (t) { return 'herr_' + t.id; }));
+
+  var modelos = {};                   // pieza -> [{ geom, col }] (sólo las que cargaron)
+  var modelosPedidos = false;
+  var usarModelos = true;
+
+  function colorDeMaterial(nombre, kd) {
+    if (kd) return kd;
+    var m = /^mat_([0-9a-f]{6})$/i.exec(nombre);       // los que escribe el exportador
+    if (m) return [0, 2, 4].map(function (i) { return parseInt(m[1].substr(i, 2), 16); });
+    return [200, 200, 200];
+  }
+
+  function leerMtl(texto) {
+    var kd = {}, cur = null;
+    texto.split(/\r?\n/).forEach(function (l) {
+      var t = l.trim().split(/\s+/);
+      if (t[0] === 'newmtl') cur = t[1];
+      else if (t[0] === 'Kd' && cur) kd[cur] = [+t[1] * 255, +t[2] * 255, +t[3] * 255];
+    });
+    return kd;
+  }
+
+  /** Texto OBJ -> [{ geom, col }], una malla por material. */
+  function leerObj(nombre, texto, kd) {
+    var P = window.p5;
+    var v = [], porMat = {}, orden = [], mat = 'sin_material';
+    texto.split(/\r?\n/).forEach(function (l) {
+      var t = l.trim().split(/\s+/);
+      if (t[0] === 'v') v.push([+t[1] * MODELOS_ESCALA, -t[2] * MODELOS_ESCALA, +t[3] * MODELOS_ESCALA]);
+      else if (t[0] === 'usemtl') mat = t[1];
+      else if (t[0] === 'f') {
+        var ix = t.slice(1).map(function (q) {
+          var i = parseInt(q, 10);
+          return i < 0 ? v.length + i : i - 1;
+        });
+        if (!porMat[mat]) { porMat[mat] = []; orden.push(mat); }
+        for (var k = 1; k < ix.length - 1; k++) porMat[mat].push([ix[0], ix[k], ix[k + 1]]);   // abanico
+      }
+    });
+    return orden.map(function (m) {
+      var g = new P.Geometry(1, 1);
+      g.gid = 'banco:' + nombre + ':' + m;
+      porMat[m].forEach(function (tri) {
+        var a = v[tri[0]], b = v[tri[1]], c = v[tri[2]];
+        /* Normal plana, hacia afuera: el OBJ viene antihorario con Y arriba;
+           ya en Y abajo se calcula igual y se corrige el signo de la Y. */
+        var ux = b[0] - a[0], uy = -(b[1] - a[1]), uz = b[2] - a[2];
+        var wx = c[0] - a[0], wy = -(c[1] - a[1]), wz = c[2] - a[2];
+        var nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx;
+        var len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+        var base = g.vertices.length;
+        [a, b, c].forEach(function (q) {
+          g.vertices.push(new P.Vector(q[0], q[1], q[2]));
+          g.vertexNormals.push(new P.Vector(nx / len, -ny / len, nz / len));
+          g.uvs.push(0, 0);
+        });
+        g.faces.push([base, base + 1, base + 2]);
+      });
+      return { geom: g, col: colorDeMaterial(m, kd[m]) };
+    });
+  }
+
+  function pedirModelos() {
+    if (modelosPedidos || typeof fetch !== 'function') return;
+    modelosPedidos = true;
+    fetch(MODELOS_BASE + 'materiales.mtl')
+      .then(function (r) { return r.ok ? r.text() : ''; })
+      .catch(function () { return ''; })
+      .then(function (mtl) {
+        var kd = leerMtl(mtl);
+        MODELOS_PIEZAS.forEach(function (nombre) {
+          fetch(MODELOS_BASE + nombre + '.obj')
+            .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+            .then(function (txt) {
+              var mallas = leerObj(nombre, txt, kd);
+              if (mallas.length) modelos[nombre] = mallas;
+            })
+            .catch(function () { /* sin modelo: queda con cajas */ });
+        });
+      });
+  }
+
+  /** Dibuja el modelo de la pieza en el origen actual. Devuelve false si
+      no hay modelo (entonces quien llama dibuja las cajas). "d" tiñe cada
+      color, igual que matFor() con las cajas. */
+  function modelo(p, nombre, d, giroZ) {
+    var mallas = usarModelos && modelos[nombre];
+    if (!mallas) return false;
+    d = d || [0, 0, 0];
+    if (giroZ) p.rotateZ(giroZ);
+    mallas.forEach(function (m) { mat(p, m.col[0] + d[0], m.col[1] + d[1], m.col[2] + d[2]); p.model(m.geom); });
+    return true;
+  }
+
+  /** Para probar o comparar: bench.setModelos(false) vuelve a las cajas. */
+  bench.setModelos = function (v) { usarModelos = !!v; };
+  bench.modelosCargados = function () { return Object.keys(modelos); };
+
   function drawRoom(p) {
     p.push();
     p.noStroke();
     p.translate(0, -320, -480);
-    mat(p, 20, 30, 36);
-    p.box(2000, 1200, 20);
+    grp(p, 'sala_pared');
+    if (!modelo(p, 'sala_pared')) {
+      mat(p, 20, 30, 36);
+      p.box(2000, 1200, 20);
+    }
     p.pop();
   }
 
@@ -413,16 +542,22 @@
     p.push();
     p.noStroke();
     p.translate(0, 14, 10);
-    mat(p, 84, 62, 42);
-    p.box(1000, 28, 520);
+    grp(p, 'escritorio');
+    if (!modelo(p, 'escritorio')) {
+      mat(p, 84, 62, 42);
+      p.box(1000, 28, 520);
+    }
     p.pop();
 
     /* Alfombrilla del banco: marca dónde se apoya el equipo */
     p.push();
     p.noStroke();
     p.translate(-150, -1, 20);
-    mat(p, 24, 40, 40);
-    p.box(430, 4, 410);
+    grp(p, 'alfombrilla');
+    if (!modelo(p, 'alfombrilla')) {
+      mat(p, 24, 40, 40);
+      p.box(430, 4, 410);
+    }
     p.pop();
   }
 
@@ -437,9 +572,12 @@
       p.noStroke();
       p.translate(t.x, isHeld ? -40 : -8, 190);
       if (isHeld) p.rotateZ(-0.5);
+      grp(p, 'herr_' + t.id);
       mat(p, t.col[0], t.col[1], t.col[2]);
 
-      if (t.id === 'destornillador') {
+      if (modelo(p, 'herr_' + t.id)) {
+        /* el modelo ya trae sus colores */
+      } else if (t.id === 'destornillador') {
         p.box(14, 16, 74);                       // mango
         p.push(); p.translate(0, 0, -62); mat(p, 190, 195, 200);
         p.box(6, 6, 54); p.pop();
@@ -490,6 +628,8 @@
     p.noStroke();
 
     /* Chasis: cinco caras (la lateral se saca aparte) */
+    grp(p, 'gabinete_chasis');
+    if (!modelo(p, 'gabinete_chasis')) {
     p.push(); mat(p, 44, 56, 66);
     p.translate(0, 0, -92); p.box(300, 360, 10); p.pop();      // lado cerrado
     p.push(); mat(p, 36, 46, 56);
@@ -516,6 +656,7 @@
     p.translate(-110, 190, 60); p.box(50, 14, 50); p.pop();
     p.push(); mat(p, 26, 32, 38);
     p.translate(110, 190, 60); p.box(50, 14, 50); p.pop();
+    }
 
     /* Humedad: marcas de agua secas en el fondo del gabinete */
     if (wet) {
@@ -557,25 +698,33 @@
     p.rotateX(k * Math.PI / 2);
     p.rotateZ(k * 0.3);
     p.noStroke();
+    grp(p, 'tapa_lateral');
 
-    mat(p, hover === 'tapa' ? 96 : 62, 78, 90);
-    p.box(300, 360, 8);
-    p.push(); mat(p, 40, 50, 58);
-    p.translate(-120, 0, 6); p.box(14, 180, 5); p.pop();          // tirador
-    p.push(); mat(p, 150, 158, 160);                              // tornillos
-    p.translate(132, -150, 6); p.box(10, 10, 5); p.pop();
-    p.push(); mat(p, 150, 158, 160);
-    p.translate(132, 150, 6); p.box(10, 10, 5); p.pop();
+    if (!modelo(p, 'tapa_lateral', hover === 'tapa' ? [34, 0, 0] : null)) {
+      mat(p, hover === 'tapa' ? 96 : 62, 78, 90);
+      p.box(300, 360, 8);
+      p.push(); mat(p, 40, 50, 58);
+      p.translate(-120, 0, 6); p.box(14, 180, 5); p.pop();          // tirador
+      p.push(); mat(p, 150, 158, 160);                              // tornillos
+      p.translate(132, -150, 6); p.box(10, 10, 5); p.pop();
+      p.push(); mat(p, 150, 158, 160);
+      p.translate(132, 150, 6); p.box(10, 10, 5); p.pop();
+    }
     p.pop();
   }
 
   /** Color de la pieza según su estado en la orden de trabajo. */
-  function matFor(p, id, base) {
+  function deltaDe(id) {
     var st = status[id];
-    if (st === 'bad') mat(p, base[0] + 80, base[1] - 20, base[2] - 14);
-    else if (st === 'fixed') mat(p, base[0] - 12, base[1] + 56, base[2] + 10);
-    else if (st === 'ok') mat(p, base[0], base[1] + 16, base[2] + 44);
-    else mat(p, base[0], base[1], base[2]);
+    if (st === 'bad') return [80, -20, -14];
+    if (st === 'fixed') return [-12, 56, 10];
+    if (st === 'ok') return [0, 16, 44];
+    return null;
+  }
+
+  function matFor(p, id, base) {
+    var d = deltaDe(id) || [0, 0, 0];
+    mat(p, base[0] + d[0], base[1] + d[1], base[2] + d[2]);
   }
 
   function offsetOf(id) { return (anim[id] || 0) * 70; }      // cuánto salió del zócalo
@@ -583,22 +732,28 @@
   function drawPsu(p) {
     p.push();
     p.translate(-80, -128, -10 + offsetOf('fuente'));
-    matFor(p, 'fuente', [62, 74, 86]);
-    p.box(120, 86, 130);
-    p.push(); p.translate(0, 0, 66); mat(p, 40, 52, 60);
-    p.box(80, 80, 4); p.pop();
-    fan(p, 0, 0, 70, 34, 1.6);
+    grp(p, 'fuente');
+    if (!modelo(p, 'fuente', deltaDe('fuente'))) {
+      matFor(p, 'fuente', [62, 74, 86]);
+      p.box(120, 86, 130);
+      p.push(); p.translate(0, 0, 66); mat(p, 40, 52, 60);
+      p.box(80, 80, 4); p.pop();
+    }
+    fan(p, 0, 0, 70, 34, 1.6, 'ventilador_fuente');
     p.pop();
   }
 
   function drawBoard(p) {
     p.push();
     p.translate(10, 50, -32);
-    matFor(p, 'placa', [26, 74, 54]);
-    p.box(260, 240, 10);
-    /* Zócalos y chips sueltos, para que se lea como una placa */
-    p.push(); p.translate(-70, -80, 8); mat(p, 20, 52, 40); p.box(70, 50, 6); p.pop();
-    p.push(); p.translate(90, 96, 8); mat(p, 20, 52, 40); p.box(60, 20, 6); p.pop();
+    grp(p, 'placa_madre');
+    if (!modelo(p, 'placa_madre', deltaDe('placa'))) {
+      matFor(p, 'placa', [26, 74, 54]);
+      p.box(260, 240, 10);
+      /* Zócalos y chips sueltos, para que se lea como una placa */
+      p.push(); p.translate(-70, -80, 8); mat(p, 20, 52, 40); p.box(70, 50, 6); p.pop();
+      p.push(); p.translate(90, 96, 8); mat(p, 20, 52, 40); p.box(60, 20, 6); p.pop();
+    }
 
     /* Sulfato: la costra verdosa que deja la humedad sobre el cobre */
     if (sulfato) {
@@ -613,10 +768,13 @@
   function drawCooler(p) {
     p.push();
     p.translate(-25, 8, 14 + offsetOf('cooler'));
+    grp(p, 'cpu_disipador');
     /* Con polvo encima, el disipador se ve opaco y sucio. */
-    matFor(p, 'cooler', dust ? [78, 76, 64] : [70, 96, 118]);
-    p.box(92, 92, 56);
-    fan(p, 0, 0, 34, 30, 2.4);
+    if (!modelo(p, 'cpu_disipador', polvoDelta())) {
+      matFor(p, 'cooler', dust ? [78, 76, 64] : [70, 96, 118]);
+      p.box(92, 92, 56);
+    }
+    fan(p, 0, 0, 34, 30, 2.4, 'ventilador_cpu');
 
     /* El polvo se ve: una manta parda sobre las aletas y pelusas sueltas */
     if (dust) {
@@ -636,13 +794,24 @@
     p.pop();
   }
 
+  /** Teñido del disipador: el estado de la orden más el polvo (el modelo
+      trae el color limpio). */
+  function polvoDelta() {
+    var d = (deltaDe('cooler') || [0, 0, 0]).slice();
+    if (dust) { d[0] += 8; d[1] -= 20; d[2] -= 54; }
+    return d;
+  }
+
   function drawRam(p) {
     var off = offsetOf('ram');
     p.push();
     p.translate(78, 10 - off, -10);
-    matFor(p, 'ram', [92, 66, 132]);
-    p.push(); p.translate(-16, 0, 0); p.box(20, 116, 14); p.pop();
-    p.push(); p.translate(16, 0, 0); p.box(20, 116, 14); p.pop();
+    grp(p, 'ram');
+    if (!modelo(p, 'ram', deltaDe('ram'))) {
+      matFor(p, 'ram', [92, 66, 132]);
+      p.push(); p.translate(-16, 0, 0); p.box(20, 116, 14); p.pop();
+      p.push(); p.translate(16, 0, 0); p.box(20, 116, 14); p.pop();
+    }
 
     /* Los contactos sulfatados: por ahí no pasa la señal */
     if (sulfato) {
@@ -656,17 +825,23 @@
   function drawGpu(p) {
     p.push();
     p.translate(5, 112, -4 + offsetOf('gpu'));
-    matFor(p, 'gpu', [108, 54, 78]);
-    p.box(208, 22, 66);
-    p.push(); p.translate(40, 0, 8); mat(p, 60, 32, 46); p.box(90, 16, 46); p.pop();
+    grp(p, 'placa_video');
+    if (!modelo(p, 'placa_video', deltaDe('gpu'))) {
+      matFor(p, 'gpu', [108, 54, 78]);
+      p.box(208, 22, 66);
+      p.push(); p.translate(40, 0, 8); mat(p, 60, 32, 46); p.box(90, 16, 46); p.pop();
+    }
     p.pop();
   }
 
   function drawDisk(p) {
     p.push();
     p.translate(105, 140, -26 + offsetOf('disco'));
-    matFor(p, 'disco', [96, 88, 52]);
-    p.box(72, 60, 66);
+    grp(p, 'disco');
+    if (!modelo(p, 'disco', deltaDe('disco'))) {
+      matFor(p, 'disco', [96, 88, 52]);
+      p.box(72, 60, 66);
+    }
     p.pop();
   }
 
@@ -674,14 +849,22 @@
   function drawFront(p) {
     p.push();
     p.translate(152, -150, 10);
-    matFor(p, 'boton', [72, 86, 98]);
-    p.box(12, 66, 76);
+    grp(p, 'panel_frontal');
+    var conModelo = modelo(p, 'panel_frontal', deltaDe('boton'));
+    if (!conModelo) {
+      matFor(p, 'boton', [72, 86, 98]);
+      p.box(12, 66, 76);
+    }
 
-    p.push(); p.translate(8, -14, 0);
-    mat(p, hover === 'power' ? 150 : 96, 110, 104);
-    p.box(8, 22, 26); p.pop();
+    /* El pulsador se ve más claro al pasarle el mouse: eso lo pone el
+       código aunque el cuerpo sea un modelo. */
+    if (!conModelo || hover === 'power') {
+      p.push(); p.translate(8, -14, 0);
+      mat(p, hover === 'power' ? 150 : 96, 110, 104);
+      p.box(8, 22, 26); p.pop();
+    }
 
-    p.push(); p.translate(8, 18, 0);
+    p.push(); p.translate(8, 18, 0); grp(p, 'led_encendido');
     if (ledOn) { p.fill(43, 240, 122); p.emissiveMaterial(43, 240, 122); } else { mat(p, 30, 48, 42); }
     p.box(6, 10, 10); p.pop();
     p.pop();
@@ -692,39 +875,55 @@
     /* Zona de la fuente */
     p.push();
     p.translate(-154, -150, 22);
-    matFor(p, 'fuente', [58, 70, 82]);
-    p.box(10, 72, 68);
-    p.push(); p.translate(-6, -16, 0);
-    mat(p, status.fuente === 'fixed' ? 90 : 60, 70, 66);
-    p.box(4, 16, 24); p.pop();                       // interruptor 0 / I
+    grp(p, 'fuente_trasera');
+    if (!modelo(p, 'fuente_trasera', deltaDe('fuente'))) {
+      matFor(p, 'fuente', [58, 70, 82]);
+      p.box(10, 72, 68);
+      p.push(); p.translate(-6, -16, 0);
+      mat(p, status.fuente === 'fixed' ? 90 : 60, 70, 66);
+      p.box(4, 16, 24); p.pop();                       // interruptor 0 / I
+    }
     p.pop();
 
     /* Entrada de corriente + cable que se va a la pared */
     p.push();
     p.translate(-154, -150, -48);
-    matFor(p, 'cable', [52, 64, 76]);
-    p.box(10, 72, 70);
-    p.push(); p.translate(-14, 0, 0); mat(p, 44, 52, 60);
-    p.box(22, 26, 30); p.pop();
+    grp(p, 'entrada_corriente');
+    if (!modelo(p, 'entrada_corriente', deltaDe('cable'))) {
+      matFor(p, 'cable', [52, 64, 76]);
+      p.box(10, 72, 70);
+      p.push(); p.translate(-14, 0, 0); mat(p, 44, 52, 60);
+      p.box(22, 26, 30); p.pop();
+    }
     p.pop();
 
-    /* Puertos de video: el de la placa madre y el de la placa de video */
+    /* Puertos de video: el de la placa madre y el de la placa de video.
+       El chasis del panel es un modelo; los dos conectores cambian de color
+       según dónde esté enchufado el monitor, así que los pone el código. */
     p.push();
     p.translate(-154, 70, -10);
-    matFor(p, 'monitor', [56, 68, 80]);
-    p.box(10, 92, 90);
-    p.push(); p.translate(-6, -30, 0);
+    grp(p, 'puertos_video');
+    if (!modelo(p, 'puertos_video', deltaDe('monitor'))) {
+      matFor(p, 'monitor', [56, 68, 80]);
+      p.box(10, 92, 90);
+    }
+    p.push(); p.translate(-6, -30, 0); grp(p, 'conector_video_placa_madre');
     mat(p, videoOnGpu ? 50 : 150, 130, 60); p.box(4, 18, 40); p.pop();   // puerto placa madre
-    p.push(); p.translate(-6, 26, 0);
+    p.push(); p.translate(-6, 26, 0); grp(p, 'conector_video_placa_de_video');
     mat(p, videoOnGpu ? 150 : 50, 130, 60); p.box(4, 18, 46); p.pop();   // puerto placa de video
     p.pop();
   }
 
   /** Aspas girando: un ventilador que gira es "el equipo tiene corriente". */
-  function fan(p, x, y, z, r, speed) {
+  function fan(p, x, y, z, r, speed, nombre) {
     p.push();
     p.translate(x, y, z);
-    p.rotateZ(fansOn ? (p.frameCount * speed * 0.05) : 0.4);
+    if (nombre) grp(p, nombre);
+    var giro = fansOn ? (p.frameCount * speed * 0.05) : 0.4;
+    /* Con modelo, el exportador dejó las aspas en la posición de reposo
+       (0.4 rad): se resta para que quieto se vea igual y girando gire. */
+    if (nombre && modelo(p, nombre, null, giro - 0.4)) { p.pop(); return; }
+    p.rotateZ(giro);
     mat(p, 150, 180, 196);
     for (var i = 0; i < 5; i++) {
       p.push();
@@ -744,20 +943,28 @@
     p.translate(MON.x, MON.y, MON.z);
     p.rotateY(-0.22);
     p.noStroke();
+    grp(p, 'monitor');
 
-    matFor(p, 'monitor', [66, 78, 90]);
-    p.box(330, 260, 46);                                  // carcasa
+    if (!modelo(p, 'monitor', deltaDe('monitor'))) {
+      matFor(p, 'monitor', [66, 78, 90]);
+      p.box(330, 260, 46);                                  // carcasa
+    }
 
-    p.push();                                             // pantalla
+    p.push();                                             // pantalla (textura viva: siempre del código)
     p.translate(0, -6, 25);
+    grp(p, 'monitor_pantalla');
     p.texture(screenTex);
     p.plane(286, 208);
     p.pop();
 
-    p.push(); p.translate(0, 148, 0); mat(p, 54, 64, 74);
-    p.box(70, 42, 60); p.pop();                           // cuello
-    p.push(); p.translate(0, 172, 10); mat(p, 48, 58, 68);
-    p.box(190, 14, 150); p.pop();                         // base
+    p.push(); p.translate(0, 160, 5); grp(p, 'monitor_soporte');
+    if (!modelo(p, 'monitor_soporte')) {
+      p.push(); p.translate(0, -12, -5); mat(p, 54, 64, 74);
+      p.box(70, 42, 60); p.pop();                         // cuello
+      p.push(); p.translate(0, 12, 5); mat(p, 48, 58, 68);
+      p.box(190, 14, 150); p.pop();                       // base
+    }
+    p.pop();
     p.pop();
 
     drawCables(p);
@@ -787,14 +994,18 @@
      entrar al puerto de la placa madre o al de la placa de video. */
   function drawCables(p) {
     /* Toma de pared */
-    p.push(); p.noStroke(); mat(p, 70, 78, 84);
-    p.translate(-430, -150, -460); p.box(50, 70, 10); p.pop();
+    p.push(); p.noStroke();
+    p.translate(-430, -150, -460); grp(p, 'toma_pared');
+    if (!modelo(p, 'toma_pared')) { mat(p, 70, 78, 84); p.box(50, 70, 10); }
+    p.pop();
 
     var inlet = toWorld([-164, -150, -48]);
+    grp(p, 'cable_alimentacion');
     cableRun(p, inlet, [-430, -140, -452], 40, [34, 40, 46]);
 
     /* Video: del monitor al puerto donde esté enchufado */
     var port = toWorld(videoOnGpu ? [-166, 96, -10] : [-166, 44, -10]);
+    grp(p, 'cable_video');
     cableRun(p, [MON.x - 150, MON.y + 60, MON.z - 30], port, 55, [38, 46, 54]);
   }
 
@@ -977,6 +1188,17 @@
       { at: 3300, mode: 'desktop', temp: 61 },
       { at: 4000, line: 'EQUIPO OPERATIVO — listo para entregar', cls: 'ok' }
     ])
+  };
+
+  /** Dibuja la escena entera, sin cámara ni luces ni HUD. Lo usa el
+      exportador de modelos (tools/exportar_modelos.js) con un `p` falso
+      que anota cada caja en vez de dibujarla. */
+  bench.dibujarEscena = function (p) {
+    drawRoom(p);
+    drawDesk(p);
+    drawTools(p);
+    drawMonitor(p);
+    drawCase(p);
   };
 
   bench.hasSeq = function (kind) { return !!SEQ[kind]; };

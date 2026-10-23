@@ -47,14 +47,14 @@
      ============================================================ */
   var MAP = {
     /* ---- aplicaciones del escritorio ---- */
-    'app.terminal':   null,              // sin arte final: queda el SVG
+    'app.terminal':   'txt4.png',
     'app.explorador': 'busc-carp.png',
-    'app.taskmgr':    null,
+    'app.taskmgr':    'barra.png',
     'app.mail':       'mail.png',
-    'app.manual':     null,
-    'app.papelera':   null,            // no hay papelera dibujada todavía
+    'app.manual':     'sig1.png',
+    'app.papelera':   'vacio.png',
     'app.pc':         'pc.png',
-    'app.asistente':  null,              // TEC-Bot, el asistente de soporte
+    'app.asistente':  'txt2.png',            // TEC-Bot, el asistente de soporte
 
     /* ---- sistema de archivos (explorador) ---- */
     'fs.carpeta':      'carpeta.png',
@@ -63,7 +63,7 @@
     'fs.imagen':       'img.png',
     'fs.comprimido':   'rar.png',
     'fs.musica':       'musica.png',
-    'fs.ejecutable':   null,
+    'fs.ejecutable':   'ventana.png',
     'fs.roto':         'error-file.png',
     'fs.peligro':      'fire.png',
     'fs.cifrado':      null,            // archivo secuestrado por el ransomware (.locked)
@@ -73,7 +73,11 @@
     'aviso.error':    'dino-error.png',
     'aviso.info':     'i.png',
     'aviso.cargando': 'cargar.png',
-    'aviso.malware':  null,
+    /* El hacker (GL1TCH-M4N): la cara es el aviso del malware en todo el
+       sistema (pop-ups, ventanas del jefe y del ransomware, diálogos) y el
+       cuerpo entero es el personaje que se pasea por la pantalla. */
+    'aviso.malware':  { src: 'EntidadesGraficas/IdentidadVisual/hacker/22.png' },
+    'hacker.cuerpo':  { src: 'EntidadesGraficas/IdentidadVisual/hacker/23.png' },
 
     /* ---- procesos (administrador de tareas) ---- */
     'proceso.firmado':   'wind.png',
@@ -105,7 +109,7 @@
 
     /* ---- laboratorio de redes: piezas y herramientas que todavía no
             tienen arte ---- */
-    'hw.nic':         null,            // placa de red
+    'hw.nic':         'wif.png',
     'hw.rj45':        null,            // ficha RJ45
     'hw.utp':         null,            // cable de red (patch cord)
     'hw.switch':      null,
