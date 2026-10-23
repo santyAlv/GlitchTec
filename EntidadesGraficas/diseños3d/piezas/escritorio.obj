@@ -1,0 +1,21 @@
+# Glitch.TEC — modelos del Servicio Técnico
+# Unidades: metros. Eje Y hacia arriba.
+mtllib materiales.mtl
+
+o escritorio.001
+v -0.5 0.014 -0.26
+v -0.5 0.014 0.26
+v -0.5 -0.014 -0.26
+v -0.5 -0.014 0.26
+v 0.5 0.014 -0.26
+v 0.5 0.014 0.26
+v 0.5 -0.014 -0.26
+v 0.5 -0.014 0.26
+usemtl mat_543e2a
+s off
+f 3 4 2 1
+f 6 8 7 5
+f 2 6 5 1
+f 7 8 4 3
+f 5 7 3 1
+f 4 8 6 2
