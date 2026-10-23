@@ -208,7 +208,7 @@
   font-family: var(--mono);
   font-size: 15px;
   font-weight: bold;
-  color: #7a1020;
+  color: #8a1f9e;
   background: var(--face);
   box-shadow: var(--bevel-out);
   position: relative;
@@ -248,11 +248,11 @@
   box-shadow: var(--bevel-out);
 }
 .hk-opt b { color: #3d0a72; margin-right: 4px; }
-.hk-opt:hover:not(:disabled) { background: #cbcfcb; }
+.hk-opt:hover:not(:disabled) { background: #ffffff; }
 .hk-opt:active:not(:disabled) { box-shadow: var(--bevel-press); }
 .hk-opt:disabled { color: var(--ink-dim); cursor: default; }
-.hk-opt.right { background: #d9f2e0; box-shadow: var(--bevel-in); color: #0d4a20; }
-.hk-opt.wrong { background: #f7dade; box-shadow: var(--bevel-in); color: #7a1020; }
+.hk-opt.right { background: #b8e6f8; box-shadow: var(--bevel-in); color: #2a2fb0; }
+.hk-opt.wrong { background: #f7dade; box-shadow: var(--bevel-in); color: #8a1f9e; }
 
 .hk-feedback {
   margin-top: 12px;
@@ -263,8 +263,8 @@
   box-shadow: var(--bevel-thin-in);
   border-left: 4px solid var(--sh);
 }
-.hk-feedback.ok  { border-left-color: #12833c; color: #0d4a20; }
-.hk-feedback.bad { border-left-color: #a3121b; color: #7a1020; }
+.hk-feedback.ok  { border-left-color: #12833c; color: #2a2fb0; }
+.hk-feedback.bad { border-left-color: #8a1f9e; color: #8a1f9e; }
 
 .hk-modal-foot {
   margin: 12px 0 0;
