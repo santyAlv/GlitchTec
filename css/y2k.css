@@ -1,0 +1,85 @@
+/* ============================================================
+   Glitch.TEC — tema "Y2K" (identidad visual del equipo de diseño)
+   ------------------------------------------------------------
+   Se carga ÚLTIMO y pisa los tokens de base.css: la paleta sale de
+   EntidadesGraficas/IdentidadVisual/paleta/paleta.png y el fondo y el
+   logotipo, de IdentidadVisual/fondo y /logo.
+
+     rosa      #ff80ff     violeta   #9b2ef0     índigo  #4a3cff
+     cian      #00bbf5     celeste   #b8e6f8     marino  #00103a
+
+   El relieve gris de los 90 se reemplaza por lo que muestra la
+   referencia: celeste plano, borde marino grueso y sombra dura
+   desplazada, sin biseles.
+   ============================================================ */
+
+:root {
+  --pink:    #ff80ff;
+  --purple:  #9b2ef0;
+  --indigo:  #4a3cff;
+  --cyan-y:  #00bbf5;
+  --sky:     #b8e6f8;
+  --navy:    #00103a;
+
+  /* ---------- Chrome ---------- */
+  --face:       #b8e6f8;
+  --face-lit:   #e3f6ff;
+  --face-dim:   #8fc6e6;
+  --hi:         #ffffff;
+  --sh:         #6a74e8;
+  --sh-deep:    #00103a;
+
+  --ink:        #00103a;
+  --ink-dim:    #2a3a8a;
+  --ink-soft:   #5560b0;
+
+  --desk:       #00bbf5;
+  --desk-dark:  #00103a;
+
+  --title-1:    #4a3cff;
+  --title-2:    #9b2ef0;
+  --title-off1: #7d86c8;
+  --title-off2: #b6bce3;
+
+  --sel:        #4a3cff;
+  --sel-text:   #ffffff;
+
+  --paper:      #e9f8ff;
+  --paper-2:    #d6efff;
+
+  /* ---------- "Fósforo" → neón de la paleta ---------- */
+  --green:      #5ff0ff;
+  --green-dim:  #1b8fb8;
+  --amber:      #ffd84a;
+  --red:        #ff4fb8;
+  --red-dim:    #8a1f9e;
+  --cyan:       #00bbf5;
+  --violet:     #c678ff;
+
+  --bg-deep:    #00081f;
+  --bg-panel:   #00103a;
+  --line:       #2a2fb0;
+  --text:       #b8e6f8;
+  --text-dim:   #7d8fe0;
+
+  /* ---------- Marcos planos ---------- */
+  --bevel-out:
+    inset 0 0 0 2px var(--navy),
+    inset 0 0 0 3px #fff;
+  --bevel-in:
+    inset 0 0 0 2px var(--navy);
+  --bevel-thin-in:  inset 0 0 0 1px var(--indigo);
+  --bevel-thin-out: inset 0 0 0 1px var(--navy);
+  --bevel-press:
+    inset 0 0 0 2px var(--navy),
+    inset 3px 3px 0 rgba(74,60,255,.35);
+
+  --dither: linear-gradient(45deg, rgba(74,60,255,.18) 25%, transparent 25%,
+                                   transparent 75%, rgba(74,60,255,.18) 75%);
+
+  --mono: "Lucida Console", "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
+  --ui:   Verdana, Tahoma, "MS Sans Serif", Geneva, sans-serif;
+
+  --drop: 5px 5px 0 var(--navy);
+}
+
