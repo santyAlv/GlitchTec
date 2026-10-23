@@ -73,7 +73,11 @@
     'aviso.error':    'dino-error.png',
     'aviso.info':     'i.png',
     'aviso.cargando': 'cargar.png',
-    'aviso.malware':  'sig2.png',
+    /* El hacker (GL1TCH-M4N): la cara es el aviso del malware en todo el
+       sistema (pop-ups, ventanas del jefe y del ransomware, diálogos) y el
+       cuerpo entero es el personaje que se pasea por la pantalla. */
+    'aviso.malware':  { src: 'EntidadesGraficas/IdentidadVisual/hacker/22.png' },
+    'hacker.cuerpo':  { src: 'EntidadesGraficas/IdentidadVisual/hacker/23.png' },
 
     /* ---- procesos (administrador de tareas) ---- */
     'proceso.firmado':   'wind.png',
