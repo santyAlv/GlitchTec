@@ -280,7 +280,7 @@
      Deliberadamente "mascota": tiene que leerse como un bicho que
      se pasea por la pantalla, no como una ventana mas.
      ============================================================ */
-  var SPRITE =
+  var SPRITE_SVG =
     '<svg viewBox="0 0 120 130" class="hk-svg">' +
       '<defs>' +
         '<linearGradient id="hkHood" x1="0" y1="0" x2="0" y2="1">' +
@@ -321,6 +321,17 @@
       '<rect x="40" y="88" width="40" height="17" rx="2" fill="#0d1a14" stroke="#0a1118" stroke-width="2"/>' +
       '<text x="44" y="100" font-family="monospace" font-size="9" fill="#35ff7a">&gt;_</text>' +
     '</svg>';
+
+  /* El personaje real es el arte del equipo de diseño. Si el PNG no está
+     (o no carga), el onerror lo cambia por el dibujo de arriba, para que el
+     hacker nunca quede invisible. */
+  var SPRITE = (function () {
+    var src = GT.assets && GT.assets.src('hacker.cuerpo');
+    if (!src) return SPRITE_SVG;
+    return '<img class="hk-svg hk-img" src="' + src + '" alt="" draggable="false" ' +
+           'onerror="this.outerHTML=window.GlitchTec.hacker.spriteFallback">';
+  })();
+  hacker.spriteFallback = SPRITE_SVG;
 
   /* ============================================================
      Construccion del DOM
@@ -487,7 +498,7 @@
   function moveTo(fx, fy, instant) {
     if (!fig) return;
     var b = bounds();
-    var w = 108, h = 118;                   // tamano aproximado del personaje
+    var w = 150, h = 150;                   // tamano del personaje (css/hacker.css: .hk-fig)
     var x = Math.round(Math.max(8, Math.min(b.w - w - 8, fx * (b.w - w))));
     var y = Math.round(Math.max(8, Math.min(b.h - h - 52, fy * (b.h - h - 52))));
 
@@ -509,11 +520,11 @@
   function clampToScreen() {
     if (!fig || !layer || layer.classList.contains('hidden')) return;
     var b = bounds();
-    var x = Math.min(parseInt(fig.style.left, 10) || 0, b.w - 116);
-    var y = Math.min(parseInt(fig.style.top, 10) || 0, b.h - 170);
+    var x = Math.min(parseInt(fig.style.left, 10) || 0, b.w - 158);
+    var y = Math.min(parseInt(fig.style.top, 10) || 0, b.h - 202);
     fig.style.left = Math.max(8, x) + 'px';
     fig.style.top = Math.max(8, y) + 'px';
-    placeBubble(x, y, 108);
+    placeBubble(x, y, 150);
   }
 
   /** Salto a un punto aleatorio + amenaza. Evita quedar sobre el HUD.

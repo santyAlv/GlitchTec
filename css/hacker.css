@@ -19,17 +19,17 @@
 /* ---------------- El personaje ---------------- */
 .hk-fig {
   position: absolute;
-  width: 108px;
-  height: 118px;
+  width: 150px;
+  height: 150px;
   pointer-events: auto;
   cursor: crosshair;
   transition: left .95s cubic-bezier(.36,1.4,.5,1), top .95s cubic-bezier(.36,1.4,.5,1);
   animation: hkFloat 3.4s ease-in-out infinite;
   filter: drop-shadow(0 0 14px rgba(178,107,255,.55));
-  image-rendering: pixelated;
 }
 .hk-fig.no-anim { transition: none; }
 .hk-fig .hk-svg { width: 100%; height: 100%; display: block; }
+.hk-fig .hk-img { object-fit: contain; image-rendering: auto; user-select: none; }
 
 @keyframes hkFloat {
   0%, 100% { transform: translateY(0) rotate(-1deg); }
