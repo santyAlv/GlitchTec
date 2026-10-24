@@ -1,0 +1,311 @@
+/* ============================================================
+   Glitch.TEC — tema "Y2K" (identidad visual del equipo de diseño)
+   ------------------------------------------------------------
+   Se carga ÚLTIMO y pisa los tokens de base.css: la paleta sale de
+   EntidadesGraficas/IdentidadVisual/paleta/paleta.png y el fondo y el
+   logotipo, de IdentidadVisual/fondo y /logo.
+
+     rosa      #ff80ff     violeta   #9b2ef0     índigo  #4a3cff
+     cian      #00bbf5     celeste   #b8e6f8     marino  #00103a
+
+   El relieve gris de los 90 se reemplaza por lo que muestra la
+   referencia: celeste plano, borde marino grueso y sombra dura
+   desplazada, sin biseles.
+   ============================================================ */
+
+:root {
+  --pink:    #ff80ff;
+  --purple:  #9b2ef0;
+  --indigo:  #4a3cff;
+  --cyan-y:  #00bbf5;
+  --sky:     #b8e6f8;
+  --navy:    #00103a;
+
+  /* ---------- Chrome ---------- */
+  --face:       #b8e6f8;
+  --face-lit:   #e3f6ff;
+  --face-dim:   #8fc6e6;
+  --hi:         #ffffff;
+  --sh:         #6a74e8;
+  --sh-deep:    #00103a;
+
+  --ink:        #00103a;
+  --ink-dim:    #2a3a8a;
+  --ink-soft:   #5560b0;
+
+  --desk:       #00bbf5;
+  --desk-dark:  #00103a;
+
+  --title-1:    #4a3cff;
+  --title-2:    #9b2ef0;
+  --title-off1: #7d86c8;
+  --title-off2: #b6bce3;
+
+  --sel:        #4a3cff;
+  --sel-text:   #ffffff;
+
+  --paper:      #e9f8ff;
+  --paper-2:    #d6efff;
+
+  /* ---------- "Fósforo" → neón de la paleta ---------- */
+  --green:      #5ff0ff;
+  --green-dim:  #1b8fb8;
+  --amber:      #ffd84a;
+  --red:        #ff4fb8;
+  --red-dim:    #8a1f9e;
+  --cyan:       #00bbf5;
+  --violet:     #c678ff;
+
+  --bg-deep:    #00081f;
+  --bg-panel:   #00103a;
+  --line:       #2a2fb0;
+  --text:       #b8e6f8;
+  --text-dim:   #7d8fe0;
+
+  /* ---------- Marcos planos ---------- */
+  --bevel-out:
+    inset 0 0 0 2px var(--navy),
+    inset 0 0 0 3px #fff;
+  --bevel-in:
+    inset 0 0 0 2px var(--navy);
+  --bevel-thin-in:  inset 0 0 0 1px var(--indigo);
+  --bevel-thin-out: inset 0 0 0 1px var(--navy);
+  --bevel-press:
+    inset 0 0 0 2px var(--navy),
+    inset 3px 3px 0 rgba(74,60,255,.35);
+
+  --dither: linear-gradient(45deg, rgba(74,60,255,.18) 25%, transparent 25%,
+                                   transparent 75%, rgba(74,60,255,.18) 75%);
+
+  --mono: "Lucida Console", "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
+  --ui:   Verdana, Tahoma, "MS Sans Serif", Geneva, sans-serif;
+
+  --drop: 5px 5px 0 var(--navy);
+}
+
+/* ============================================================
+   FONDO: el cielo celeste de la referencia, con el horizonte
+   cian y las manchas violetas, y por debajo la textura de
+   semitonos del fondo oficial.
+   ============================================================ */
+#desktop {
+  background-color: var(--sky);
+  background-image:
+    radial-gradient(ellipse 62% 70% at 28% 108%, var(--purple) 0 62%, transparent 62.4%),
+    radial-gradient(ellipse 70% 80% at 86% 118%, var(--indigo) 0 64%, transparent 64.4%),
+    linear-gradient(180deg, var(--sky) 0 42%, var(--cyan-y) 42% 60%, transparent 60%),
+    linear-gradient(180deg, transparent 60%, var(--indigo) 100%),
+    repeating-linear-gradient(0deg,  rgba(74,60,255,.10) 0 1px, transparent 1px 16px),
+    repeating-linear-gradient(90deg, rgba(74,60,255,.10) 0 1px, transparent 1px 16px);
+  background-size: auto;
+  background-position: 0 0;
+}
+/* Textura del fondo oficial sobre las zonas oscuras */
+#desktop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("../EntidadesGraficas/IdentidadVisual/fondo/backg-nocolor.png") center / cover;
+  mix-blend-mode: soft-light;
+  opacity: .55;
+  pointer-events: none;
+}
+#icon-layer { z-index: 2; }
+
+/* Pantallas completas: el fondo oficial, oscuro */
+.screen {
+  background-color: var(--navy);
+  background-image: url("../EntidadesGraficas/IdentidadVisual/fondo/backg.png");
+  background-size: cover;
+  background-position: center;
+}
+
+/* ============================================================
+   VENTANAS
+   ============================================================ */
+.win {
+  padding: 3px;
+  background: var(--face);
+  box-shadow: inset 0 0 0 2px var(--navy), var(--drop);
+}
+.win-bar {
+  height: 24px;
+  flex: 0 0 24px;
+  margin-bottom: 3px;
+  padding: 0 3px 0 6px;
+  background: linear-gradient(90deg, var(--indigo) 0%, var(--purple) 100%);
+  box-shadow: inset 0 0 0 1px var(--navy);
+}
+.win-title {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .5px;
+  text-shadow: 1px 1px 0 var(--navy);
+}
+.win-btns { gap: 3px; }
+.win-btns button {
+  width: 18px; height: 18px;
+  color: var(--navy);
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.win-btns .wb-close { background: var(--pink); }
+.win-btns button:active { box-shadow: var(--bevel-press); padding: 0; }
+.win-body { background: var(--paper); box-shadow: inset 0 0 0 2px var(--navy); }
+
+.win-terminal .win-bar { background: linear-gradient(90deg, var(--navy) 0%, var(--indigo) 100%); }
+.win-terminal.inactive .win-bar { background: linear-gradient(90deg, #394078 0%, #8189c4 100%); }
+.win-terminal .win-body { background: var(--navy); }
+.term-out { color: var(--sky); text-shadow: 0 0 6px rgba(0,187,245,.45); }
+.term-out .l-cmd   { color: var(--cyan-y); }
+.term-out .l-err   { color: var(--pink); }
+.term-out .l-dim   { color: #5f6fc8; }
+.term-out .l-evil  { color: var(--pink); text-shadow: 0 0 9px rgba(255,128,255,.7); }
+.term-out .l-title { color: var(--pink); }
+
+/* ============================================================
+   BARRA DE TAREAS, MENÚ INICIO, HUD
+   ============================================================ */
+#taskbar {
+  height: 34px;
+  flex: 0 0 34px;
+  padding: 3px 4px;
+  background: var(--sky);
+  box-shadow: inset 0 3px 0 var(--navy);
+}
+#start-btn, .task-btn, #tray {
+  height: 26px;
+  color: var(--navy);
+  background: var(--pink);
+  box-shadow: inset 0 0 0 2px var(--navy), 2px 2px 0 var(--navy);
+}
+#start-btn { font-family: var(--mono); letter-spacing: .5px; }
+.task-btn  { background: var(--sky); }
+#start-btn:hover, .task-btn:hover { background: #fff; }
+.task-btn.active, #start-btn.open {
+  background: var(--indigo);
+  color: #fff;
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+#tray { background: var(--sky); box-shadow: inset 0 0 0 2px var(--navy); }
+
+.flag {
+  background:
+    linear-gradient(90deg, var(--indigo) 0 46%, transparent 46% 54%, var(--cyan-y) 54% 100%) 0 0 / 100% 46% no-repeat,
+    linear-gradient(90deg, var(--purple) 0 46%, transparent 46% 54%, var(--pink) 54% 100%) 0 100% / 100% 46% no-repeat;
+  filter: drop-shadow(1px 1px 0 var(--navy));
+}
+
+#start-menu {
+  box-shadow: inset 0 0 0 2px var(--navy), 5px -5px 0 var(--navy);
+}
+.sm-head { background: linear-gradient(0deg, var(--indigo) 0%, var(--purple) 100%); font-family: var(--mono); }
+.sm-body, .sm-foot { background: var(--sky); }
+.sm-foot { border-top: 2px solid var(--navy); box-shadow: none; }
+
+#hud {
+  box-shadow: inset 0 0 0 2px var(--navy), var(--drop);
+  background: var(--sky);
+}
+
+/* Iconos de escritorio: etiqueta clara sobre el cielo */
+.desk-icon span { color: var(--navy); text-shadow: 0 0 3px #fff, 0 0 3px #fff; font-weight: bold; }
+.desk-icon:hover span { background: rgba(255,255,255,.55); }
+.desk-icon.selected span, .desk-icon:focus-visible span { background: var(--indigo); color: #fff; text-shadow: none; outline-color: #fff; }
+
+/* ============================================================
+   PANTALLA DE TÍTULO
+   ============================================================ */
+.game-title {
+  width: min(560px, 88vw);
+  height: min(170px, 26vw);
+  font-size: 0;
+  letter-spacing: 0;
+  color: transparent;
+  text-shadow: none;
+  background: url("../EntidadesGraficas/IdentidadVisual/logo/21.png") center / 100% auto no-repeat;
+  filter: drop-shadow(0 0 22px rgba(74,60,255,.7));
+}
+.game-title::before, .game-title::after { display: none; }
+.game-sub { color: var(--sky); font-family: var(--mono); text-shadow: 0 0 8px var(--indigo); }
+.game-tagline {
+  color: var(--navy);
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy), var(--drop);
+}
+
+.menu-btn {
+  color: var(--navy);
+  background: var(--pink);
+  font-family: var(--mono);
+  letter-spacing: .5px;
+  box-shadow: inset 0 0 0 2px var(--navy), 4px 4px 0 var(--navy);
+  transition: transform .06s steps(2);
+}
+.menu-btn:hover:not(:disabled) { background: #fff; transform: translate(-1px, -1px); }
+.menu-btn:active:not(:disabled) { background: var(--cyan-y); transform: translate(3px, 3px); box-shadow: inset 0 0 0 2px var(--navy); }
+.menu-btn:focus-visible { outline-color: var(--navy); }
+
+/* ============================================================
+   CRT: más tenue, la referencia es limpia
+   ============================================================ */
+#scanlines { opacity: .22; mix-blend-mode: normal; background:
+  repeating-linear-gradient(180deg, rgba(0,16,58,.35) 0 1px, transparent 1px 3px); }
+#scanlines::after { background: radial-gradient(ellipse at center, transparent 62%, rgba(0,16,58,.38) 100%); }
+#scanlines::before { box-shadow: none; }
+
+/* ============================================================
+   Avisos del malware, diálogos, tarjetas de modo, iconos
+   El malware usa el rosa: parece del sistema, pero no lo es.
+   ============================================================ */
+.popup {
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy), 5px 5px 0 var(--purple);
+}
+.popup-bar {
+  height: 22px;
+  background: linear-gradient(90deg, var(--purple) 0%, var(--pink) 100%);
+  color: var(--navy);
+  box-shadow: inset 0 0 0 1px var(--navy);
+  font-family: var(--mono);
+}
+.popup-x { width: 18px; height: 18px; background: var(--sky); box-shadow: inset 0 0 0 2px var(--navy); }
+
+.dialog {
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy), var(--drop);
+}
+.dialog::before {
+  height: 22px;
+  font-family: var(--mono);
+  color: var(--navy);
+  background: linear-gradient(90deg, var(--purple) 0%, var(--pink) 100%);
+  box-shadow: inset 0 0 0 1px var(--navy);
+}
+.dialog.friendly::before { color: #fff; background: linear-gradient(90deg, var(--indigo) 0%, var(--purple) 100%); }
+
+.mode-card { background: var(--sky); box-shadow: inset 0 0 0 2px var(--navy), 6px 6px 0 var(--navy); }
+.mode-card:hover { background: #fff; }
+.mode-card:active { box-shadow: inset 0 0 0 2px var(--navy), 2px 2px 0 var(--navy); }
+.mode-ico { background: var(--indigo); box-shadow: inset 0 0 0 2px var(--navy); }
+.mode-card.tecnico .mode-ico { background: var(--purple); box-shadow: inset 0 0 0 2px var(--navy); }
+.modes-title { color: var(--cyan-y); text-shadow: 0 0 12px var(--indigo); }
+.player-field span { color: var(--sky); }
+
+/* Iconos: el arte es chico y pixelado, así que se agranda en escalones enteros */
+.desk-icon { width: 92px; }
+.desk-icon .asset { --asset-size: 48px; }
+@media (max-width: 980px) { .desk-icon .asset { --asset-size: 40px; } .desk-icon { width: 84px; } }
+@media (max-width: 620px) { .desk-icon .asset { --asset-size: 32px; } .desk-icon { width: 74px; } }
+.asset img { image-rendering: pixelated; }
+
+/* Barras de desplazamiento */
+::-webkit-scrollbar-track { background-color: var(--paper-2); background-image: none; }
+::-webkit-scrollbar-thumb { background: var(--pink); box-shadow: inset 0 0 0 2px var(--navy); }
+::-webkit-scrollbar-button:single-button { background-color: var(--sky); box-shadow: inset 0 0 0 2px var(--navy); }
+::-webkit-scrollbar-corner { background: var(--sky); }
+.term-out::-webkit-scrollbar-track, .boss-body::-webkit-scrollbar-track { background: var(--navy); }
+.term-out::-webkit-scrollbar-thumb, .boss-body::-webkit-scrollbar-thumb { background: var(--indigo); box-shadow: none; }
+
+#scanlines { opacity: .14; animation: none; }
+
