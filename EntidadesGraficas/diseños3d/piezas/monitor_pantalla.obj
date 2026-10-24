@@ -1,0 +1,16 @@
+# Glitch.TEC — modelos del Servicio Técnico
+# Unidades: metros. Eje Y hacia arriba.
+mtllib materiales.mtl
+
+o monitor_pantalla.001
+v -0.143 0.104 0
+v 0.143 0.104 0
+v 0.143 -0.104 0
+v -0.143 -0.104 0
+vt 0 0
+vt 1 0
+vt 1 1
+vt 0 1
+usemtl pantalla
+s off
+f 4/4 3/3 2/2 1/1

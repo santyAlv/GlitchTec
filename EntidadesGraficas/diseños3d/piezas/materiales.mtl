@@ -1,0 +1,449 @@
+# Colores de Glitch.TEC (un material por color usado en el juego)
+
+newmtl mat_141e24
+Kd 0.0784 0.1176 0.1412
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_543e2a
+Kd 0.3294 0.2431 0.1647
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_182828
+Kd 0.0941 0.1569 0.1569
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_c45434
+Kd 0.7686 0.3294 0.2039
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_bec3c8
+Kd 0.7451 0.7647 0.7843
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_4696be
+Kd 0.2745 0.5882 0.7451
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_96a0aa
+Kd 0.5882 0.6275 0.6667
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_96c4d2
+Kd 0.5882 0.7686 0.8235
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_5a6e78
+Kd 0.3529 0.4314 0.4706
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_aa9664
+Kd 0.6667 0.5882 0.3922
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_cdcdd2
+Kd 0.8039 0.8039 0.8235
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_dcaa28
+Kd 0.8627 0.6667 0.1569
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_3c5046
+Kd 0.2353 0.3137 0.2745
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_78be82
+Kd 0.4706 0.7451 0.5098
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_be3c46
+Kd 0.7451 0.2353 0.2745
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_969ca2
+Kd 0.5882 0.6118 0.6353
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_5078c8
+Kd 0.3137 0.4706 0.7843
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_46dc6e
+Kd 0.2745 0.8627 0.4314
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_424e5a
+Kd 0.2588 0.3059 0.3529
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl pantalla
+Kd 0.0392 0.0627 0.0784
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_36404a
+Kd 0.2118 0.2510 0.2902
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_303a44
+Kd 0.1882 0.2275 0.2667
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_464e54
+Kd 0.2745 0.3059 0.3294
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_22282e
+Kd 0.1333 0.1569 0.1804
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_262e36
+Kd 0.1490 0.1804 0.2118
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_2c3842
+Kd 0.1725 0.2196 0.2588
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_242e38
+Kd 0.1412 0.1804 0.2196
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_3a4650
+Kd 0.2275 0.2745 0.3137
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_28343e
+Kd 0.1569 0.2039 0.2431
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_222c36
+Kd 0.1333 0.1725 0.2118
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_4e5860
+Kd 0.3059 0.3451 0.3765
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_1e2830
+Kd 0.1176 0.1569 0.1882
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_1a2026
+Kd 0.1020 0.1255 0.1490
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_3e4a56
+Kd 0.2431 0.2902 0.3373
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_28343c
+Kd 0.1569 0.2039 0.2353
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_96b4c4
+Kd 0.5882 0.7059 0.7686
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_1a4a36
+Kd 0.1020 0.2902 0.2118
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_143428
+Kd 0.0784 0.2039 0.1569
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_466076
+Kd 0.2745 0.3765 0.4627
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_5c4284
+Kd 0.3608 0.2588 0.5176
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_6c364e
+Kd 0.4235 0.2118 0.3059
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_3c202e
+Kd 0.2353 0.1255 0.1804
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_605834
+Kd 0.3765 0.3451 0.2039
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_485662
+Kd 0.2824 0.3373 0.3843
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_606e68
+Kd 0.3765 0.4314 0.4078
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_1e302a
+Kd 0.1176 0.1882 0.1647
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_3a4652
+Kd 0.2275 0.2745 0.3216
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_3c4642
+Kd 0.2353 0.2745 0.2588
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_34404c
+Kd 0.2039 0.2510 0.2980
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_2c343c
+Kd 0.1725 0.2039 0.2353
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_384450
+Kd 0.2196 0.2667 0.3137
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_96823c
+Kd 0.5882 0.5098 0.2353
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_32823c
+Kd 0.1961 0.5098 0.2353
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_3e4e5a
+Kd 0.2431 0.3059 0.3529
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_28323a
+Kd 0.1569 0.1961 0.2275
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
+
+newmtl mat_969ea0
+Kd 0.5882 0.6196 0.6275
+Ka 0 0 0
+Ks 0.05 0.05 0.05
+Ns 10
+d 1
+illum 1
