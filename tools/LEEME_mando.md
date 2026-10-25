@@ -7,6 +7,13 @@ control propio: ni mouse, ni gamepad, ni teclado. Es un stick y dos botones.
 celular (app) --JSON/WebSocket--> relay Node (:3000) --> juego en el navegador
 ```
 
+## Instalar la app
+
+El APK ya compilado está en GitHub: [App del mando v1.0](https://github.com/santyAlv/GlitchTec/releases/tag/mando-v1.0)
+(`glitchtec-mando.apk`, Android 7.0 o superior). En un celular, descargarlo y permitir apps de
+origen desconocido; en un emulador, `adb install glitchtec-mando.apk`. No hace falta compilar nada:
+`tools\mando_dev.ps1` lo compila solo si falta, o con `-Compilar`.
+
 ## Levantar todo
 
 ```powershell
