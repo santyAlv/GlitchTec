@@ -99,6 +99,20 @@
   var guards = [];
   term.guard = function (fn) { guards.push(fn); };
 
+  /** Comandos disponibles, sin alias repetidos: [{ name, desc }].
+      Es lo que necesita el menu radial para armar sus opciones; para ejecutar
+      uno se usa GT.terminal.run('scan archivo.exe'), igual que si se escribiera. */
+  term.commands = function () {
+    var seen = [], out = [];
+    Object.keys(COMMANDS).forEach(function (name) {
+      var def = COMMANDS[name];
+      if (name === '?' || seen.indexOf(def) !== -1) return;
+      seen.push(def);
+      out.push({ name: name, desc: def.desc || '' });
+    });
+    return out;
+  };
+
   /* Atajo: la raiz del sistema de archivos vive en el estado de la partida, y
      cambia en cada partida nueva. Por eso es una funcion y no una variable
      guardada: si la cacheara, despues de reiniciar seguiria apuntando al arbol

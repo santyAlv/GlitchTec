@@ -58,7 +58,10 @@
     STREAK_MULT_MAX: 3,
     SHIELD_SECONDS: 20,       // premio de racha: el dano entra a la mitad
     SHIELD_FACTOR: 0.5,
-    EXTRA_TIME: 15            // premio de racha: segundos de regalo
+    EXTRA_TIME: 15,           // premio de racha: segundos de regalo
+
+    /* RAM virtual (ver GT.drainRam): la consumen los pop-ups masivos */
+    MAX_RAM: 100
   };
 
   /* ---------------- Bus de eventos minimo ----------------
@@ -114,6 +117,7 @@
       level: 0,                 // 0 = todavia no arranco
       integrity: GT.CONFIG.MAX_INTEGRITY,
       score: 0,
+      ram: GT.CONFIG.MAX_RAM,   // RAM virtual libre (0 = saturada)
       elapsed: 0,               // segundos jugados
       hintsUsed: 0,
       mistakes: 0,
@@ -152,6 +156,30 @@
     if (!s.running) return;
     s.score = Math.max(0, s.score + points);
     GT.emit('score', { delta: points, reason: reason, total: s.score });
+    GT.emit('hud');
+  };
+
+  /* ---------------- RAM virtual ----------------
+     Recurso que los eventos masivos (caza de pop-ups) consumen y que el
+     jugador libera cerrandolos. Solo guarda el numero y avisa por el bus:
+       'ram'     { ram, delta, reason }   cada vez que cambia
+       'ramfull' { reason }               al llegar a 0 (el minijuego decide el castigo) */
+  GT.drainRam = function (amount, reason) {
+    var s = GT.state;
+    if (!s.running || s.finished) return;
+    var was = s.ram;
+    s.ram = Math.max(0, s.ram - amount);
+    GT.emit('ram', { ram: s.ram, delta: s.ram - was, reason: reason });
+    GT.emit('hud');
+    if (s.ram === 0 && was > 0) GT.emit('ramfull', { reason: reason });
+  };
+
+  GT.freeRam = function (amount, reason) {
+    var s = GT.state;
+    if (!s.running) return;
+    var was = s.ram;
+    s.ram = Math.min(GT.CONFIG.MAX_RAM, s.ram + amount);
+    GT.emit('ram', { ram: s.ram, delta: s.ram - was, reason: reason });
     GT.emit('hud');
   };
 

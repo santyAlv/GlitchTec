@@ -437,6 +437,14 @@ desde el mismo servidor que la API.
 
 ---
 
+## El mando (app Android)
+
+El juego se maneja **solo** con la app del celular (`mando_android/`): un stick y dos
+botones de clic, que llegan por WebSocket a un relay Node (`tools/mando_server/`). La
+página no tiene ningún control propio. Levantar todo (relay, emulador y app) con
+`tools\mando_dev.ps1`. El formato de los mensajes y las funciones que usa cada sector
+(eventos, cursor virtual, minijuegos, RAM virtual) están en [tools/LEEME_mando.md](tools/LEEME_mando.md).
+
 ## Estructura del proyecto
 
 ```
