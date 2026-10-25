@@ -4,8 +4,8 @@
    maliciosos (rojos) por trayectorias distintas. La mira se mueve con el
    stick izquierdo del mando (o con el mouse):
 
-     clic izquierdo / boton A  -> CAPTURAR (validar) trafico legitimo
-     clic derecho   / boton B  -> BLOQUEAR (destruir) un troyano
+     clic izquierdo / boton izq -> CAPTURAR (validar) trafico legitimo
+     clic derecho   / boton der -> BLOQUEAR (destruir) un troyano
 
    Acertar suma puntos con velocidad y racha (GT.correct). Equivocarse corta
    la racha (GT.wrong) y un troyano que pasa o se captura le pega a la
@@ -22,8 +22,6 @@
   var ROUND_SECS = 40;
   var HIT_RADIUS = 26;          // que tan cerca de la mira tiene que estar el paquete
   var AIM_SPEED = 340;          // px/s con el stick a fondo
-  var DEADZONE = 0.2;           // el stick nunca queda en 0 exacto
-  var BTN_CAPTURE = 0, BTN_BLOCK = 1;   // A y B del mando
 
   var run = null;               // estado de la ronda en curso (null = no hay)
 
@@ -31,7 +29,7 @@
     return {
       canvas: canvas, ctx: canvas.getContext('2d'),
       aim: { x: W / 2, y: H / 2 },
-      packets: [], spawnIn: 0.5, left: ROUND_SECS, last: 0, prevBtn: [false, false],
+      packets: [], spawnIn: 0.5, left: ROUND_SECS, last: 0,
       stats: { captured: 0, blocked: 0, wrongHits: 0, breached: 0, lostLegit: 0 }
     };
   }
@@ -94,22 +92,15 @@
   }
 
   /* ---------------- Mando ---------------- */
+  /* Si el mando llega como mouse, esto no hace nada: lo atienden los eventos
+     del canvas. Si llega como gamepad, GT.input.poll() trae el stick y los botones. */
   function pollPad(dt) {
-    var pads = navigator.getGamepads ? navigator.getGamepads() : [];
-    var pad = null;
-    for (var i = 0; i < pads.length; i++) if (pads[i]) { pad = pads[i]; break; }
-    if (!pad) return;
-    var ax = pad.axes[0] || 0, ay = pad.axes[1] || 0;
-    if (Math.hypot(ax, ay) > DEADZONE) {
-      run.aim.x = Math.max(0, Math.min(W, run.aim.x + ax * AIM_SPEED * dt));
-      run.aim.y = Math.max(0, Math.min(H, run.aim.y + ay * AIM_SPEED * dt));
-    }
-    /* Solo reacciono al flanco (apenas se aprieta), no mientras se mantiene. */
-    [BTN_CAPTURE, BTN_BLOCK].forEach(function (b, k) {
-      var down = !!(pad.buttons[b] && pad.buttons[b].pressed);
-      if (down && !run.prevBtn[k]) act(k === 0 ? 'capture' : 'block');
-      run.prevBtn[k] = down;
-    });
+    var p = GT.input.poll();
+    if (!p) return;
+    run.aim.x = Math.max(0, Math.min(W, run.aim.x + p.x * AIM_SPEED * dt));
+    run.aim.y = Math.max(0, Math.min(H, run.aim.y + p.y * AIM_SPEED * dt));
+    if (p.left.pressed) act('capture');
+    if (p.right.pressed) act('block');
   }
 
   /* ---------------- Dibujo ---------------- */
@@ -180,7 +171,7 @@
     el.innerHTML =
       '<canvas width="' + W + '" height="' + H + '"></canvas>' +
       '<button class="xp-btn fw-start">INICIAR FILTRADO (' + ROUND_SECS + ' s)</button>' +
-      '<small>Clic izq / A: validar tráfico legítimo · Clic der / B: bloquear troyanos · Stick: mover la mira</small>';
+      '<small>Clic izq: validar tráfico legítimo · Clic der: bloquear troyanos · Stick: mover la mira</small>';
     var cv = el.querySelector('canvas');
 
     cv.addEventListener('mousemove', function (e) {
