@@ -1774,6 +1774,15 @@
   tech.totalCases = CASES.length;
   tech.solved = function () { return GT.state.techSolved || 0; };
   tech.minutes = function () { return GT.state.techMinutes || 0; };
+
+  /** Suma minutos de taller a la orden en curso (para los minijuegos de
+      hardware: soldar, inspeccionar...). Pasarse del presupuesto de la orden
+      le cuesta reputacion al cerrarla, igual que cualquier otro paso. */
+  tech.addMinutes = function (n) {
+    caseMinutes += n;
+    GT.state.techMinutes = (GT.state.techMinutes || 0) + n;
+    renderHud();
+  };
   tech.cost = function () { return GT.state.techCost || 0; };
 
 })(window, document);

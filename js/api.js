@@ -160,6 +160,12 @@
     post('evento.php', payload).catch(function () { /* silencioso */ });
   };
 
+  /** Guarda el resumen de una ronda de minijuego como evento "<tipo>_round"
+      (lo llama GT.minigame.finish). El detalle va tal cual en detail_json. */
+  api.logRound = function (type, summary) {
+    api.logEvent(type + '_round', summary);
+  };
+
   /** Cierra la partida con el resumen final. */
   api.finishMatch = function (summary) {
     var row = {

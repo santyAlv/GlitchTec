@@ -2,7 +2,7 @@
    Glitch.TEC — Minijuego: filtrado de paquetes de red
    Una ronda de ROUND_SECS segundos. Cruzan paquetes legitimos (verdes) y
    maliciosos (rojos) por trayectorias distintas. La mira se mueve con el
-   stick izquierdo del mando (o con el mouse):
+   stick de la app Android del mando (no hay control por mouse):
 
      clic izquierdo / boton izq -> CAPTURAR (validar) trafico legitimo
      clic derecho   / boton der -> BLOQUEAR (destruir) un troyano
@@ -10,7 +10,7 @@
    Acertar suma puntos con velocidad y racha (GT.correct). Equivocarse corta
    la racha (GT.wrong) y un troyano que pasa o se captura le pega a la
    integridad. Al cerrar la ronda se registra el resumen en la base
-   (api.logEvent -> evento.php).
+   (GT.minigame.finish -> api.logRound -> evento.php).
    ============================================================ */
 (function (window, document) {
   'use strict';
@@ -92,16 +92,16 @@
   }
 
   /* ---------------- Mando ---------------- */
-  /* El mando del celular llega por WebSocket (js/input.js). Sin mando conectado,
-     poll() devuelve null y el mouse sigue funcionando por los eventos del canvas. */
-  function pollPad(dt) {
-    var p = GT.input.poll();
-    if (!p) return;
-    run.aim.x = Math.max(0, Math.min(W, run.aim.x + p.x * AIM_SPEED * dt));
-    run.aim.y = Math.max(0, Math.min(H, run.aim.y + p.y * AIM_SPEED * dt));
-    if (p.left.pressed) act('capture');
-    if (p.right.pressed) act('block');
+  /* Solo se juega con el mando: la app Android del celular, que llega por
+     WebSocket (js/input.js). Durante la ronda el Firewall se queda con el stick
+     (GT.cursor.hold), asi el puntero del escritorio no hace clics por detras. */
+  function moveAim(dt) {
+    var a = GT.input.axes();
+    run.aim.x = Math.max(0, Math.min(W, run.aim.x + a.x * AIM_SPEED * dt));
+    run.aim.y = Math.max(0, Math.min(H, run.aim.y + a.y * AIM_SPEED * dt));
   }
+  GT.on('pad:left', function (e) { if (run && e.down) act('capture'); });
+  GT.on('pad:right', function (e) { if (run && e.down) act('block'); });
 
   /* ---------------- Dibujo ---------------- */
   function draw() {
@@ -129,41 +129,46 @@
     c.fillStyle = '#2bf07a'; c.textAlign = 'left'; c.font = '12px monospace';
     c.fillText('TIEMPO ' + Math.ceil(run.left) + 's   RACHA x' + GT.getMultiplier() +
                '   VALIDADOS ' + s.captured + '   BLOQUEADOS ' + s.blocked, 8, 16);
+    if (!GT.input.connected) {
+      c.fillStyle = '#ff3b4a';
+      c.fillText('SIN MANDO: abrí la app del celular y conectala al relay', 8, H - 8);
+    }
   }
 
   /* ---------------- Ronda ---------------- */
-  function loop(ts) {
-    if (!run || !run.canvas.isConnected) { run = null; return; }       // ventana cerrada
-    var dt = Math.min(0.1, (ts - (run.last || ts)) / 1000);
-    run.last = ts;
-    if (GT.state.running && !GT.state.finished) {
-      pollPad(dt); step(dt); draw();
-      if (run.left <= 0) return finish();
-    }
-    window.requestAnimationFrame(loop);
+  /* El marco (js/minigame.js) llama a tick() en cada frame, se queda con el
+     stick (GT.cursor.hold) y guarda el resumen al terminar. */
+  function tick(dt) {
+    if (!run.canvas.isConnected) return GT.minigame.stop();       // ventana cerrada
+    moveAim(dt); step(dt); draw();
+    if (run.left <= 0) finish();
   }
 
   function finish() {
     var s = run.stats, good = s.captured + s.blocked;
     var total = good + s.wrongHits + s.breached + s.lostLegit;
     var acc = total ? Math.round(100 * good / total) : 0;
-    GT.state.firewallRounds = (GT.state.firewallRounds || 0) + 1;
     if (acc >= 70) { GT.heal(8, 'firewall estable'); GT.addScore(50, 'ronda de firewall'); }
     GT.ui.toast('Firewall: ' + good + ' paquetes filtrados, ' + acc + '% de precisión.', acc >= 70 ? 'info' : 'bad');
-    if (GT.api) GT.api.logEvent('firewall_round', {
+    GT.minigame.finish({
       captured: s.captured, blocked: s.blocked, wrong: s.wrongHits,
       breached: s.breached, lost_legit: s.lostLegit, accuracy: acc
     });
-    run.canvas.parentNode.querySelector('.fw-start').hidden = false;
+  }
+
+  function stop() {
+    var btn = run && run.canvas.parentNode && run.canvas.parentNode.querySelector('.fw-start');
+    if (btn) btn.hidden = false;
     run = null;
   }
 
-  function begin(canvas) {
-    run = newRun(canvas);
-    window.requestAnimationFrame(loop);
-  }
+  GT.minigame.register('firewall', {
+    start: function (o) { run = newRun(o.canvas); },
+    tick: tick,
+    stop: stop
+  });
 
-  fw.isActive = function () { return !!run; };
+  fw.isActive = function () { return GT.minigame.isActive('firewall'); };
 
   fw.open = function () {
     var el = document.createElement('div');
@@ -174,24 +179,15 @@
       '<small>Clic izq: validar tráfico legítimo · Clic der: bloquear troyanos · Stick: mover la mira</small>';
     var cv = el.querySelector('canvas');
 
-    cv.addEventListener('mousemove', function (e) {
-      if (!run) return;
-      var b = cv.getBoundingClientRect();
-      run.aim.x = (e.clientX - b.left) * W / b.width;
-      run.aim.y = (e.clientY - b.top) * H / b.height;
-    });
-    cv.addEventListener('mousedown', function (e) {
-      if (run) act(e.button === 2 ? 'block' : 'capture');
-    });
-    cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
     el.querySelector('.fw-start').addEventListener('click', function (e) {
       e.target.hidden = true;
-      begin(cv);
+      if (!GT.minigame.start('firewall', { canvas: cv })) e.target.hidden = false;
     });
 
     GT.ui.openWindow({
       id: 'firewall', title: 'Firewall — Filtro de paquetes', icon: GT.ui.icons.taskmgr, asset: 'app.firewall',
-      width: W + 16, height: H + 90, body: el
+      width: W + 16, height: H + 90, body: el,
+      onClose: function () { if (fw.isActive()) GT.minigame.stop(); }
     });
   };
 
