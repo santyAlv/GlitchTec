@@ -152,6 +152,7 @@
     if (!matchId) return;
     var payload = {
       match_id: matchId,
+      token: matchToken,
       event_type: type,
       detail: detail || {},
       at: new Date().toISOString()
@@ -160,10 +161,32 @@
     post('evento.php', payload).catch(function () { /* silencioso */ });
   };
 
-  /** Guarda el resumen de una ronda de minijuego como evento "<tipo>_round"
-      (lo llama GT.minigame.finish). El detalle va tal cual en detail_json. */
+  /** Guarda una ronda de minijuego (lo llama GT.minigame.finish): va a la
+      tabla `minijuegos` y deja un evento "<tipo>_round" (api/ronda.php).
+      summary trae points, secs y accuracy (los completa el marco) mas lo propio
+      de cada minijuego, que viaja tal cual en el detalle. */
   api.logRound = function (type, summary) {
-    api.logEvent(type + '_round', summary);
+    if (!matchId || offline) return;
+    var detail = {};
+    Object.keys(summary || {}).forEach(function (k) {
+      if (k !== 'points' && k !== 'secs' && k !== 'accuracy') detail[k] = summary[k];
+    });
+    post('ronda.php', {
+      match_id: matchId,
+      token: matchToken,
+      tipo: type,
+      puntos: summary.points || 0,
+      segundos: summary.secs || 0,
+      precision: summary.accuracy || 0,
+      detalle: detail
+    }).catch(function () { /* silencioso, igual que logEvent */ });
+  };
+
+  /** Mejores rondas de un minijuego, de todos los jugadores (ranking.php?minijuego=). */
+  api.getMinigameRanking = function (type, limit) {
+    if (offline) return Promise.resolve({ offline: true, minijuego: type, ranking: [] });
+    return get('ranking.php?minijuego=' + encodeURIComponent(type) + '&limit=' + (limit || 10))
+      .catch(function () { return { offline: true, minijuego: type, ranking: [] }; });
   };
 
   /** Cierra la partida con el resumen final. */

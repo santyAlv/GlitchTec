@@ -1,7 +1,8 @@
 # Levanta el entorno del mando: relay Node, emulador Android, APK instalado y app abierta.
 # Uso:  powershell -ExecutionPolicy Bypass -File tools\mando_dev.ps1 [-Avd dbz34] [-Compilar] [-SinEmulador]
 # Todo es idempotente: lo que ya esta corriendo se deja como esta.
-param([string]$Avd = 'dbz34', [switch]$Compilar, [switch]$SinEmulador)
+param([string]$Avd = 'dbz34', [switch]$Compilar, [switch]$SinEmulador, [switch]$Red)
+# -Red: el relay escucha en toda la red local (hace falta para un celular real; el emulador no lo necesita)
 
 $repo = Split-Path $PSScriptRoot -Parent
 $sdk  = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { "$env:LOCALAPPDATA\Android\Sdk" }
@@ -15,8 +16,9 @@ if (-not (Test-Path "$srv\node_modules")) { Push-Location $srv; npm install --si
 if (Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue) {
     Write-Host 'Relay: ya estaba corriendo en el puerto 3000'
 } else {
+    if ($Red) { $env:HOST = '0.0.0.0' }
     Start-Process node -ArgumentList 'server.js' -WorkingDirectory $srv -WindowStyle Minimized
-    Write-Host 'Relay: arrancado en ws://localhost:3000'
+    Write-Host ('Relay: arrancado en ws://' + $(if ($Red) { '0.0.0.0 (toda la red local)' } else { 'localhost' }) + ':3000')
 }
 if ($SinEmulador) { return }
 

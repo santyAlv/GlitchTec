@@ -82,6 +82,9 @@ CREATE TABLE IF NOT EXISTS partidas (
   hints_used     INT UNSIGNED     NOT NULL DEFAULT 0,
   popups_closed  INT UNSIGNED     NOT NULL DEFAULT 0,
   best_streak    SMALLINT UNSIGNED NOT NULL DEFAULT 0,  -- mejor racha de aciertos
+  -- 1 = partida que no cuadra con lo que el servidor vio (ver partida_end.php):
+  -- no entra al ranking.
+  sospechosa     TINYINT(1)       NOT NULL DEFAULT 0,
   started_at     DATETIME         NOT NULL,
   finished_at    DATETIME         NULL,
   PRIMARY KEY (id),
@@ -142,6 +145,29 @@ CREATE TABLE IF NOT EXISTS eventos (
   -- ON DELETE CASCADE: si borro una partida, se borran solos todos sus
   -- eventos. Sin esto quedarian apuntando a la nada (o el DELETE fallaria).
   CONSTRAINT fk_eventos_partida
+    FOREIGN KEY (partida_id) REFERENCES partidas(id)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- Rondas de minijuegos (Firewall, caza de pop-ups, soldadura...)
+-- ------------------------------------------------------------
+-- Una fila por ronda. Los campos comunes son columnas para poder ordenar y
+-- promediar (ranking por minijuego); lo propio de cada uno va en detail_json.
+-- Para una base ya creada: sql/migracion_minijuegos.sql.
+CREATE TABLE IF NOT EXISTS minijuegos (
+  id            BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  partida_id    INT UNSIGNED     NOT NULL,
+  tipo          VARCHAR(30)      NOT NULL,                 -- 'firewall', 'popups', ...
+  puntos        INT              NOT NULL DEFAULT 0,       -- puntaje ganado en la ronda
+  segundos      SMALLINT UNSIGNED NOT NULL DEFAULT 0,      -- duración de la ronda
+  precision_pct TINYINT UNSIGNED NOT NULL DEFAULT 0,       -- aciertos sobre el total, 0-100
+  detail_json   JSON             NULL,
+  created_at    DATETIME         NOT NULL,
+  PRIMARY KEY (id),
+  KEY idx_partida (partida_id),
+  KEY idx_tipo_puntos (tipo, puntos),
+  CONSTRAINT fk_minijuegos_partida
     FOREIGN KEY (partida_id) REFERENCES partidas(id)
     ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
