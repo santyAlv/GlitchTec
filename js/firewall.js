@@ -92,8 +92,8 @@
   }
 
   /* ---------------- Mando ---------------- */
-  /* Si el mando llega como mouse, esto no hace nada: lo atienden los eventos
-     del canvas. Si llega como gamepad, GT.input.poll() trae el stick y los botones. */
+  /* El mando del celular llega por WebSocket (js/input.js). Sin mando conectado,
+     poll() devuelve null y el mouse sigue funcionando por los eventos del canvas. */
   function pollPad(dt) {
     var p = GT.input.poll();
     if (!p) return;
