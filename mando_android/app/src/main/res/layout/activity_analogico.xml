@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/analogico"
+    android:gravity="center"
+    android:background="#202020">
+
+    <!-- Círculo de fondo -->
+    <View
+        android:id="@+id/joystick_base"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_centerInParent="true"
+        android:background="@drawable/mando_base" />
+
+    <!-- Círculo que se mueve -->
+    <View
+        android:id="@+id/joystick_knob"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_centerInParent="true"
+        android:background="@drawable/mando_analogico" />
+
+    <!-- Botones de clic: izquierdo y derecho -->
+    <Button
+        android:id="@+id/btnIzq"
+        android:layout_width="120dp"
+        android:layout_height="80dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_margin="24dp"
+        android:text="IZQ" />
+
+    <Button
+        android:id="@+id/btnDer"
+        android:layout_width="120dp"
+        android:layout_height="80dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="24dp"
+        android:text="DER" />
+
+</RelativeLayout>

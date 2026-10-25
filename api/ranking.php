@@ -19,6 +19,40 @@ if ($limit > 50) $limit = 50;
 $modo = isset($_GET['modo']) ? (string)$_GET['modo'] : '';
 $filtraModo = ($modo === 'virus' || $modo === 'tecnico');
 
+/* Ranking de un MINIJUEGO: las mejores rondas (no partidas) de ese tipo.
+   GET ?minijuego=firewall. Solo cuentan rondas de partidas ya cerradas y que
+   no esten marcadas como sospechosas (ver partida_end.php). */
+$mini = isset($_GET['minijuego']) ? (string)$_GET['minijuego'] : '';
+if ($mini !== '') {
+    if (!preg_match('/^[a-z][a-z0-9_]{1,29}$/', $mini)) {
+        json_error('minijuego inválido');
+    }
+    try {
+        $stmt = db()->prepare(
+            'SELECT p.player_name AS player, m.puntos, m.precision_pct AS `precision`,
+                    m.segundos AS `time`, m.created_at AS `at`
+             FROM minijuegos m
+             JOIN partidas p ON p.id = m.partida_id
+             WHERE m.tipo = :tipo AND p.sospechosa = 0 AND p.status IN (\'won\', \'lost\')
+             ORDER BY m.puntos DESC, m.precision_pct DESC, m.created_at ASC
+             LIMIT :lim'
+        );
+        $stmt->bindValue(':tipo', $mini, PDO::PARAM_STR);
+        $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$r) {
+            $r['puntos']    = (int)$r['puntos'];
+            $r['precision'] = (int)$r['precision'];
+            $r['time']      = (int)$r['time'];
+        }
+        unset($r);
+        json_out(['ok' => true, 'offline' => false, 'minijuego' => $mini, 'ranking' => $rows]);
+    } catch (Throwable $e) {
+        json_error('No se pudo obtener el ranking del minijuego: ' . $e->getMessage(), 500);
+    }
+}
+
 /* Armo la consulta concatenando el filtro opcional de modo. Ojo: lo unico
    que concateno es un pedazo FIJO de SQL escrito por mi (' AND modo = :modo'),
    nunca el valor que mando el usuario —ese sigue viajando como parametro. Esa
@@ -34,7 +68,7 @@ try {
                 best_streak AS streak,
                 finished_at AS at
          FROM partidas
-         WHERE status = \'won\''
+         WHERE status = \'won\' AND sospechosa = 0'
         . ($filtraModo ? ' AND modo = :modo' : '') .
         ' ORDER BY score DESC, finished_at ASC
          LIMIT :lim'

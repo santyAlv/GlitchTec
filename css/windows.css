@@ -559,3 +559,9 @@ table.tm-table { width: 100%; border-collapse: collapse; font-size: 11px; }
 }
 .boss-next:active { box-shadow: inset 1px 1px 0 #0a5c28, inset -1px -1px 0 #b6ffd2; }
 .boss-next:disabled { opacity: .35; cursor: default; }
+
+/* Minijuego de filtrado de paquetes (js/firewall.js) */
+.fw { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 4px; position: relative; }
+.fw canvas { max-width: 100%; border: 2px inset #888; cursor: crosshair; }
+.fw .fw-start { position: absolute; top: 40%; }
+.fw small { font-size: 11px; text-align: center; }

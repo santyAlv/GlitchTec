@@ -1774,6 +1774,56 @@
   tech.totalCases = CASES.length;
   tech.solved = function () { return GT.state.techSolved || 0; };
   tech.minutes = function () { return GT.state.techMinutes || 0; };
+
+  /** Suma minutos de taller a la orden en curso (para los minijuegos de
+      hardware: soldar, inspeccionar...). Pasarse del presupuesto de la orden
+      le cuesta reputacion al cerrarla, igual que cualquier otro paso. */
+  tech.addMinutes = function (n) {
+    caseMinutes += n;
+    GT.state.techMinutes = (GT.state.techMinutes || 0) + n;
+    renderHud();
+  };
+
+  /** Fallas de la orden en curso, para los minijuegos de hardware:
+      [{ id: 'cable', found: bool, fixed: bool }]. Vacio si no hay orden. */
+  tech.faults = function () {
+    if (!cur) return [];
+    return cur.fallas.map(function (f) { return { id: f, found: !!found[f], fixed: !!fixed[f] }; });
+  };
+
+  /** Resultado de un minijuego de hardware sobre una falla de la orden.
+      ok = true  -> la falla queda reparada, con el mismo premio que repararla
+                    desde el taller (mas si ya estaba diagnosticada).
+      ok = false -> error de manos: se corta la racha y baja la reputacion.
+      opts: { minutes: minutos de taller que costo, rep: reputacion que cuesta
+              fallar (6 por defecto), part: pieza del banco a marcar como arreglada }.
+      Devuelve true solo si la falla se reparo ahora. */
+  tech.applyRepair = function (fault, ok, opts) {
+    if (!cur || phase !== 'trabajo' || GT.state.finished) return false;
+    opts = opts || {};
+    if (opts.minutes) tech.addMinutes(opts.minutes);
+
+    if (!ok) {
+      logLine('✘ La reparación salió mal.', 'bad');
+      GT.wrong(60, 'reparación fallida');
+      GT.damage(opts.rep || 6, 'reparación fallida');
+      GT.audio.hurt();
+      return false;
+    }
+    if (!tiene(fault) || fixed[fault]) return false;      // no es una falla de esta orden, o ya estaba
+
+    fixed[fault] = true;
+    if (opts.part) markPart(opts.part, 'fixed');
+    logLine('✔ Falla reparada: ' + fault + '.', 'ok');
+    GT.audio.ok();
+    if (found[fault]) { GT.correct(180, 'reparación correcta'); GT.ui.flash('gain'); }
+    else { GT.addScore(60, 'reparación a ciegas'); }
+    refreshSymptom();
+    renderZones();
+    renderTray();
+    renderHud();
+    return true;
+  };
   tech.cost = function () { return GT.state.techCost || 0; };
 
 })(window, document);
