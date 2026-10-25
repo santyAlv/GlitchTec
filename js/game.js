@@ -123,6 +123,11 @@
     });
 
     GT.ui.registerIcon({
+      id: 'firewall', label: 'Firewall', icon: GT.ui.icons.taskmgr, asset: 'app.firewall',
+      hint: 'Filtrar paquetes de red', onOpen: function () { GT.firewall.open(); }
+    });
+
+    GT.ui.registerIcon({
       id: 'bot', label: 'TEC-Bot', icon: GT.bot.ICON, asset: 'app.asistente',
       hint: 'Asistente de soporte', onOpen: function () { GT.bot.open(); }
     });
