@@ -49,7 +49,7 @@
     var def = defs[id];
     if (!def || !GT.state.running || GT.state.finished) return false;
     end();
-    current = { id: id, def: def };
+    current = { id: id, def: def, score0: GT.state.score, t0: GT.state.elapsed };
     if (def.holdCursor !== false) GT.cursor.hold(true);
     if (def.start) def.start(opts || {});
     GT.emit('minigame:start', { id: id });
@@ -59,10 +59,15 @@
   /** Fin normal de la ronda: guarda el resumen en la base y avisa. */
   mg.finish = function (result) {
     if (!current) return;
-    var id = current.id;
+    var id = current.id, c = current;
+    result = result || {};
+    /* El marco completa lo comun a todas las rondas: puntos ganados y duracion.
+       El minijuego aporta accuracy (0-100) y lo suyo. */
+    result.points = GT.state.score - c.score0;
+    result.secs = Math.round(GT.state.elapsed - c.t0);
     end();
-    if (GT.api) GT.api.logRound(id, result || {});
-    GT.emit('minigame:end', { id: id, result: result || {} });
+    if (GT.api) GT.api.logRound(id, result);
+    GT.emit('minigame:end', { id: id, result: result });
   };
 
   /** Aborta sin guardar nada. */
