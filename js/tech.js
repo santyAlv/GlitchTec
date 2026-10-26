@@ -173,6 +173,39 @@
       ok: 'Las líneas de 12 V y 5 V están limpias: no hay cortocircuito en la placa.'
     },
 
+    /* ---------------- Daño físico en la placa (golpes) ---------------- */
+    ver_placa_lupa: {
+      g: 'inspeccion', label: 'Mirar las soldaduras de la placa con lupa', min: 6, parte: 'placa',
+      req: 'abrir', detecta: 'pista',
+      ok: 'Las soldaduras brillan parejas y las pistas de cobre no tienen cortes.',
+      mal: 'Al lado del conector de 24 pines hay una pista con una fisura finita y dos puntos de ' +
+           'soldadura opacos y agrietados: soldaduras frías. Con el golpe se partieron.'
+    },
+    continuidad_pistas: {
+      tool: 'tester', g: 'inspeccion', label: 'Medir continuidad entre el conector y el regulador',
+      min: 5, parte: 'placa', req: 'abrir', detecta: 'pista',
+      ok: 'El tester marca continuidad firme en todas las pistas de alimentación.',
+      mal: 'El tester marca continuidad a veces sí y a veces no: la pista está cortada y hace ' +
+           'contacto o no según cómo se mueva la placa.'
+    },
+
+    /* ---------------- Acciones: daño físico en la placa ---------------- */
+    /* minijuego: este paso no se resuelve con un click, abre el banco de
+       soldadura (js/soldadura.js), que cobra los minutos segun lo que tarde
+       y repara la falla con GT.tech.applyRepair si sale bien. */
+    soldar_pista: {
+      g: 'accion', label: 'Reparar la pista en el banco de soldadura', min: 0, parte: 'placa',
+      req: 'abrir', arregla: 'pista', minijuego: 'soldadura',
+      nada: 'La placa no tiene pistas ni soldaduras dañadas: no había nada que soldar.'
+    },
+    cambiar_placa: {
+      tool: 'destornillador', g: 'accion', label: 'Cambiar la placa madre', min: 40, parte: 'placa',
+      costo: 95000, arregla: 'placa_muerta',
+      hecho: 'Desarmás todo y montás una placa madre nueva.',
+      nada: 'La placa tenía arreglo: era una pista fisurada y dos soldaduras frías. Le cobraste ' +
+            'al colegio una placa entera por una reparación de diez minutos.'
+    },
+
     /* ---------------- Inspección: ventilación ---------------- */
     ver_filtros: {
       g: 'inspeccion', label: 'Revisar los filtros y las entradas de aire', min: 3, parte: 'boton',
@@ -746,7 +779,49 @@
                'preventivo, cada dos o tres años, no cuando el equipo ya se apaga.'
     },
 
-    /* ---------------- CASO 8 · LABORATORIO DE REDES ---------------- */
+    /* ---------------- CASO 8 · DAÑO FÍSICO EN LA PLACA ---------------- */
+    /* El unico caso que se repara con el banco de soldadura (minijuego).
+       La trampa es cara: cambiar la placa entera "anda", pero no hacia
+       falta. */
+    {
+      id: 'c8',
+      titulo: 'Se cayó y se apaga si la tocás',
+      cliente: 'Laboratorio de informática — PC del aula 3',
+      equipo: 'WinTEC Tower 3000',
+      relato: '"Un alumno se enganchó el pie en el cable y la torre se cayó del escritorio. Desde ' +
+              'entonces prende a veces, y si la movés un poco se apaga de golpe."',
+      presupuesto: 70,
+      fallas: ['pista'],
+      pieza: 'placa',
+      sintomas: {
+        pista: 'Enciende y arranca, pero apenas apoyás la mano en el gabinete se apaga de golpe. ' +
+               'A veces ni siquiera prende.'
+      },
+      exito: 'Con la pista reparada movés el gabinete, lo golpeás suave con los nudillos y el equipo ' +
+             'sigue andando. Arranca el sistema sin cortes.',
+      pasos: ['ver_cable', 'ver_fuente', 'abrir', 'ver_ram', 'ver_placa_lupa', 'continuidad_pistas',
+              'medir_continuidad', 'soldar_pista', 'reasentar_ram', 'cambiar_fuente', 'cambiar_placa'],
+      diagnostico: {
+        pregunta: '¿Por qué se apagaba la PC que se cayó?',
+        opciones: [
+          'La fuente se dañó con el golpe',
+          'Con el golpe se fisuró una pista de la placa y se agrietaron dos soldaduras: hacían contacto según cómo se moviera',
+          'La memoria RAM se salió del zócalo',
+          'El procesador recalentaba porque se movió el disipador'
+        ],
+        correcta: 1,
+        porque: 'Una falla que <b>aparece o desaparece al mover el equipo</b> es mecánica: algo ' +
+                'hace contacto a ratos. Después de un golpe lo típico es una <b>pista fisurada</b> o ' +
+                '<b>soldaduras frías</b> (opacas y agrietadas) cerca de los conectores, que son los ' +
+                'que hacen palanca. Se encuentra con <b>lupa</b> y con el <b>tester en continuidad</b>, ' +
+                'y se repara en el banco: se suelda de nuevo la junta, se puentea la pista con estaño ' +
+                'y se limpia el flux con alcohol isopropílico. La placa no se cambia.'
+      },
+      leccion: 'Falla intermitente que cambia al mover el equipo: es mecánica. Buscá fisuras y ' +
+               'soldaduras frías con lupa y tester, y repará soldando: la placa no se tira.'
+    },
+
+    /* ---------------- CASO 9 · LABORATORIO DE REDES ---------------- */
     /* La orden más larga del taller: cuatro fallas juntas, todas de capa
        física, y ninguna dentro del sistema operativo. El orden de "fallas"
        es el orden en que una tapa a la otra: con la placa quemada el sistema
@@ -868,6 +943,10 @@
     sulfato_ram: 'post_ram',
     filtro:      'apagon',
     vent_trabado: 'apagon',
+
+    /* Daño físico: la pista cortada hace contacto a ratos, el equipo se
+       corta solo igual que si recalentara. */
+    pista:       'apagon',
 
     /* Red. La ficha mal armada y el puerto quemado dan la MISMA pantalla
        ("cable desconectado"): desde la PC no se distinguen, hay que ir a
@@ -1291,6 +1370,25 @@
       GT.audio.error();
       logLine('✋ Primero tenés que "' + STEPS[st.req].label.toLowerCase() + '".', 'warn');
       GT.ui.toast('Paso bloqueado: ' + STEPS[st.req].label, 'warn');
+      return;
+    }
+
+    /* Paso que se juega en un minijuego (el banco de soldadura): los minutos
+       y el resultado los pone el minijuego, no este click. */
+    if (st.minijuego) {
+      if (st.arregla && fixed[st.arregla]) { logLine('Eso ya está reparado.', 'dim'); GT.audio.click(); return; }
+      if (!tiene(st.arregla)) {
+        doneSteps[id] = true;
+        logLine('<b>› ' + st.label + '</b>', 'step');
+        logLine('· ' + st.nada, 'dim');
+        wasted++;
+        GT.addScore(-25, 'acción innecesaria');
+        GT.audio.error();
+        renderTray();
+        return;
+      }
+      logLine('<b>› ' + st.label + '</b>', 'step');
+      if (st.minijuego === 'soldadura') GT.soldadura.open(st.arregla);
       return;
     }
 
