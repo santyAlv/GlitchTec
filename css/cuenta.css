@@ -1,0 +1,343 @@
+/* ============================================================
+   Glitch.TEC — pantalla de cuenta (inicio de sesión y registro)
+   Una ventana del sistema centrada, con la estética Y2K: celeste
+   plano, borde marino y sombra dura. A la izquierda la marca y
+   para qué sirve la cuenta; a la derecha los formularios o, con
+   la sesión iniciada, el perfil con el resumen y el historial.
+   ============================================================ */
+
+.cta-wrap {
+  position: relative;
+  z-index: 1;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+.cta-win {
+  width: min(880px, 100%);
+  padding: 3px;
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy), 8px 8px 0 var(--navy);
+  color: var(--ink);
+  animation: ctaIn .16s steps(3);
+}
+@keyframes ctaIn { from { opacity: .3; transform: translateY(6px); } }
+
+/* ---------- barra de título ---------- */
+.cta-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  margin-bottom: 3px;
+  padding: 0 3px 0 6px;
+  background: linear-gradient(90deg, var(--indigo) 0%, var(--purple) 100%);
+  box-shadow: inset 0 0 0 1px var(--navy);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: .5px;
+  text-shadow: 1px 1px 0 var(--navy);
+}
+.cta-bar .asset { --asset-size: 16px; }
+.cta-bar-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cta-x {
+  width: 20px; height: 20px;
+  display: grid; place-items: center;
+  font-family: var(--mono); font-weight: bold; font-size: 13px;
+  color: var(--navy);
+  background: var(--pink);
+  box-shadow: inset 0 0 0 2px var(--navy);
+  text-shadow: none;
+}
+.cta-x:hover { background: #fff; }
+.cta-x:active { box-shadow: var(--bevel-press); }
+
+/* ---------- cuerpo: marca | formularios ---------- */
+.cta-body {
+  display: grid;
+  grid-template-columns: 290px 1fr;
+  gap: 3px;
+}
+
+.cta-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 20px 22px;
+  color: var(--sky);
+  background-color: var(--navy);
+  background-image:
+    radial-gradient(ellipse 90% 60% at 50% 115%, rgba(155,46,240,.75) 0 60%, transparent 61%),
+    url("../EntidadesGraficas/IdentidadVisual/fondo/backg.png");
+  background-size: auto, cover;
+  background-position: center;
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.cta-logo { display: flex; justify-content: center; }
+.cta-logo .asset-banner { width: 240px; height: 104px; filter: drop-shadow(0 0 16px rgba(74,60,255,.8)); }
+.cta-lead { margin: 0; font-size: 12px; line-height: 1.7; color: #fff; }
+.cta-perks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .3px;
+}
+.cta-perks li { display: flex; align-items: center; gap: 9px; }
+.cta-perks li::before {
+  content: "";
+  flex: 0 0 9px;
+  height: 9px;
+  background: var(--pink);
+  box-shadow: 2px 2px 0 var(--indigo);
+}
+.cta-guest {
+  margin: auto 0 0;
+  padding: 8px 10px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--navy);
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy), 3px 3px 0 var(--purple);
+}
+
+.cta-main {
+  min-width: 0;
+  padding: 20px 24px 22px;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+
+/* Aviso general: offline, verificando, error del servidor */
+.cta-note {
+  margin: 0 0 14px;
+  padding: 7px 10px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--navy);
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--indigo);
+}
+.cta-note:empty { display: none; }
+.cta-note.warn { background: #ffe3ff; box-shadow: inset 0 0 0 2px var(--purple); color: #5a137a; }
+
+/* ---------- pestañas de carpeta ---------- */
+.cta-tabs { display: flex; gap: 3px; padding-left: 8px; }
+.cta-tab {
+  position: relative;
+  padding: 7px 14px 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: var(--ink-dim);
+  background: var(--paper-2);
+  box-shadow: inset 2px 2px 0 var(--navy), inset -2px 0 0 var(--navy);
+}
+.cta-tab:hover { background: #fff; }
+.cta-tab.is-on {
+  z-index: 1;
+  margin-bottom: -2px;
+  padding-bottom: 8px;
+  color: var(--navy);
+  background: var(--sky);
+}
+
+/* ---------- formularios ---------- */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 18px 20px;
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.auth-form[hidden] { display: none; }
+.auth-form .menu-btn { margin-top: 4px; padding: 10px 16px; }
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: var(--navy);
+}
+.auth-field > span em { font-style: normal; font-weight: normal; letter-spacing: 0; color: var(--ink-soft); }
+.auth-field > span em::before { content: " · "; }
+.auth-field input {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: normal;
+  letter-spacing: 0;
+  color: var(--ink);
+  background: #fff;
+  border: 0;
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.auth-field input:focus { outline: 0; box-shadow: inset 0 0 0 2px var(--indigo), 3px 3px 0 var(--pink); }
+.auth-field input[aria-invalid="true"] { background: #fff0ff; box-shadow: inset 0 0 0 2px var(--purple); }
+.auth-field small {
+  min-height: 1.3em;
+  font-family: var(--ui);
+  font-size: 10.5px;
+  font-weight: normal;
+  letter-spacing: 0;
+  line-height: 1.3;
+  color: #8a1f9e;
+}
+.auth-field small:empty { min-height: 0; }
+
+/* Contraseña con el botón para mostrarla */
+.auth-pass { display: flex; }
+.auth-pass input { flex: 1; }
+.auth-eye {
+  flex: 0 0 auto;
+  min-width: 48px;
+  margin-left: -2px;
+  padding: 0 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: var(--navy);
+  background: var(--paper-2);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.auth-eye:hover { background: #fff; }
+.auth-eye[aria-pressed="true"] { color: #fff; background: var(--indigo); }
+
+.cta-link {
+  display: block;
+  margin: 14px 0 0 auto;
+  padding: 4px 2px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .5px;
+  color: var(--indigo);
+  background: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.cta-link:hover { color: var(--purple); }
+
+/* ---------- perfil ---------- */
+.cta-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy), 4px 4px 0 var(--indigo);
+}
+.cta-profile .asset { flex: 0 0 auto; }
+.cta-profile div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cta-profile strong {
+  font-family: var(--mono);
+  font-size: 18px;
+  letter-spacing: 1px;
+  color: var(--navy);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cta-profile span { font-size: 11.5px; color: var(--ink-dim); overflow: hidden; text-overflow: ellipsis; }
+
+.cta-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+.cta-stat {
+  padding: 10px 12px;
+  background: #fff;
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.cta-stat h4 {
+  margin: -10px -12px 8px;
+  padding: 5px 12px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 1px;
+  color: #fff;
+  background: var(--indigo);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.cta-stat.tecnico h4 { background: var(--purple); }
+.cta-stat dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; margin: 0; font-size: 11.5px; }
+.cta-stat dt { color: var(--ink-dim); }
+.cta-stat dd { margin: 0; font-family: var(--mono); font-weight: bold; color: var(--navy); text-align: right; }
+.cta-stat p { margin: 0; font-size: 11.5px; color: var(--ink-soft); }
+
+.cta-sub {
+  margin: 18px 0 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: var(--navy);
+}
+
+.cta-hist {
+  max-height: 220px;
+  overflow: auto;
+  background: #fff;
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.cta-hist table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.cta-hist th {
+  position: sticky;
+  top: 0;
+  padding: 6px 8px;
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--navy);
+  background: var(--sky);
+  box-shadow: inset 0 -2px 0 var(--navy);
+}
+.cta-hist td { padding: 6px 8px; border-bottom: 1px solid var(--paper-2); white-space: nowrap; }
+.cta-hist td.num { font-family: var(--mono); text-align: right; }
+.cta-hist th.num { text-align: right; }
+.cta-hist tr:last-child td { border-bottom: 0; }
+.cta-hist td.vacio { padding: 14px 8px; color: var(--ink-soft); white-space: normal; text-align: center; }
+.cta-res { display: inline-block; padding: 1px 6px; font-family: var(--mono); font-size: 10px; letter-spacing: .5px; }
+.cta-res.gano  { color: var(--navy); background: var(--cyan-y); }
+.cta-res.perdio { color: #fff; background: var(--purple); }
+
+.cta-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.cta-actions .menu-btn { flex: 1 1 160px; }
+
+/* ---------- pantallas angostas: la marca pasa a ser una cabecera ---------- */
+@media (max-width: 760px) {
+  .cta-wrap { align-items: flex-start; padding: 16px 12px 28px; }
+  .cta-body { grid-template-columns: 1fr; }
+  .cta-side { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 14px; }
+  .cta-logo .asset-banner { width: 150px; height: 64px; }
+  .cta-lead { flex: 1 1 200px; font-size: 11.5px; }
+  .cta-perks, .cta-guest { display: none; }
+  .cta-main { padding: 16px 14px 18px; }
+  .auth-form { padding: 14px 12px 16px; }
+}
+@media (max-width: 420px) {
+  .cta-tab { flex: 1; padding-left: 6px; padding-right: 6px; letter-spacing: .3px; }
+  .cta-tabs { padding-left: 0; }
+  .cta-hist th:nth-child(4), .cta-hist td:nth-child(4) { display: none; }
+  .cta-hist th, .cta-hist td { padding-left: 5px; padding-right: 5px; }
+  .cta-hist table { font-size: 11px; }
+}

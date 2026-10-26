@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="css/assets.css">
 <link rel="stylesheet" href="css/y2k.css">
 <link rel="stylesheet" href="css/detalle.css">
+<link rel="stylesheet" href="css/cuenta.css">
 </head>
 <body>
 
@@ -295,65 +296,103 @@
   </section>
 
   <!-- ============ PANTALLA 3C: CUENTA (LOGIN / REGISTRO) ============
-       MAQUETA PROVISIONAL. La lógica está en js/auth.js y se agarra de los
-       id y de los data-auth*: el diseño de la issue #21 puede cambiar todo
-       lo demás (estructura, clases, convertirlo en modal) mientras conserve
-       esos ganchos y los name de los campos. -->
+       Una ventana del sistema centrada: a la izquierda la marca y para qué
+       sirve la cuenta, a la derecha los formularios o el perfil.
+       js/auth.js se agarra de los id, de los data-auth* y de los name de
+       los campos: si se rehace el diseño, eso es lo que hay que conservar. -->
   <section id="screen-auth" class="screen">
-    <div class="doc">
-      <h2 class="doc-title">// CUENTA</h2>
+    <div class="cta-wrap">
+      <div class="cta-win" role="region" aria-labelledby="cta-title">
 
-      <p class="rk-note" id="auth-note" aria-live="polite"></p>
+        <div class="cta-bar">
+          <span data-asset="sys.usuario" data-size="xs"></span>
+          <span class="cta-bar-title" id="cta-title">Cuenta de usuario · WinTEC</span>
+          <button class="cta-x" data-action="back" aria-label="Volver al menú">×</button>
+        </div>
 
-      <!-- Sin sesión: formularios -->
-      <div id="auth-forms">
-        <div class="rk-filters">
-          <div class="rk-group" role="group" aria-label="Entrar o crear cuenta">
-            <button class="rk-btn is-on" data-auth-tab="login" aria-pressed="true">INICIAR SESIÓN</button>
-            <button class="rk-btn" data-auth-tab="registro" aria-pressed="false">CREAR CUENTA</button>
+        <div class="cta-body">
+          <aside class="cta-side">
+            <div class="cta-logo"><span data-asset="sys.logo" data-size="banner" data-alt="Glitch.TEC"></span></div>
+            <p class="cta-lead">Con una cuenta tus partidas quedan guardadas y entrás al ranking con tu nombre.</p>
+            <ul class="cta-perks">
+              <li>Historial de tus partidas</li>
+              <li>Mejor puntaje y racha por modo</li>
+              <li>Tu nombre fijo en el ranking global</li>
+            </ul>
+            <p class="cta-guest">Sin cuenta también se juega: el puntaje queda guardado en esta PC.</p>
+          </aside>
+
+          <div class="cta-main">
+            <p class="cta-note" id="auth-note" aria-live="polite"></p>
+
+            <!-- Sin sesión: formularios -->
+            <div id="auth-forms">
+              <div class="cta-tabs" role="group" aria-label="Entrar o crear cuenta">
+                <button class="cta-tab is-on" data-auth-tab="login" aria-pressed="true">INICIAR SESIÓN</button>
+                <button class="cta-tab" data-auth-tab="registro" aria-pressed="false">CREAR CUENTA</button>
+              </div>
+
+              <form id="auth-login" class="auth-form" novalidate>
+                <label class="auth-field"><span>USUARIO O CORREO</span>
+                  <input name="login" type="text" maxlength="120" autocomplete="username" spellcheck="false" required></label>
+                <label class="auth-field"><span>CONTRASEÑA</span>
+                  <span class="auth-pass">
+                    <input name="password" type="password" maxlength="72" autocomplete="current-password" required>
+                    <button type="button" class="auth-eye" data-auth-eye aria-pressed="false" aria-label="Mostrar contraseña">VER</button>
+                  </span></label>
+                <button class="menu-btn" type="submit">ENTRAR</button>
+              </form>
+
+              <form id="auth-registro" class="auth-form" novalidate hidden>
+                <label class="auth-field"><span>USUARIO</span>
+                  <input name="username" type="text" maxlength="24" autocomplete="username" spellcheck="false" required>
+                  <small data-error="username"></small></label>
+                <label class="auth-field"><span>CORREO ELECTRÓNICO</span>
+                  <input name="email" type="email" maxlength="120" autocomplete="email" spellcheck="false" required>
+                  <small data-error="email"></small></label>
+                <label class="auth-field"><span>CONTRASEÑA <em>8 o más, con letras y números</em></span>
+                  <span class="auth-pass">
+                    <input name="password" type="password" maxlength="72" autocomplete="new-password" required>
+                    <button type="button" class="auth-eye" data-auth-eye aria-pressed="false" aria-label="Mostrar contraseña">VER</button>
+                  </span>
+                  <small data-error="password"></small></label>
+                <label class="auth-field"><span>REPETIR CONTRASEÑA</span>
+                  <input name="password2" type="password" maxlength="72" autocomplete="new-password" required>
+                  <small data-error="password2"></small></label>
+                <button class="menu-btn" type="submit">CREAR CUENTA</button>
+              </form>
+
+              <button class="cta-link" data-action="modes">Jugar sin cuenta ›</button>
+            </div>
+
+            <!-- Con sesión: perfil, resumen por modo e historial -->
+            <div id="auth-user" hidden>
+              <div class="cta-profile">
+                <span data-asset="sys.usuario" data-size="xl"></span>
+                <div>
+                  <strong id="auth-username"></strong>
+                  <span id="auth-email"></span>
+                </div>
+              </div>
+
+              <div class="cta-stats" id="auth-resumen"></div>
+
+              <h3 class="cta-sub">ÚLTIMAS PARTIDAS</h3>
+              <div class="cta-hist">
+                <table>
+                  <thead><tr><th>Modo</th><th>Resultado</th><th>Puntaje</th><th>Tiempo</th><th>Fecha</th></tr></thead>
+                  <tbody id="auth-history"></tbody>
+                </table>
+              </div>
+
+              <div class="cta-actions">
+                <button class="menu-btn" data-action="modes">JUGAR</button>
+                <button class="menu-btn ghost" id="auth-logout">CERRAR SESIÓN</button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <form id="auth-login" class="auth-form" novalidate>
-          <label class="auth-field"><span>USUARIO O CORREO</span>
-            <input name="login" type="text" maxlength="120" autocomplete="username" spellcheck="false"></label>
-          <label class="auth-field"><span>CONTRASEÑA</span>
-            <input name="password" type="password" maxlength="72" autocomplete="current-password"></label>
-          <button class="menu-btn" type="submit">ENTRAR</button>
-        </form>
-
-        <form id="auth-registro" class="auth-form" novalidate hidden>
-          <label class="auth-field"><span>USUARIO</span>
-            <input name="username" type="text" maxlength="24" autocomplete="username" spellcheck="false">
-            <small data-error="username"></small></label>
-          <label class="auth-field"><span>CORREO ELECTRÓNICO</span>
-            <input name="email" type="email" maxlength="120" autocomplete="email" spellcheck="false">
-            <small data-error="email"></small></label>
-          <label class="auth-field"><span>CONTRASEÑA (8 o más, con letras y números)</span>
-            <input name="password" type="password" maxlength="72" autocomplete="new-password">
-            <small data-error="password"></small></label>
-          <label class="auth-field"><span>REPETIR CONTRASEÑA</span>
-            <input name="password2" type="password" maxlength="72" autocomplete="new-password">
-            <small data-error="password2"></small></label>
-          <button class="menu-btn" type="submit">CREAR CUENTA</button>
-        </form>
-      </div>
-
-      <!-- Con sesión: datos de la cuenta e historial -->
-      <div id="auth-user" hidden>
-        <ul class="credits">
-          <li><span>Usuario</span><em id="auth-username"></em></li>
-          <li><span>Correo</span><em id="auth-email"></em></li>
-        </ul>
-        <ul class="credits" id="auth-history"></ul>
-        <div class="doc-actions">
-          <button class="menu-btn" data-action="modes">JUGAR</button>
-          <button class="menu-btn ghost" id="auth-logout">CERRAR SESIÓN</button>
-        </div>
-      </div>
-
-      <div class="doc-actions">
-        <button class="menu-btn ghost" data-action="back">VOLVER</button>
       </div>
     </div>
   </section>

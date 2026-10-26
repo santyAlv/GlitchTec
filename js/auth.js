@@ -1,7 +1,7 @@
 /* ============================================================
    Glitch.TEC — cuentas de usuario (cliente)
    Registro, inicio y cierre de sesion contra la API PHP, y la
-   pantalla provisional de cuenta. Jugar sin cuenta sigue andando
+   pantalla de cuenta. Jugar sin cuenta sigue andando
    igual: la sesion solo agrega que las partidas queden asociadas
    al usuario y que se pueda ver el historial.
    ============================================================ */
@@ -160,11 +160,9 @@
   auth.isLogged = function () { return !!auth.user; };
 
   /* ============================================================
-     Pantalla provisional de cuenta
-     Maqueta funcional y nada mas: los formularios usan las clases que ya
-     existian. El diseno de la pantalla (issue #21) va encima de esto; lo
-     unico que tiene que conservar son los id y los data-auth, que es de
-     donde se agarra este codigo.
+     Pantalla de cuenta
+     El diseño vive en css/cuenta.css. Este codigo solo se agarra de los
+     id, de los data-auth* y de los name de los campos.
      ============================================================ */
   var MODE_NAMES = { virus: 'PC Corrompida', tecnico: 'Servicio Técnico' };
 
@@ -180,16 +178,48 @@
     var note = $('auth-note');
     if (!note) return;
     note.textContent = text || '';
-    note.className = 'rk-note' + (bad ? ' warn' : '');
+    note.className = 'cta-note' + (bad ? ' warn' : '');
   }
 
   /* Muestra los errores de cada campo debajo de su input. textContent y no
-     innerHTML: el mensaje viene del servidor. */
+     innerHTML: el mensaje viene del servidor. El aria-invalid pinta el
+     campo y ademas lo anuncia el lector de pantalla. */
   function showErrors(form, errors) {
     var slots = form.querySelectorAll('[data-error]');
     for (var i = 0; i < slots.length; i++) {
-      slots[i].textContent = (errors && errors[slots[i].dataset.error]) || '';
+      var name = slots[i].dataset.error;
+      setFieldError(form, name, (errors && errors[name]) || '');
     }
+  }
+
+  function setFieldError(form, name, msg) {
+    var slot = form.querySelector('[data-error="' + name + '"]');
+    if (slot) slot.textContent = msg;
+    var input = form.elements[name];
+    if (input) input.setAttribute('aria-invalid', msg ? 'true' : 'false');
+  }
+
+  /* Validacion de cada campo del registro al salir de el, con las mismas
+     reglas de arriba: el jugador se entera antes de mandar el formulario. */
+  function checkField(form, name) {
+    var el = form.elements;
+    var msg = '';
+    if (name === 'username') msg = auth.checkUsername(el.username.value);
+    if (name === 'email')    msg = auth.checkEmail(el.email.value);
+    if (name === 'password') msg = auth.checkPassword(el.password.value, el.username.value);
+    if (name === 'password2' && el.password2.value !== el.password.value) msg = 'Las contraseñas no coinciden.';
+    setFieldError(form, name, msg);
+  }
+
+  /* Despues de entrar o registrarse, las contraseñas vuelven a puntitos:
+     si no, al cerrar sesion el campo aparece mostrando el texto. */
+  function hidePasswords() {
+    document.querySelectorAll('[data-auth-eye]').forEach(function (b) {
+      b.parentNode.querySelector('input').type = 'password';
+      b.textContent = 'VER';
+      b.setAttribute('aria-pressed', 'false');
+      b.setAttribute('aria-label', 'Mostrar contraseña');
+    });
   }
 
   function showTab(tab) {
@@ -220,34 +250,92 @@
     renderHistory();
   }
 
+  /* Resumen por modo (una tarjeta cada uno) y la tabla de las ultimas
+     partidas. Todo con createElement y textContent: los datos vienen de la
+     base y el nombre de usuario lo eligio el jugador. */
+  var historyReq = 0;
+
   function renderHistory() {
-    var ul = $('auth-history');
-    ul.innerHTML = '';
+    var stats = $('auth-resumen');
+    var body = $('auth-history');
+    stats.innerHTML = '';
+    body.innerHTML = '';
+    emptyRow(body, 'Cargando...');
+
+    /* Si la pantalla se redibuja antes de que vuelva la respuesta (abrir
+       la cuenta justo cuando cambia la sesion), solo vale el ultimo pedido:
+       si no, las dos respuestas se suman y aparece todo repetido. */
+    var req = ++historyReq;
     auth.history(10).then(function (data) {
-      if (!data.ok) { addRow(ul, 'Historial', data.error || 'No disponible'); return; }
+      if (req !== historyReq) return;
+      body.innerHTML = '';
+      if (!data.ok) { emptyRow(body, data.error || 'El historial no está disponible.'); return; }
 
       Object.keys(MODE_NAMES).forEach(function (modo) {
-        var r = data.resumen[modo];
-        addRow(ul, MODE_NAMES[modo], r
-          ? r.ganadas + ' ganadas de ' + r.jugadas + ' · mejor puntaje ' + r.mejor_puntaje
-          : 'sin partidas todavía');
+        stats.appendChild(statCard(modo, data.resumen && data.resumen[modo]));
       });
+
+      if (!data.partidas || !data.partidas.length) {
+        emptyRow(body, 'Todavía no jugaste ninguna partida con esta cuenta.');
+        return;
+      }
       data.partidas.forEach(function (p) {
-        addRow(ul, (MODE_NAMES[p.modo] || p.modo) + ' · ' + (p.won ? 'ganada' : 'perdida'),
-               p.score + ' pts · ' + GT.formatTime(p.time));
+        var tr = document.createElement('tr');
+        cell(tr, MODE_NAMES[p.modo] || p.modo);
+        var res = cell(tr, '');
+        var tag = el('span', 'cta-res ' + (p.won ? 'gano' : 'perdio'), p.won ? 'GANADA' : 'PERDIDA');
+        res.appendChild(tag);
+        cell(tr, String(p.score), 'num');
+        cell(tr, GT.formatTime(p.time || 0), 'num');
+        cell(tr, formatDate(p.at));
+        body.appendChild(tr);
       });
     });
   }
 
-  function addRow(ul, label, value) {
-    var li = document.createElement('li');
-    var span = document.createElement('span');
-    var em = document.createElement('em');
-    span.textContent = label;
-    em.textContent = value;
-    li.appendChild(span);
-    li.appendChild(em);
-    ul.appendChild(li);
+  function statCard(modo, r) {
+    var card = el('div', 'cta-stat ' + modo);
+    card.appendChild(el('h4', '', MODE_NAMES[modo].toUpperCase()));
+    if (!r) {
+      card.appendChild(el('p', '', 'Sin partidas todavía.'));
+      return card;
+    }
+    var dl = el('dl');
+    [['Partidas', r.jugadas], ['Ganadas', r.ganadas],
+     ['Mejor puntaje', r.mejor_puntaje], ['Mejor racha', r.mejor_racha || 0]].forEach(function (par) {
+      dl.appendChild(el('dt', '', par[0]));
+      dl.appendChild(el('dd', '', String(par[1])));
+    });
+    card.appendChild(dl);
+    return card;
+  }
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function cell(tr, text, cls) {
+    var td = el('td', cls, text);
+    tr.appendChild(td);
+    return td;
+  }
+
+  function emptyRow(body, text) {
+    var tr = document.createElement('tr');
+    var td = cell(tr, text, 'vacio');
+    td.colSpan = 5;
+    body.appendChild(tr);
+  }
+
+  /* La base devuelve "2026-09-18 21:40:05"; con la T en el medio lo
+     entiende new Date(). Igual que en el ranking. */
+  function formatDate(at) {
+    if (!at) return '—';
+    var d = new Date(String(at).replace(' ', 'T'));
+    return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('es-AR');
   }
 
   /* El campo "tu nombre para el ranking" de la pantalla de modos: con sesion
@@ -278,7 +366,35 @@
     if (!loginForm || !regForm) return;
 
     document.querySelectorAll('[data-auth-tab]').forEach(function (b) {
-      b.addEventListener('click', function () { showTab(b.dataset.authTab); });
+      b.addEventListener('click', function () {
+        showTab(b.dataset.authTab);
+        var form = (b.dataset.authTab === 'registro') ? regForm : loginForm;
+        form.elements[0].focus();
+      });
+    });
+
+    /* Boton VER: alterna la contraseña entre puntitos y texto. Es un
+       button type="button" para que no mande el formulario. */
+    document.querySelectorAll('[data-auth-eye]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var input = b.parentNode.querySelector('input');
+        var show = (input.type === 'password');
+        input.type = show ? 'text' : 'password';
+        b.textContent = show ? 'OCULTAR' : 'VER';
+        b.setAttribute('aria-pressed', show ? 'true' : 'false');
+        b.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
+        input.focus();
+      });
+    });
+
+    /* Registro: cada campo se revisa al salir de el, y el error se borra
+       en cuanto el jugador vuelve a escribir. */
+    ['username', 'email', 'password', 'password2'].forEach(function (name) {
+      var input = regForm.elements[name];
+      input.addEventListener('blur', function () { if (input.value) checkField(regForm, name); });
+      input.addEventListener('input', function () {
+        if (input.getAttribute('aria-invalid') === 'true') setFieldError(regForm, name, '');
+      });
     });
 
     /* submit del FORM y no click del boton: asi tambien entra con Enter. El
@@ -286,22 +402,23 @@
        pagina y se llevaria puesta la partida. */
     loginForm.addEventListener('submit', function (e) {
       e.preventDefault();
+      if (!loginForm.elements.login.value.trim() || !loginForm.elements.password.value) {
+        setNote('Completá el usuario (o el correo) y la contraseña.', true);
+        return;
+      }
       setNote('Verificando...');
       auth.login(loginForm.elements.login.value, loginForm.elements.password.value).then(function (res) {
         loginForm.elements.password.value = '';      // la clave no se queda en el campo
-        if (res.ok) { loginForm.reset(); setNote(''); }
+        if (res.ok) { loginForm.reset(); hidePasswords(); setNote(''); }
         else setNote(res.error || 'No se pudo iniciar sesión.', true);
       });
     });
 
     regForm.addEventListener('submit', function (e) {
       e.preventDefault();
-      showErrors(regForm, null);
-
-      if (regForm.elements.password.value !== regForm.elements.password2.value) {
-        showErrors(regForm, { password2: 'Las contraseñas no coinciden.' });
-        return;
-      }
+      ['username', 'email', 'password', 'password2'].forEach(function (name) { checkField(regForm, name); });
+      var bad = regForm.querySelector('[aria-invalid="true"]');
+      if (bad) { bad.focus(); return; }
 
       setNote('Creando la cuenta...');
       auth.register({
@@ -309,7 +426,7 @@
         email: regForm.elements.email.value,
         password: regForm.elements.password.value
       }).then(function (res) {
-        if (res.ok) { regForm.reset(); setNote(''); return; }
+        if (res.ok) { regForm.reset(); hidePasswords(); setNote(''); return; }
         showErrors(regForm, res.errors);
         setNote(res.error || 'No se pudo crear la cuenta.', true);
       });
