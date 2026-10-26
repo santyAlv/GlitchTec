@@ -6,7 +6,7 @@
    Tiene tres partes y estan separadas a proposito:
      1. la base de conocimiento  (datos: temas y palabras clave)
      2. el buscador              (GT.bot.ask: texto -> respuesta)
-     3. la ventana provisional   (GT.bot.open)
+     3. la ventana de chat       (GT.bot.open)
    El buscador no sabe nada de la ventana: devuelve un objeto y lo
    puede usar cualquier interfaz (la ventana, el comando "bot" de
    la Terminal o lo que arme el front despues).
@@ -428,74 +428,142 @@
   }
 
   /* ============================================================
-     3. Ventana provisional
+     3. Ventana de chat
      ============================================================ */
-  /* MAQUETA PROVISIONAL del chat. Reusa los estilos de la Terminal para no
-     inventar diseño acá: la interfaz definitiva es de la issue #23. La logica
-     solo necesita un lugar donde escribir (bot-log) y un campo de texto
-     (bot-input); todo lo demas se puede rehacer. */
+  /* Una app de mensajeria del escritorio: globos del bot a la izquierda y
+     del jugador a la derecha, atajos para lo mas comun y el cupo de pistas
+     gratis siempre a la vista. El diseño esta en css/chat.css.
+     Todo el texto entra con textContent: lo que escribe el jugador vuelve
+     a la pantalla y no tiene que poder meter HTML. */
   var log = null;
   var input = null;
+  var counter = null;
 
-  function line(text, cls) {
-    if (!log) return;
-    var el = document.createElement('span');
-    el.className = 'term-line bot-line' + (cls ? ' l-' + cls : '');
-    el.textContent = text;                 // textContent: lo que escribe el jugador vuelve a la pantalla
-    log.appendChild(el);
-    log.scrollTop = log.scrollHeight;
+  /* Atajos de abajo: lo que se manda al tocarlos. */
+  var CHIPS = [
+    { label: 'Dame una pista', ask: 'pista' },
+    { label: '¿De qué sabés?', ask: 'temas' },
+    { label: '¿Qué es el phishing?', ask: 'qué es el phishing' },
+    { label: '¿Para qué sirve kill?', ask: 'para qué sirve kill' }
+  ];
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
   }
 
-  /** Escribe una respuesta del bot en el chat. */
+  function scrollDown() { if (log) log.scrollTop = log.scrollHeight; }
+
+  function userMsg(text) {
+    if (!log) return;
+    var row = el('div', 'bot-msg is-user');
+    row.appendChild(el('p', 'bot-bubble', text));
+    log.appendChild(row);
+    scrollDown();
+  }
+
+  /** Dibuja una respuesta del bot como un globo. */
   function show(res) {
-    line(res.title, res.type === 'hint' ? 'warn' : 'title');
-    line(res.text, res.type === 'unknown' ? 'dim' : 'info');
-    if (res.related && res.related.length) line('También puede servirte: ' + res.related.join(' · '), 'dim');
-    if (res.type === 'hint') line('Pistas gratis que te quedan en este nivel: ' + res.left, 'dim');
-    line('');
+    if (!log) return;
+    var row = el('div', 'bot-msg is-bot is-' + res.type);
+    row.appendChild(el('span', 'bot-avatar'));
+    row.lastChild.innerHTML = GT.assets.html('app.asistente', { size: 'lg', alt: '' });
+
+    var bubble = el('div', 'bot-bubble');
+    bubble.appendChild(el('strong', 'bot-title', res.title));
+    bubble.appendChild(el('p', 'bot-text', res.text));
+
+    /* Los temas parecidos se pueden tocar: preguntan por ese tema. */
+    if (res.related && res.related.length) {
+      var rel = el('div', 'bot-related');
+      rel.appendChild(el('span', '', 'También puede servirte:'));
+      res.related.forEach(function (t) {
+        var b = el('button', 'bot-rel', t);
+        b.type = 'button';
+        b.addEventListener('click', function () { send(t); });
+        rel.appendChild(b);
+      });
+      bubble.appendChild(rel);
+    }
+    row.appendChild(bubble);
+    log.appendChild(row);
+    updateCounter();
+    scrollDown();
+  }
+
+  function updateCounter() {
+    if (!counter) return;
+    var left = bot.hintsLeft();
+    counter.textContent = 'Pistas gratis en este nivel: ' + left;
+    counter.classList.toggle('is-empty', left === 0);
+  }
+
+  function send(text) {
+    text = String(text || '').trim();
+    if (!text) return;
+    userMsg(text);
+    show(bot.ask(text));
+    GT.audio.click();
+    if (input) input.focus();
   }
 
   bot.open = function () {
     if (GT.ui.isOpen(WIN_ID)) { GT.ui.focusWindow(WIN_ID); if (input) input.focus(); return; }
 
-    var body = document.createElement('div');
-    body.className = 'bot';
-    body.style.cssText = 'display:flex;flex-direction:column;height:100%;';
+    var body = el('div', 'bot');
     body.innerHTML =
-      '<div class="term-out bot-log"></div>' +
-      '<div class="term-input-row bot-input-row">' +
-        '<span class="term-prompt">vos&gt;</span>' +
-        '<input class="term-input bot-input" spellcheck="false" autocomplete="off" maxlength="160" ' +
-               'aria-label="Pregunta para TEC-Bot">' +
-      '</div>';
+      '<div class="bot-head">' +
+        GT.assets.html('app.asistente', { size: 'xl', alt: '' }) +
+        '<div><strong>TEC-Bot</strong><span class="bot-status">en línea · soporte técnico</span></div>' +
+        '<span class="bot-counter" aria-live="polite"></span>' +
+      '</div>' +
+      '<div class="bot-log" role="log" aria-live="polite" aria-label="Conversación con TEC-Bot"></div>' +
+      '<div class="bot-chips" role="group" aria-label="Preguntas rápidas"></div>' +
+      '<form class="bot-form">' +
+        '<input class="bot-input" spellcheck="false" autocomplete="off" maxlength="160" ' +
+               'placeholder="Escribí tu pregunta..." aria-label="Pregunta para TEC-Bot">' +
+        '<button type="submit" class="bot-send">ENVIAR</button>' +
+      '</form>';
 
     GT.ui.openWindow({
       id: WIN_ID, title: 'TEC-Bot — Asistente de soporte',
-      icon: ICON, asset: 'app.asistente', className: 'win-terminal win-bot',
-      width: 520, height: 360,
+      icon: ICON, asset: 'app.asistente', className: 'win-bot',
+      width: 460, height: 500,
       body: body,
       onFocus: function () { if (input) input.focus(); },
-      onClose: function () { log = null; input = null; }
+      onClose: function () { log = null; input = null; counter = null; }
     });
 
     log = body.querySelector('.bot-log');
     input = body.querySelector('.bot-input');
+    counter = body.querySelector('.bot-counter');
 
-    input.addEventListener('keydown', function (e) {
-      if (e.key !== 'Enter') { GT.audio.key(); return; }
-      var text = input.value.trim();
-      input.value = '';
-      if (!text) return;
-      line('vos> ' + text, 'cmd');
-      show(bot.ask(text));
-      GT.audio.click();
+    var chips = body.querySelector('.bot-chips');
+    CHIPS.forEach(function (c) {
+      var b = el('button', 'bot-chip', c.label);
+      b.type = 'button';
+      b.addEventListener('click', function () { send(c.ask); });
+      chips.appendChild(b);
     });
+
+    /* submit del form: entra con Enter y con el boton, y el preventDefault
+       evita que se recargue la pagina y se pierda la partida. */
+    body.querySelector('.bot-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var text = input.value;
+      input.value = '';
+      send(text);
+    });
+    input.addEventListener('keydown', function (e) { if (e.key !== 'Enter') GT.audio.key(); });
 
     show(bot.ask('hola'));
     input.focus();
   };
 
-  /* Icono provisional, en la misma rejilla de 16x16 que los de ui.js. */
+  /* Glifo de respaldo, en la misma rejilla de 16x16 que los de ui.js. Se ve
+     solo si no carga el arte del set (app.asistente). */
   var ICON =
     '<svg viewBox="0 0 16 16" shape-rendering="crispEdges">' +
       '<path d="M7 0h2v2H7z" fill="#8e9398"/>' +
