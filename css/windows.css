@@ -88,7 +88,7 @@
 }
 .win-terminal.inactive .win-bar { background: linear-gradient(90deg, #4a544d 0%, #8d968e 100%); }
 .win-terminal .win-body {
-  background: #04090b;
+  background: #00103a;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -101,7 +101,7 @@
   font-family: var(--mono);
   font-size: 13px;
   line-height: 1.45;
-  color: #b9f5cf;
+  color: #b8e6f8;
   text-shadow: 0 0 6px rgba(43,240,122,.35);
   white-space: pre-wrap;
   word-break: break-word;
@@ -125,7 +125,7 @@
   flex: 0 0 auto;
   padding: 6px 10px 8px;
   border-top: 1px solid #10261b;
-  background: #04090b;
+  background: #00103a;
 }
 .term-prompt {
   font-family: var(--mono);
@@ -156,7 +156,7 @@
   background: var(--face);
   box-shadow: var(--bevel-out);
 }
-.xp-btn:hover:not(:disabled) { background: #cbcfcb; }
+.xp-btn:hover:not(:disabled) { background: #ffffff; }
 .xp-btn:active:not(:disabled) { box-shadow: var(--bevel-press); padding: 5px 11px 3px 13px; }
 .xp-btn:disabled { color: var(--sh); text-shadow: 1px 1px 0 var(--hi); cursor: default; }
 .xp-btn.danger  { font-weight: bold; }
@@ -255,7 +255,7 @@
 .exp-item:hover span { background: #d9dcd9; }
 .exp-item.selected .asset { filter: brightness(.82) saturate(1.35); }
 .exp-item.selected span { background: var(--sel); color: var(--sel-text); outline: 1px dotted #fff; outline-offset: -1px; }
-.exp-item.danger span { color: #a3121b; }
+.exp-item.danger span { color: #8a1f9e; }
 .exp-item.locked .asset { opacity: .5; }
 .exp-empty { padding: 18px; color: var(--ink-soft); font-style: italic; }
 
@@ -328,7 +328,7 @@
   margin: 0 9px 8px;
   padding: 5px 9px;
   font-size: 11px;
-  color: #7a1020;
+  color: #8a1f9e;
   background: #ffe4e8;
   box-shadow: var(--bevel-thin-in);
 }
@@ -351,9 +351,9 @@ table.tm-table { width: 100%; border-collapse: collapse; font-size: 11px; }
 .tm-table tr.selected td.sig-bad, .tm-table tr.selected td .sig-bad { color: #ffc9cf; }
 .tm-table tr.dying td { background: #f0d6d9; opacity: .55; }
 .tm-table .num { text-align: right; font-family: var(--mono); }
-.tm-table .sig-bad  { color: #a3121b; font-weight: bold; }
+.tm-table .sig-bad  { color: #8a1f9e; font-weight: bold; }
 .tm-table .sig-good { color: #12602c; }
-.tm-table .hot { color: #a3121b; font-weight: bold; }
+.tm-table .hot { color: #8a1f9e; font-weight: bold; }
 .tm-table tr.new-proc td { animation: newProc 1.4s steps(2) 2; }
 @keyframes newProc { 50% { background: #ffe7a8; } }
 
@@ -394,7 +394,7 @@ table.tm-table { width: 100%; border-collapse: collapse; font-size: 11px; }
 .mail-item .subj { display: block; font-weight: bold; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mail-item .tag { font-size: 9.5px; font-family: var(--mono); letter-spacing: 1px; }
 .mail-item.ok  .tag { color: #12602c; }
-.mail-item.bad .tag { color: #a3121b; }
+.mail-item.bad .tag { color: #8a1f9e; }
 .mail-item.active.ok .tag, .mail-item.active.bad .tag { color: #fff; }
 
 .mail-read { flex: 1; overflow: auto; background: var(--paper); box-shadow: var(--bevel-in); padding: 0; min-width: 0; }
@@ -441,7 +441,7 @@ table.tm-table { width: 100%; border-collapse: collapse; font-size: 11px; }
 .mail-verdict.wrong { background: #fbe6e9; }
 .mail-verdict h4 { margin: 0 0 6px; font-size: 11px; font-family: var(--mono); letter-spacing: 1px; }
 .mail-verdict.right h4 { color: #12602c; }
-.mail-verdict.wrong h4 { color: #a3121b; }
+.mail-verdict.wrong h4 { color: #8a1f9e; }
 .mail-verdict ul { margin: 6px 0 0; padding-left: 18px; }
 .mail-verdict li { margin-bottom: 3px; }
 
@@ -538,7 +538,7 @@ table.tm-table { width: 100%; border-collapse: collapse; font-size: 11px; }
 }
 .boss-opt:hover:not(:disabled) { background: #14212b; border-left-color: var(--green); color: #fff; }
 .boss-opt:disabled { cursor: default; }
-.boss-opt.right { border-left-color: var(--green); background: rgba(43,240,122,.11); color: #b9f5cf; }
+.boss-opt.right { border-left-color: var(--green); background: rgba(43,240,122,.11); color: #b8e6f8; }
 .boss-opt.wrong { border-left-color: var(--red); background: rgba(255,59,82,.11); color: #ffb9c4; }
 .boss-feedback {
   margin-top: 13px;
