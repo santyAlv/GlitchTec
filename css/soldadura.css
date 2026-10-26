@@ -1,0 +1,121 @@
+/* ============================================================
+   Glitch.TEC — banco de soldadura (js/soldadura.js)
+   Una ventana del sistema sobre el taller, como la ficha técnica.
+   La placa se dibuja en el canvas; alrededor va el chrome Y2K.
+   ============================================================ */
+
+.sold {
+  position: absolute;
+  inset: 0;
+  z-index: 820;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.sold.hidden { display: none; }
+.sold-back { position: absolute; inset: 0; background: rgba(0, 16, 58, .66); }
+
+.sold-win {
+  position: relative;
+  width: min(640px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  padding: 3px;
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy), 6px 6px 0 var(--navy);
+  animation: soldIn .14s steps(3);
+}
+@keyframes soldIn { from { opacity: .3; transform: scale(.97); } }
+
+.sold-bar {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  margin-bottom: 3px;
+  padding: 0 3px 0 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(90deg, var(--indigo) 0%, var(--purple) 100%);
+  box-shadow: inset 0 0 0 1px var(--navy);
+  text-shadow: 1px 1px 0 var(--navy);
+}
+.sold-bar span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sold-x {
+  width: 18px; height: 18px;
+  display: grid; place-items: center;
+  font-family: var(--mono); font-weight: bold; font-size: 12px;
+  color: var(--navy);
+  background: var(--pink);
+  box-shadow: inset 0 0 0 2px var(--navy);
+  text-shadow: none;
+}
+.sold-x:hover { background: #fff; }
+
+.sold-body { padding: 8px; background: var(--paper); box-shadow: inset 0 0 0 2px var(--navy); }
+
+/* El canvas escala con la ventana; la intro y el resultado van encima */
+.sold-stage { position: relative; line-height: 0; box-shadow: 0 0 0 2px var(--navy); }
+.sold-stage canvas { display: block; width: 100%; height: auto; }
+
+.sold-intro, .sold-result {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 18px 22px;
+  line-height: 1.55;
+  font-size: 12px;
+  color: var(--navy);
+  background: rgba(233, 248, 255, .94);
+}
+.sold-intro[hidden], .sold-result[hidden] { display: none; }
+.sold-intro p { margin: 0; }
+.sold-intro ul { margin: 0; padding-left: 18px; }
+.sold-intro kbd {
+  display: inline-block;
+  min-width: 34px;
+  padding: 0 4px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-align: center;
+  color: #fff;
+  background: var(--indigo);
+}
+.sold-warn { color: #6a1fc0; }
+.sold-intro .menu-btn, .sold-result .menu-btn { align-self: center; margin-top: 4px; }
+
+.sold-result { align-items: center; text-align: center; }
+.sold-result b { font-family: var(--mono); font-size: 16px; letter-spacing: 1px; }
+.sold-result p { max-width: 440px; margin: 0; }
+.sold-result.is-ok b { color: #0a6e96; }
+.sold-result.is-bad b { color: #8a1f9e; }
+
+.sold-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  font-family: var(--mono);
+}
+.sold-status:empty { display: none; }
+.sold-status span {
+  flex: 1 1 110px;
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  background: #fff;
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.sold-status i { font-style: normal; color: var(--ink-dim); letter-spacing: .5px; }
+.sold-status b { color: var(--navy); }
+.sold-status .is-bad b { color: #8a1f9e; }
+
+@media (max-width: 520px) {
+  .sold-intro { font-size: 11px; padding: 10px 12px; gap: 5px; overflow: auto; justify-content: flex-start; }
+}

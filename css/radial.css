@@ -1,0 +1,79 @@
+/* ============================================================
+   Glitch.TEC — menú radial del mando
+   Un aro alrededor del cursor con las opciones repartidas en
+   círculo. La opción marcada se agranda y se pinta de rosa; el
+   centro dice qué es y qué hace.
+   ============================================================ */
+
+#radial-menu {
+  position: fixed;
+  z-index: 99000;               /* arriba de todo, abajo del cursor del mando */
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  font-family: var(--mono);
+  animation: rmIn .12s steps(3);
+}
+@keyframes rmIn { from { opacity: .2; transform: scale(.7); } }
+
+.rm-ring {
+  position: absolute;
+  left: -112px;
+  top: -112px;
+  width: 224px;
+  height: 224px;
+  border-radius: 50%;
+  border: 3px solid var(--navy);
+  background: radial-gradient(circle, rgba(0,16,58,.85) 0 34%, rgba(74,60,255,.35) 35% 100%);
+  box-shadow: 0 0 0 3px var(--sky), 0 0 26px rgba(74,60,255,.75);
+}
+
+.rm-center {
+  position: absolute;
+  left: -62px;
+  top: -30px;
+  width: 124px;
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-align: center;
+  color: #fff;
+}
+.rm-center b { font-size: 12px; letter-spacing: .5px; color: var(--pink); text-shadow: 1px 1px 0 var(--navy); }
+.rm-center small { font-family: var(--ui); font-size: 10px; line-height: 1.25; color: var(--sky); }
+
+.rm-item {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  /* max-content: el contenedor mide 0 de ancho, y sin esto cada etiqueta
+     se achica hasta cortar las palabras por la mitad */
+  width: max-content;
+  min-width: 58px;
+  max-width: 96px;
+  padding: 5px 6px;
+  font-size: 10px;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--navy);
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy), 3px 3px 0 var(--navy);
+  transition: transform .06s steps(2);
+}
+.rm-item span { overflow-wrap: break-word; }
+.rm-item .asset { --asset-size: 28px; }
+.rm-cmd { font-size: 12px; font-weight: bold; }
+.rm-item.is-on { background: var(--cyan-y); }
+.rm-item.is-locked { opacity: .55; }
+.rm-item.is-sel {
+  z-index: 1;
+  transform: translate(-50%, -50%) scale(1.18);
+  background: var(--pink);
+  box-shadow: inset 0 0 0 2px var(--navy), 4px 4px 0 var(--indigo), 0 0 14px var(--pink);
+}

@@ -1,0 +1,160 @@
+/* ============================================================
+   Glitch.TEC — caza de pop-ups
+   La capa va arriba de las ventanas y del HUD, pero abajo de la
+   barra de tareas y de los diálogos. Los anuncios usan los colores
+   chillones del malware (rosa y violeta) para que se distingan de
+   las ventanas del sistema.
+   ============================================================ */
+
+#caza-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 450;
+  pointer-events: none;          /* solo los anuncios y el cartel atrapan clics */
+  overflow: hidden;
+}
+
+/* ---------- cartel de la oleada ---------- */
+.caza-banner {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 12px;
+  max-width: calc(100% - 16px);
+  padding: 6px 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #fff;
+  background: linear-gradient(90deg, var(--purple) 0%, var(--pink) 100%);
+  box-shadow: inset 0 0 0 2px var(--navy), 4px 4px 0 var(--navy);
+  pointer-events: auto;
+  animation: cazaPulse 1s steps(2) infinite;
+}
+@keyframes cazaPulse { 50% { box-shadow: inset 0 0 0 2px var(--navy), 4px 4px 0 var(--indigo); } }
+.caza-banner strong { letter-spacing: 1px; text-shadow: 1px 1px 0 var(--navy); }
+.caza-time {
+  min-width: 42px;
+  padding: 2px 6px;
+  text-align: center;
+  color: var(--navy);
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.caza-ram { display: flex; align-items: center; gap: 5px; }
+.caza-ram i { font-style: normal; }
+.caza-ram b {
+  display: block;
+  width: 110px;
+  height: 12px;
+  background: var(--navy);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.caza-ram em { display: block; height: 100%; background: var(--cyan-y); transition: width .1s linear; }
+.caza-ram.is-low em { background: #ff3b8a; }
+.caza-clean {
+  padding: 2px 6px;
+  color: var(--navy);
+  background: var(--cyan-y);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.caza-clean.is-empty { color: #fff; background: var(--navy); }
+.caza-banner small { flex-basis: 100%; text-align: center; font-size: 10px; opacity: .95; }
+.caza-banner kbd { font-family: inherit; padding: 0 3px; color: var(--navy); background: var(--sky); }
+
+/* ---------- anuncios ---------- */
+.caza-ad {
+  position: absolute;
+  padding: 3px;
+  background: var(--pink);
+  box-shadow: inset 0 0 0 2px var(--navy), 5px 5px 0 var(--purple);
+  pointer-events: auto;
+  cursor: pointer;
+  animation: cazaIn .14s steps(3);
+}
+@keyframes cazaIn { from { opacity: .3; transform: scale(.85); } }
+.caza-ad.is-closing { animation: cazaOut .12s steps(2) forwards; }
+@keyframes cazaOut { to { opacity: 0; transform: scale(.7); } }
+.caza-ad.is-shaking { animation: cazaShake .24s steps(4); }
+@keyframes cazaShake {
+  25% { transform: translate(-4px, 1px); }
+  50% { transform: translate(4px, -1px); }
+  75% { transform: translate(-2px, 0); }
+}
+
+.caza-ad-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  margin-bottom: 3px;
+  padding: 0 2px 0 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(90deg, var(--purple) 0%, var(--indigo) 100%);
+  box-shadow: inset 0 0 0 1px var(--navy);
+}
+.caza-ad-bar span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* La X es chica a propósito: el minijuego es de precisión */
+.caza-x {
+  width: 18px; height: 18px;
+  display: grid; place-items: center;
+  font-family: var(--mono); font-weight: bold; font-size: 13px;
+  color: var(--navy);
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy);
+  cursor: pointer;
+}
+.caza-x:hover { background: #fff; }
+
+.caza-ad-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 8px 12px;
+  text-align: center;
+  color: var(--navy);
+  background:
+    repeating-linear-gradient(45deg, #fff 0 8px, #ffe3ff 8px 16px);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.caza-ad-body b { font-family: var(--mono); font-size: 13px; letter-spacing: .5px; color: var(--purple); }
+.caza-ad-body p { margin: 0; font-size: 11px; line-height: 1.4; }
+.caza-cta {
+  margin-top: 3px;
+  padding: 5px 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--navy);
+  background: #ffd84a;
+  box-shadow: inset 0 0 0 2px var(--navy), 3px 3px 0 var(--navy);
+  animation: cazaBlink .6s steps(2) infinite;
+}
+@keyframes cazaBlink { 50% { background: var(--cyan-y); } }
+
+/* Onda del limpiador de área */
+.caza-ring {
+  position: absolute;
+  z-index: 9998;
+  transform: translate(-50%, -50%) scale(.2);
+  border-radius: 50%;
+  border: 4px solid var(--cyan-y);
+  box-shadow: 0 0 18px var(--cyan-y), inset 0 0 18px var(--cyan-y);
+  pointer-events: none;
+  animation: cazaRing .4s ease-out forwards;
+}
+@keyframes cazaRing { to { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
+
+@media (max-width: 620px) {
+  .caza-ram b { width: 70px; }
+  .caza-banner small { display: none; }
+}

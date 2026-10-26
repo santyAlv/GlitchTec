@@ -243,6 +243,7 @@
     GT.procs.reset();
     GT.mail.reset();
     GT.popups.reset();
+    GT.cazaPopups.reset();
     GT.boss.reset();
     GT.levels.reset();
     GT.hacker.reset();
@@ -321,6 +322,7 @@
         GT.tech.tick(dt);
       } else {
         GT.popups.tick(dt);
+        GT.cazaPopups.tick(dt);
         GT.procs.tick(dt);
         GT.fs.tick(dt);
         GT.sys.tick(dt);

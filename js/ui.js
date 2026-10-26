@@ -467,6 +467,29 @@
 
   ui.refreshIcons = renderIcons;
 
+  /** Programas del escritorio, para el menu radial del mando (js/radial.js):
+      [{ id, label, asset, icon, locked }]. */
+  ui.apps = function () {
+    return iconDefs.map(function (d) {
+      return { id: d.id, label: d.label, asset: d.asset, icon: d.icon, locked: !!d.locked };
+    });
+  };
+
+  /** Abre un programa igual que el doble click de su icono: respeta los
+      bloqueados y el sistema tildado. Devuelve true si lo abrio. */
+  ui.launch = function (id) {
+    var def = iconDefs.filter(function (d) { return d.id === id; })[0];
+    if (!def) return false;
+    if (def.locked) {
+      GT.audio.error();
+      ui.toast('Acceso bloqueado: todavía no disponible', 'warn');
+      return false;
+    }
+    if (frozenFor(def)) return false;
+    def.onOpen();
+    return true;
+  };
+
   /* Con el sistema tildado (ver js/sysutils.js) el escritorio no abre nada:
      lo unico que sigue respondiendo es la Terminal, que es por donde se sale.
      Devuelve true si el programa NO se tiene que abrir. */
