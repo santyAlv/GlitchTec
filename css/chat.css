@@ -1,0 +1,178 @@
+/* ============================================================
+   Glitch.TEC — TEC-Bot, la ventana de chat del asistente
+   Una app de mensajería del escritorio con la estética Y2K:
+   globos del bot a la izquierda (celeste, con su avatar) y del
+   jugador a la derecha (rosa), atajos abajo y el cupo de pistas
+   gratis en la cabecera.
+   ============================================================ */
+
+.win-bot .win-body { overflow: hidden; background: var(--sky); }
+
+.bot {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ---------- cabecera ---------- */
+.bot-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: linear-gradient(90deg, var(--navy) 0%, var(--indigo) 100%);
+  box-shadow: inset 0 -2px 0 var(--navy);
+  color: #fff;
+}
+.bot-head .asset {
+  flex: 0 0 auto;
+  --asset-size: 40px;
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy), 2px 2px 0 var(--pink);
+}
+.bot-head > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.bot-head strong { font-family: var(--mono); font-size: 14px; letter-spacing: 1px; }
+.bot-status { font-size: 10.5px; color: var(--sky); }
+.bot-status::before {
+  content: "";
+  display: inline-block;
+  width: 7px; height: 7px;
+  margin-right: 5px;
+  background: var(--cyan-y);
+  box-shadow: 0 0 6px var(--cyan-y);
+}
+.bot-counter {
+  flex: 0 1 auto;
+  max-width: 46%;
+  padding: 4px 7px;
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.3;
+  text-align: right;
+  color: var(--navy);
+  background: var(--pink);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.bot-counter.is-empty { color: #fff; background: var(--purple); }
+
+/* ---------- conversación ---------- */
+.bot-log {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 10px;
+  background-color: var(--paper);
+  background-image:
+    repeating-linear-gradient(0deg,  rgba(74,60,255,.06) 0 1px, transparent 1px 14px),
+    repeating-linear-gradient(90deg, rgba(74,60,255,.06) 0 1px, transparent 1px 14px);
+}
+
+.bot-msg { display: flex; align-items: flex-end; gap: 7px; max-width: 100%; }
+.bot-msg.is-user { justify-content: flex-end; }
+
+.bot-avatar .asset {
+  --asset-size: 28px;
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+
+.bot-bubble {
+  max-width: 82%;
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;             /* los comandos van entre dos espacios */
+  overflow-wrap: anywhere;
+  color: var(--navy);
+  animation: botIn .12s steps(2);
+}
+@keyframes botIn { from { opacity: .2; transform: translateY(4px); } }
+
+.is-bot .bot-bubble {
+  background: #fff;
+  box-shadow: inset 0 0 0 2px var(--navy), 3px 3px 0 var(--indigo);
+}
+.is-user .bot-bubble {
+  font-family: var(--mono);
+  background: var(--pink);
+  box-shadow: inset 0 0 0 2px var(--navy), 3px 3px 0 var(--purple);
+}
+.bot-title {
+  display: block;
+  margin-bottom: 3px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .5px;
+  color: var(--indigo);
+}
+.bot-text { margin: 0; }
+
+/* Pista: se distingue del resto de las respuestas */
+.is-hint .bot-bubble { background: #fffbe0; box-shadow: inset 0 0 0 2px var(--navy), 3px 3px 0 var(--amber); }
+.is-hint .bot-title { color: #8a5a00; }
+.is-unknown .bot-text { color: var(--ink-soft); }
+
+.bot-related {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px dashed var(--sh);
+  font-size: 10.5px;
+  color: var(--ink-soft);
+}
+.bot-rel, .bot-chip {
+  padding: 3px 8px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--navy);
+  background: var(--sky);
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.bot-rel:hover, .bot-chip:hover { background: #fff; }
+.bot-rel:active, .bot-chip:active { background: var(--cyan-y); }
+
+/* ---------- atajos y campo de texto ---------- */
+.bot-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 7px 8px;
+  background: var(--sky);
+  box-shadow: inset 0 2px 0 var(--navy);
+}
+.bot-chip { flex: 0 0 auto; white-space: nowrap; }
+
+.bot-form { display: flex; gap: 6px; padding: 0 8px 8px; background: var(--sky); }
+.bot-input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--ink);
+  background: #fff;
+  border: 0;
+  box-shadow: inset 0 0 0 2px var(--navy);
+}
+.bot-input:focus { outline: 0; box-shadow: inset 0 0 0 2px var(--indigo), 3px 3px 0 var(--pink); }
+.bot-send {
+  flex: 0 0 auto;
+  padding: 0 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: .5px;
+  color: var(--navy);
+  background: var(--pink);
+  box-shadow: inset 0 0 0 2px var(--navy), 3px 3px 0 var(--navy);
+}
+.bot-send:hover { background: #fff; }
+.bot-send:active { transform: translate(2px, 2px); box-shadow: inset 0 0 0 2px var(--navy), 1px 1px 0 var(--navy); }
