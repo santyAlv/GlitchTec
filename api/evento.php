@@ -13,11 +13,20 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $body = read_json_body();
 $matchId = (int)($body['match_id'] ?? 0);
+$token   = (string)($body['token'] ?? '');
 $type    = trim((string)($body['event_type'] ?? ''));
 $detail  = $body['detail'] ?? [];
 
 if ($matchId <= 0 || $type === '') {
     json_error('match_id y event_type son obligatorios');
+}
+
+/* El detalle es libre (cada evento tiene su forma), pero con tope: sin el, un
+   cliente podria llenar la base con JSON gigantes. 4 KB sobra para cualquier
+   evento del juego. */
+$detailJson = json_encode($detail, JSON_UNESCAPED_UNICODE);
+if ($detailJson === false || strlen($detailJson) > 4096) {
+    json_error('El detalle del evento es demasiado grande', 413);
 }
 
 /* SANEAR LA ENTRADA. Nunca confio en lo que manda el cliente, aunque el
@@ -28,6 +37,12 @@ if ($matchId <= 0 || $type === '') {
 $type = mb_substr(preg_replace('/[^a-z0-9_\-]/i', '', $type) ?? 'event', 0, 40);
 
 try {
+    /* Sin el token de la partida (y con la partida abierta) no se escribe nada:
+       los id son correlativos, cualquiera podria probar match_id = 1, 2, 3... */
+    if (!partida_abierta($matchId, $token)) {
+        json_error('Partida inexistente, cerrada o token inválido', 403);
+    }
+
     /* SENTENCIA PREPARADA — la forma correcta de hablar con la base.
        Los :pid, :etype y :detail son MARCADORES, no texto: primero mando la
        consulta con los huecos (prepare) y despues los valores por separado
@@ -44,7 +59,7 @@ try {
     $stmt->execute([
         ':pid'    => $matchId,
         ':etype'  => $type,
-        ':detail' => json_encode($detail, JSON_UNESCAPED_UNICODE),
+        ':detail' => $detailJson,
     ]);
     json_out(['ok' => true]);
 } catch (Throwable $e) {

@@ -43,6 +43,27 @@ try {
         ];
     }
 
+    /* Resumen por minijuego: cuantas rondas jugo, su mejor puntaje y la
+       precision media. Las rondas de partidas que quedaron abiertas tambien
+       cuentan: ya se jugaron, aunque la partida no se haya cerrado. */
+    $stmt = db()->prepare(
+        'SELECT m.tipo, COUNT(*) AS rondas, MAX(m.puntos) AS mejor,
+                ROUND(AVG(m.precision_pct)) AS precision_media
+         FROM minijuegos m
+         JOIN partidas p ON p.id = m.partida_id
+         WHERE p.user_id = :uid
+         GROUP BY m.tipo'
+    );
+    $stmt->execute([':uid' => $uid]);
+    $minijuegos = [];
+    foreach ($stmt->fetchAll() as $r) {
+        $minijuegos[$r['tipo']] = [
+            'rondas'          => (int)$r['rondas'],
+            'mejor'           => (int)$r['mejor'],
+            'precision_media' => (int)$r['precision_media'],
+        ];
+    }
+
     $stmt = db()->prepare(
         'SELECT id, modo, won, score, level_reached AS level, elapsed_sec AS time,
                 best_streak AS streak, finished_at AS at
@@ -70,6 +91,7 @@ try {
         'ok'       => true,
         'user'     => usuario_publico($user),
         'resumen'  => $resumen,
+        'minijuegos' => $minijuegos,
         'partidas' => $rows,
     ]);
 } catch (Throwable $e) {

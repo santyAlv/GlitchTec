@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/inicio"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Inicio">
+
+    <Button
+        android:id="@+id/btnAnalogico"
+        android:layout_width="204dp"
+        android:layout_height="wrap_content"
+        android:text="@string/analogico"
+        app:layout_constraintEnd_toStartOf="@+id/guidelinev50"
+        app:layout_constraintTop_toTopOf="@+id/guidelineH66" />
+
+    <Button
+        android:id="@+id/btnDigital"
+        android:layout_width="203dp"
+        android:layout_height="wrap_content"
+        android:text="@string/digital"
+        app:layout_constraintStart_toEndOf="@+id/btnAnalogico"
+        app:layout_constraintTop_toTopOf="@+id/guidelineH66" />
+
+    <EditText
+        android:id="@+id/etIp"
+        android:layout_width="409dp"
+        android:layout_height="wrap_content"
+        android:autofillHints=""
+        android:ems="10"
+        android:hint="@string/_192_168_1_35"
+        android:inputType="phone"
+        android:minHeight="48dp"
+        app:layout_constraintBottom_toTopOf="@+id/etPuerto"
+        app:layout_constraintStart_toStartOf="parent" />
+
+
+    <EditText
+        android:id="@+id/etPuerto"
+        android:layout_width="409dp"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/_3000"
+        android:autofillHints="puerto"
+        android:inputType="number"
+        android:minHeight="48dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guidelineH33" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineH66"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.66" />
+
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineH33"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.33" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelinev50"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

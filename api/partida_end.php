@@ -43,6 +43,20 @@ $mode = (string)($body['mode'] ?? 'virus');
 $mode = ($mode === 'tecnico') ? 'tecnico' : 'virus';
 
 try {
+    /* ¿El tiempo de juego que dice el cliente cabe en el tiempo REAL que el
+       servidor vio entre partida_start y ahora? El reloj del juego nunca corre
+       mas rapido que el real (tope de dt por frame, y los premios de racha lo
+       RESTAN), asi que declarar mas segundos de los que pasaron es trampa o un
+       cliente adulterado. Se deja pasar un margen de 10 s por la latencia. Si
+       se marca, la partida se cierra igual pero no entra al ranking. */
+    $vio = db()->prepare(
+        'SELECT TIMESTAMPDIFF(SECOND, started_at, NOW()) FROM partidas
+         WHERE id = :id AND token = :token'
+    );
+    $vio->execute([':id' => $matchId, ':token' => $token]);
+    $visto = $vio->fetchColumn();
+    $sospechosa = ($visto !== false && $elapsed > (int)$visto + 10) ? 1 : 0;
+
     $stmt = db()->prepare(
         'UPDATE partidas SET
             modo           = :modo,
@@ -57,6 +71,7 @@ try {
             hints_used     = :hints,
             popups_closed  = :popups,
             best_streak    = :streak,
+            sospechosa     = :sosp,
             finished_at    = NOW()
          WHERE id = :id AND token = :token AND status = \'running\''
     );
@@ -73,6 +88,7 @@ try {
         ':hints'     => $hints,
         ':popups'    => $popups,
         ':streak'    => $streak,
+        ':sosp'      => $sospechosa,
         ':id'        => $matchId,
         ':token'     => $token,
     ]);

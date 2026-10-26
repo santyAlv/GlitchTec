@@ -88,6 +88,23 @@ function clamp_int($value, int $min, int $max): int
 }
 
 /**
+ * ¿La partida existe, es de este token y sigue abierta?
+ * Lo exigen evento.php y ronda.php: sin el token de partida_start.php cualquiera
+ * podria escribir eventos o rondas en partidas ajenas (los id son correlativos).
+ */
+function partida_abierta(int $matchId, string $token): bool
+{
+    if ($matchId <= 0 || !preg_match('/^[a-f0-9]{32}$/', $token)) {
+        return false;
+    }
+    $stmt = db()->prepare(
+        'SELECT 1 FROM partidas WHERE id = :id AND token = :t AND status = \'running\''
+    );
+    $stmt->execute([':id' => $matchId, ':t' => $token]);
+    return (bool)$stmt->fetchColumn();
+}
+
+/**
  * Lee el cuerpo de un POST en JSON.
  * php://input es el flujo crudo del pedido. Hace falta porque $_POST SOLO se
  * llena cuando el cuerpo viene como formulario (application/x-www-form-

@@ -123,6 +123,11 @@
     });
 
     GT.ui.registerIcon({
+      id: 'firewall', label: 'Firewall', icon: GT.ui.icons.taskmgr, asset: 'app.firewall',
+      hint: 'Filtrar paquetes de red', onOpen: function () { GT.firewall.open(); }
+    });
+
+    GT.ui.registerIcon({
       id: 'bot', label: 'TEC-Bot', icon: GT.bot.ICON, asset: 'app.asistente',
       hint: 'Asistente de soporte', onOpen: function () { GT.bot.open(); }
     });
@@ -226,6 +231,7 @@
     GT.fs.mount();                 // arbol de archivos y cuota de disco de la partida
     GT.sys.reset();                // backups, puntos de restauracion y particiones
     GT.ransom.reset();
+    GT.minigame.reset();
     GT.state.running = true;
 
     /* Cada modulo sabe como limpiarse a si mismo; yo solo les aviso. Este es
@@ -307,6 +313,7 @@
     if (GT.state.running && !GT.state.finished) {
       GT.state.elapsed += dt;
       GT.tickShield(dt);
+      GT.minigame.tick(dt);
 
       /* Cada modulo tiene su tick(dt) y se ocupa de lo suyo: yo desde aca no
          se ni me importa que hace adentro. El loop solo reparte el tiempo. */
