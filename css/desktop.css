@@ -493,3 +493,9 @@
   #hud { width: 194px; }
   .dialog { width: calc(100% - 240px); }
 }
+/* En el celular restarle el HUD dejaba el dialogo en 135px y el texto salia
+   de a una palabra por renglon. Va abajo y el HUD arriba: puede usar todo el
+   ancho. */
+@media (max-width: 620px) {
+  .dialog { width: calc(100% - 16px); bottom: 10px; }
+}
