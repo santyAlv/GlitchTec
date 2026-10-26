@@ -156,12 +156,16 @@ class Analogico : AppCompatActivity() {
     // Manda {"button":"left"|"right","down":true|false}, lo que lee js/input.js del juego
     @SuppressLint("ClickableViewAccessibility")
     private fun botonClic(id: Int, lado: String) {
-        findViewById<View>(id).setOnTouchListener { _, event ->
+        findViewById<View>(id).setOnTouchListener { v, event ->
             when (event.action) {
-                MotionEvent.ACTION_DOWN ->
+                MotionEvent.ACTION_DOWN -> {
+                    v.animate().scaleX(0.92f).scaleY(0.92f).setDuration(60).start()
                     webSocket.send("""{"button":"$lado","down":true}""")
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL ->
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    v.animate().scaleX(1f).scaleY(1f).setDuration(80).start()
                     webSocket.send("""{"button":"$lado","down":false}""")
+                }
             }
             true
         }
