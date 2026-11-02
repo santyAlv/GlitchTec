@@ -24,6 +24,7 @@ desktop.ini
 # Dependencias (si más adelante se usa npm)
 node_modules/
 vendor/
+!js/vendor/
 composer.lock
 
 # Exports locales de partidas

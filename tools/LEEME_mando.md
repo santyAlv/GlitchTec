@@ -1,7 +1,8 @@
 # El mando de Glitch.TEC
 
 El mando es **solo la app Android** (`mando_android/`). La página no tiene ningún
-control propio: ni mouse, ni gamepad, ni teclado. Es un stick y dos botones.
+control propio: ni mouse, ni gamepad, ni teclado. Es un stick y dos botones (no hay mando
+de flechas: la app solo trae el analógico).
 
 ```
 celular (app) --JSON/WebSocket--> relay Node (:3000) --> juego en el navegador
@@ -9,7 +10,7 @@ celular (app) --JSON/WebSocket--> relay Node (:3000) --> juego en el navegador
 
 ## Instalar la app
 
-El APK ya compilado está en GitHub: [App del mando v1.0](https://github.com/santyAlv/GlitchTec/releases/tag/mando-v1.0)
+El APK ya compilado está en GitHub: [App del mando v1.1](https://github.com/santyAlv/GlitchTec/releases/tag/mando-v1.1)
 (`glitchtec-mando.apk`, Android 7.0 o superior). En un celular, descargarlo y permitir apps de
 origen desconocido; en un emulador, `adb install glitchtec-mando.apk`. No hace falta compilar nada:
 `tools\mando_dev.ps1` lo compila solo si falta, o con `-Compilar`.
@@ -25,12 +26,16 @@ Si algo ya está corriendo, lo deja como está. Opciones: `-Compilar` (recompila
 APK; pide un JDK 21 en `~\.jdks`), `-SinEmulador` (solo el relay, para usar un celular real),
 `-Red` (el relay escucha en toda la red local).
 
-El relay escucha **solo en esta PC** (`127.0.0.1`) porque no tiene autenticación: cualquiera
-en la red podría mandarle movimientos al juego. El emulador llega igual por `10.0.2.2`. Con un
-**celular real** hay que usar `-Red` (o `HOST=0.0.0.0 npm start` en `tools/mando_server`).
+El relay escucha en toda la red local. No tiene autenticación: cualquiera en la misma red
+podría mandarle movimientos al juego. Solo local: `HOST=127.0.0.1 npm start`.
 
-Después, en la app: **IP** `10.0.2.2` en el emulador (viene por defecto; en un celular real, la
-IPv4 de la PC, `ipconfig`), **puerto** `3000`, y entrar a **Analogico**. Abrir el juego con un
+**El QR lo muestra el juego**, no el relay: aparece en un panel "Conectar el mando" únicamente
+mientras corre un minijuego y todavía no hay un celular conectado (`js/mandoqr.js`). Con un
+**celular real**: abrir la app, tocar **Escanear QR** y apuntar a ese panel; llena IP y puerto y
+entra al mando solo. La IP la elige el relay (una de LAN; salta VPN como Radmin) y se la manda al
+juego al conectarse. Requiere Google Play Services y que Windows deje pasar el puerto 3000 (ver
+"Problemas comunes"). Sin cámara o en el emulador, a mano: **IP** `10.0.2.2` (viene por defecto),
+**puerto** `3000` y **Entrar**. Abrir el juego con un
 servidor estático (`python -m http.server 8123` en la raíz) en `http://localhost:8123`, o con
 PHP (ver "Backend"). Si el relay está en otra máquina: `index.html?mando=IP:PUERTO`.
 
@@ -45,6 +50,17 @@ PHP (ver "Backend"). Si el relay está en otra máquina: `index.html?mando=IP:PU
 También se acepta `{"action":"LEFT_DOWN"}` / `LEFT_UP` / `RIGHT_DOWN` / `RIGHT_UP`.
 Si el APK cambia de formato, solo se toca `apply()` en `js/input.js`.
 
+Mensajes de control (no son del stick):
+
+| Mensaje | Quién → quién | Significado |
+|---|---|---|
+| `{"hello":"mando"}` | app → relay | la app se identifica al abrir; el relay no lo reenvía |
+| `{"lan":["192.168.0.5:3000"],"mandos":0}` | relay → cada cliente al conectarse | direcciones que el celular puede usar y celulares ya conectados |
+| `{"mandos":1}` | relay → todos | cambió la cantidad de celulares conectados |
+
+`GT.input.connected` es verdadero cuando hay al menos un celular (no basta con que el relay esté
+encendido); `GT.input.relay` dice si el juego llegó al relay y `GT.input.lan` trae las direcciones.
+
 ## Qué usa cada sector del juego
 
 - **Eventos del mando** (`js/input.js`), por el bus: `GT.on('pad:left' | 'pad:right', e => e.down)`,
@@ -56,6 +72,7 @@ Si el APK cambia de formato, solo se toca `apply()` en `js/input.js`.
   responde al mando. Un minijuego que usa el stick para otra cosa lo cede con `GT.cursor.hold(true)`.
 - **Minijuegos** (`js/minigame.js`): `GT.minigame.register(id, {start, tick, stop, holdCursor})`,
   `start(id)`, `finish(resumen)` (guarda el evento `<id>_round` en la base), `stop()`.
+  Mientras corre un minijuego sin celular conectado, se muestra solo el QR para conectarlo.
   Ejemplo completo: `js/firewall.js`.
 - **RAM virtual:** `GT.drainRam(n)` / `GT.freeRam(n)`, estado en `GT.state.ram` (0-100), eventos
   `ram` y `ramfull`.
@@ -90,3 +107,5 @@ Si el APK cambia de formato, solo se toca `apply()` en `js/input.js`.
 - **El puntero no se mueve en las pruebas:** el navegador pausa la animación si la pestaña está oculta.
 - **No instala el APK:** si hay otra versión firmada con otra clave, `adb uninstall com.example.rectangulo_node`.
 - **El celular real no conecta:** firewall de Windows (puerto 3000) o Wi-Fi que aísla a los clientes.
+  Abrir el puerto, en PowerShell como admin:
+  `New-NetFirewallRule -DisplayName "Mando Glitch.TEC" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow -Profile Any`

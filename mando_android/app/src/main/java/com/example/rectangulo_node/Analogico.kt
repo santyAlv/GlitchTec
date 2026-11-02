@@ -42,6 +42,8 @@ class Analogico : AppCompatActivity() {
                     webSocket: WebSocket,
                     response: okhttp3.Response
                 ) {
+                    // Avisa al relay que este cliente es un mando (el juego muestra el QR hasta que haya uno)
+                    webSocket.send("""{"hello":"mando"}""")
                     runOnUiThread {
                         Toast.makeText(
                             this@Analogico,
