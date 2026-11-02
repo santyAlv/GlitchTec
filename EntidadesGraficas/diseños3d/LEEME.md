@@ -21,9 +21,11 @@ Salen de `js/bench3d.js` con `node tools/exportar_modelos.js`. Esta guía vive e
 Equipo: `gabinete_chasis`, `tapa_lateral`, `panel_frontal`, `fuente`,
 `fuente_trasera`, `entrada_corriente`, `puertos_video`, `placa_madre`,
 `cpu_disipador`, `ram`, `placa_video`, `disco`, `ventilador_fuente`, `ventilador_cpu`.
+Placa: `pila_cmos` (la pila CMOS en su portapila, sobre la placa madre).
 Monitor: `monitor`, `monitor_soporte`, `toma_pared`.
 Herramientas: `herr_destornillador`, `herr_aire`, `herr_alcohol`, `herr_pasta`,
-`herr_tester`, `herr_respaldo`, `herr_crimpeadora`, `herr_lantester`.
+`herr_tester`, `herr_respaldo`, `herr_crimpeadora`, `herr_lantester`,
+`herr_pila` (pila CR2032 de repuesto) y `herr_pinza` (pinza de punta).
 Ambiente: `escritorio`, `alfombrilla`, `sala_pared`.
 
 ## Cómo vuelve al juego
@@ -53,3 +55,9 @@ nombre, **metros, Y arriba, el mismo origen**) y recargá la página.
 `node tools/exportar_modelos.js` **pisa** la carpeta y se pierden las ediciones.
 Por eso se niega a correr si ya existe `EntidadesGraficas/diseños3d/piezas/`; para forzarlo:
 `node tools/exportar_modelos.js --forzar` (hacé copia de lo editado antes).
+
+## Autoría y licencias
+
+Los tres modelos nuevos (`herr_pila`, `herr_pinza`, `pila_cmos`) están modelados a mano con cajas,
+igual que el resto, en `js/bench3d.js` y exportados con `tools/exportar_modelos.js`. No se usó ningún
+recurso externo: no hay autor ni licencia de terceros que anotar.

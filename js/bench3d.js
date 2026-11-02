@@ -125,7 +125,8 @@
     { id: 'boton',   cara: 'frente',   c: [152, -150,  10], s: [ 14,  70,  80], label: 'PANEL FRONTAL' },
     { id: 'fuente',  cara: 'atras',    c: [-154,-150,  22], s: [ 14,  76,  72], label: 'FUENTE (ATRÁS)' },
     { id: 'cable',   cara: 'atras',    c: [-154,-150, -48], s: [ 14,  76,  74], label: 'ALIMENTACIÓN' },
-    { id: 'monitor', cara: 'atras',    c: [-154,  70, -10], s: [ 14,  96,  92], label: 'PUERTOS DE VIDEO' }
+    { id: 'monitor', cara: 'atras',    c: [-154,  70, -10], s: [ 14,  96,  92], label: 'PUERTOS DE VIDEO' },
+    { id: 'pila',    cara: 'interior', c: [ 100, -70, -24], s: [ 36,  36,  26], label: 'PILA CMOS' }
   ];
 
   /* Herramientas sobre la mesa. Se agarran con un click. */
@@ -138,7 +139,10 @@
     { id: 'respaldo',       x:  258, label: 'DISCO DE RESPALDO',    col: [120, 190, 130] },
     /* Laboratorio de redes: van en las dos puntas de la mesa */
     { id: 'crimpeadora',    x: -366, label: 'CRIMPEADORA',          col: [190,  60,  70] },
-    { id: 'lantester',      x:  362, label: 'PROBADOR DE RED',      col: [ 80, 120, 200] }
+    { id: 'lantester',      x:  362, label: 'PROBADOR DE RED',      col: [ 80, 120, 200] },
+    /* Pila CMOS de repuesto y pinza de punta: van en los extremos libres de la mesa */
+    { id: 'pila',           x: -470, label: 'PILA CR2032',          col: [196, 200, 206] },
+    { id: 'pinza',          x:  466, label: 'PINZA DE PUNTA',       col: [200, 150,  40] }
   ];
 
   var TOOL_NAME = {};
@@ -426,7 +430,7 @@
     'sala_pared', 'escritorio', 'alfombrilla', 'gabinete_chasis', 'tapa_lateral',
     'fuente', 'placa_madre', 'cpu_disipador', 'ram', 'placa_video', 'disco',
     'panel_frontal', 'fuente_trasera', 'entrada_corriente', 'puertos_video',
-    'ventilador_fuente', 'ventilador_cpu', 'monitor', 'monitor_soporte', 'toma_pared'
+    'ventilador_fuente', 'ventilador_cpu', 'monitor', 'monitor_soporte', 'toma_pared', 'pila_cmos'
   ].concat(TOOLS.map(function (t) { return 'herr_' + t.id; }));
 
   var modelos = {};                   // pieza -> [{ geom, col }] (sólo las que cargaron)
@@ -606,6 +610,15 @@
         p.box(40, 18, 70);
         p.push(); p.translate(0, -10, -12); mat(p, 70, 220, 110);
         p.box(26, 2, 8); p.pop();                                          // hilera de luces
+      } else if (t.id === 'pila') {
+        p.box(30, 8, 44);                                                  // blister
+        p.push(); p.translate(0, -6, 0); mat(p, 214, 218, 224);
+        p.box(20, 5, 20); p.pop();                                         // la pila
+      } else if (t.id === 'pinza') {
+        p.push(); p.translate(-5, 0, 22); p.box(7, 9, 52); p.pop();        // brazo
+        p.push(); p.translate(5, 0, 22); p.box(7, 9, 52); p.pop();         // brazo
+        p.push(); p.translate(0, 0, -20); mat(p, 170, 176, 182);
+        p.box(4, 5, 36); p.pop();                                          // punta
       } else {
         p.box(64, 16, 84);
       }
@@ -668,6 +681,7 @@
 
     drawPsu(p);
     drawBoard(p);
+    drawPila(p);
     drawCooler(p);
     drawRam(p);
     drawGpu(p);
@@ -761,6 +775,23 @@
       p.push(); p.translate(-40, 110, 8); p.box(120, 16, 7); p.pop();
       p.push(); p.translate(60, 70, 8); p.box(40, 24, 7); p.pop();
       p.push(); p.translate(-96, 20, 8); p.box(26, 44, 7); p.pop();
+    }
+    p.pop();
+  }
+
+  /** Pila CMOS (CR2032) en su portapila de la placa: la que mantiene el reloj
+      y la configuración del BIOS cuando el equipo está apagado. */
+  function drawPila(p) {
+    p.push();
+    p.translate(100, -70, -24 + offsetOf('pila') * 0.5);
+    grp(p, 'pila_cmos');
+    if (!modelo(p, 'pila_cmos', deltaDe('pila'))) {
+      mat(p, 24, 30, 34);
+      p.box(32, 32, 6);                                    // portapila
+      matFor(p, 'pila', [196, 200, 206]);
+      p.push(); p.translate(0, 0, 7); p.box(22, 22, 7); p.pop();    // la pila
+      mat(p, 150, 156, 162);
+      p.push(); p.translate(0, -14, 5); p.box(12, 6, 3); p.pop();   // lengüeta
     }
     p.pop();
   }
@@ -1180,6 +1211,43 @@
       { at: 3900, line: 'Paquetes: enviados 4, recibidos 4, perdidos 0', cls: 'ok' },
       { at: 4600, line: 'RED OPERATIVA — una hora de prueba sin cortes', cls: 'ok' }
     ]),
+    /* Pila CMOS gastada: el BIOS perdió la configuración y vuelve a la fecha de fábrica */
+    cmos: withBios([
+      { at: 1200, beep: 'short', line: 'POST OK — 1 pitido corto', cls: 'ok' },
+      { at: 1800, line: 'CMOS checksum error — Defaults loaded', cls: 'bad' },
+      { at: 2500, line: 'CMOS battery state: LOW', cls: 'warn' },
+      { at: 3100, line: 'Fecha: 01/01/2023  Hora: 00:00:00', cls: 'warn' },
+      { at: 3800, line: 'Presione F1 para continuar, DEL para entrar al SETUP', cls: 'dim' },
+      { at: 4500, mode: 'desktop' },
+      { at: 5000, line: 'WinTEC: la fecha y la hora del sistema son incorrectas (2023)', cls: 'bad' }
+    ]),
+    cmos_ok: withBios([
+      { at: 1200, line: 'Memoria OK — 16384K', cls: 'ok' },
+      { at: 1700, beep: 'short', line: 'POST OK — 1 pitido corto', cls: 'ok' },
+      { at: 2200, line: 'CMOS checksum OK — pila CMOS: 3,0 V', cls: 'ok' },
+      { at: 2800, mode: 'desktop' },
+      { at: 3400, line: 'Fecha y hora sincronizadas: reloj correcto', cls: 'ok' },
+      { at: 4000, line: 'EQUIPO OPERATIVO — la fecha ya no se pierde al apagar', cls: 'ok' }
+    ]),
+    sin_arranque: withBios([
+      { at: 1200, beep: 'short', line: 'POST OK — 1 pitido corto', cls: 'ok' },
+      { at: 1800, line: 'Disco de arranque no encontrado', cls: 'bad' },
+      { at: 2600, line: 'Insert system disk and press any key', cls: 'dim' },
+      { at: 3400, line: 'El equipo no tiene qué arrancar', cls: 'warn' }
+    ]),
+    pantallazo: withBios([
+      { at: 1200, beep: 'short', line: 'POST OK — 1 pitido corto', cls: 'ok' },
+      { at: 1800, line: 'Iniciando WinTEC . . .', cls: 'dim' },
+      { at: 2500, mode: 'desktop' },
+      { at: 3200, line: 'STOP 0x0000001A: ERROR DE ADMINISTRACION DE MEMORIA', cls: 'bad' },
+      { at: 4000, line: 'El sistema se reinicia en 3 . . . 2 . . . 1', cls: 'warn' }
+    ]),
+    imagen_rota: withBios([
+      { at: 1200, beep: 'short', line: 'POST OK — 1 pitido corto', cls: 'ok' },
+      { at: 1800, mode: 'desktop' },
+      { at: 2400, line: 'imagen con rayas y parpadeos, colores cambiados', cls: 'bad' },
+      { at: 3200, line: 'se corrige un poco si movés el cable', cls: 'warn' }
+    ]),
     ok: withBios([
       { at: 1200, line: 'Memoria OK — 16384K', cls: 'ok' },
       { at: 1700, beep: 'short', line: 'POST OK — 1 pitido corto', cls: 'ok' },
@@ -1202,6 +1270,10 @@
   };
 
   bench.hasSeq = function (kind) { return !!SEQ[kind]; };
+
+  /** Registra una pantalla de prueba nueva (la usa js/tech_ordenes.js). Con
+      sinBios la secuencia arranca sola, sin las líneas del BIOS. */
+  bench.addSeq = function (kind, steps, sinBios) { SEQ[kind] = sinBios ? steps : withBios(steps); };
 
   bench.screenTest = function (kind, done) {
     seq = SEQ[kind] || SEQ.ok;
