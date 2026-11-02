@@ -14,15 +14,13 @@
         android:theme="@style/Theme.Rectangulo_node"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".MainActivity"
-            android:exported="false" />
-        <activity
             android:name=".Analogico"
             android:exported="false"
             android:screenOrientation="landscape" />
         <activity
             android:name=".Inicio"
-            android:exported="true">
+            android:exported="true"
+            android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

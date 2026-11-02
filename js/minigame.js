@@ -18,7 +18,9 @@
      GT.minigame.stop()                      // aborta sin guardar (cerrar la ventana, por ejemplo)
      GT.minigame.isActive('popups')          // o sin argumento: hay alguno corriendo
 
-   Eventos del bus: 'minigame:start' {id} y 'minigame:end' {id, result}.
+   Eventos del bus: 'minigame:start' {id}, 'minigame:end' {id, result} (fin normal)
+   y 'minigame:close' {id} (siempre que se cierra, termine bien o no).
+   Mientras corre un minijuego sin celular conectado, js/mandoqr.js muestra el QR.
    Puntaje, rachas y salud se tocan con las funciones de siempre (GT.correct,
    GT.wrong, GT.damage, GT.heal, GT.addScore). La RAM virtual es GT.drainRam /
    GT.freeRam (state.js). La reputacion del taller es la integridad: GT.damage /
@@ -43,6 +45,7 @@
     if (!c) return;
     if (c.def.stop) c.def.stop();
     if (c.def.holdCursor !== false) GT.cursor.hold(false);
+    GT.emit('minigame:close', { id: c.id });                 // termino, se aborto o se reinicio
   }
 
   mg.start = function (id, opts) {

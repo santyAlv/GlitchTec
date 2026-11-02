@@ -1,74 +1,126 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<!-- Mismo lenguaje visual que activity_analogico: fondo de semitono, bases negras y botones de color -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/inicio"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Inicio">
+    android:background="#02133A">
 
-    <Button
-        android:id="@+id/btnAnalogico"
-        android:layout_width="204dp"
-        android:layout_height="wrap_content"
-        android:text="@string/analogico"
-        app:layout_constraintEnd_toStartOf="@+id/guidelinev50"
-        app:layout_constraintTop_toTopOf="@+id/guidelineH66" />
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/fondo_mando"
+        android:importantForAccessibility="no" />
 
-    <Button
-        android:id="@+id/btnDigital"
-        android:layout_width="203dp"
-        android:layout_height="wrap_content"
-        android:text="@string/digital"
-        app:layout_constraintStart_toEndOf="@+id/btnAnalogico"
-        app:layout_constraintTop_toTopOf="@+id/guidelineH66" />
-
-    <EditText
-        android:id="@+id/etIp"
-        android:layout_width="409dp"
-        android:layout_height="wrap_content"
-        android:autofillHints=""
-        android:ems="10"
-        android:hint="@string/_192_168_1_35"
-        android:inputType="phone"
-        android:minHeight="48dp"
-        app:layout_constraintBottom_toTopOf="@+id/etPuerto"
-        app:layout_constraintStart_toStartOf="parent" />
-
-
-    <EditText
-        android:id="@+id/etPuerto"
-        android:layout_width="409dp"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="@string/_3000"
-        android:autofillHints="puerto"
-        android:inputType="number"
-        android:minHeight="48dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/guidelineH33" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guidelineH66"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.66" />
+        android:layout_centerInParent="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
+        <!-- Acción principal: escanear el QR que muestra el juego -->
+        <FrameLayout
+            android:id="@+id/btnQr"
+            android:layout_width="190dp"
+            android:layout_height="190dp"
+            android:layout_marginEnd="72dp"
+            android:contentDescription="@string/escanear_qr">
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guidelineH33"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.33" />
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/joy_base"
+                android:importantForAccessibility="no" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guidelinev50"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.5" />
+            <ImageView
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:layout_gravity="center"
+                android:src="@drawable/btn_magenta"
+                android:importantForAccessibility="no" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="@string/escanear_qr_boton"
+                android:textColor="@color/white"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <!-- Alternativa a mano (emulador o sin cámara) -->
+        <LinearLayout
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/conectar_a_mano"
+                android:textColor="#B8C2FF"
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/etIp"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:autofillHints="ip"
+                android:background="@drawable/campo"
+                android:hint="@string/_192_168_1_35"
+                android:inputType="numberDecimal"
+                android:paddingHorizontal="16dp"
+                android:textColor="@color/white"
+                android:textColorHint="#7F89C9" />
+
+            <EditText
+                android:id="@+id/etPuerto"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:autofillHints="puerto"
+                android:background="@drawable/campo"
+                android:hint="@string/_3000"
+                android:inputType="number"
+                android:paddingHorizontal="16dp"
+                android:textColor="@color/white"
+                android:textColorHint="#7F89C9" />
+
+            <FrameLayout
+                android:id="@+id/btnAnalogico"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:layout_marginTop="8dp"
+                android:contentDescription="@string/entrar">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/joy_base"
+                    android:importantForAccessibility="no" />
+
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/btn_azul"
+                    android:importantForAccessibility="no" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="@string/entrar"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>

@@ -19,7 +19,8 @@
      GT.on('pad:left',   function (e) { e.down })     // true al apretar, false al soltar
      GT.on('pad:right',  function (e) { ... })        // idem
      GT.on('pad:stick',  function (e) { e.x, e.y })   // ya sin zona muerta; y abajo = +
-     GT.on('pad:status', function (e) { e.connected })
+     GT.on('pad:status', function (e) { e.connected })    // hay un celular conectado
+     GT.on('pad:relay',  function (e) { e.relay, e.lan }) // estado del relay y sus IP:PUERTO
 
    Y para leer el estado de este instante (en un loop, por ejemplo):
 
@@ -37,8 +38,11 @@
   var input = GT.input = {};
 
   input.DEADZONE = 0.2;           // el stick nunca queda en 0 exacto
-  input.connected = false;
+  input.connected = false;        // hay un celular conectado (no basta con el relay)
+  input.relay = false;            // el juego llego al relay
+  input.lan = [];                 // "IP:PUERTO" que el celular puede usar (las manda el relay)
 
+  var pads = 0;                   // celulares conectados al relay, segun el relay
   var stick = { x: 0, y: 0 };     // tal como llega: y arriba = +
   var down = { left: false, right: false };
 
@@ -63,6 +67,12 @@
     var m;
     try { m = JSON.parse(text); } catch (e) { return; }
     if (!m) return;
+    if (Array.isArray(m.lan) || typeof m.mandos === 'number') {      // aviso del relay
+      if (Array.isArray(m.lan)) input.lan = m.lan.filter(function (a) { return typeof a === 'string'; });
+      if (typeof m.mandos === 'number') pads = m.mandos;
+      refresh();
+      return;
+    }
     if (typeof m.x === 'number' && typeof m.y === 'number') {
       stick.x = Math.max(-1, Math.min(1, m.x));
       stick.y = Math.max(-1, Math.min(1, m.y));
@@ -89,16 +99,23 @@
     emit('pad:status', { connected: on });
   }
 
+  /* "Conectado" es que haya al menos un celular en el relay. */
+  function refresh() {
+    setConnected(input.relay && pads > 0);
+    emit('pad:relay', { relay: input.relay, lan: input.lan });
+  }
+
   /* ---------- Conexion ---------- */
   function connect() {
     var m = /[?&]mando=([^&]+)/.exec(window.location.search);
     var ws;
     try { ws = new window.WebSocket('ws://' + (m ? decodeURIComponent(m[1]) : 'localhost:3000')); }
     catch (e) { return; }
-    ws.onopen = function () { setConnected(true); };
+    ws.onopen = function () { input.relay = true; refresh(); };
     ws.onmessage = function (ev) { apply(ev.data); };
     ws.onclose = function () {                       // reintenta cada 2 s
-      setConnected(false);
+      input.relay = false; pads = 0; input.lan = [];
+      refresh();
       setTimeout(connect, 2000);
     };
   }

@@ -565,3 +565,22 @@ table.tm-table { width: 100%; border-collapse: collapse; font-size: 11px; }
 .fw canvas { max-width: 100%; border: 2px inset #888; cursor: crosshair; }
 .fw .fw-start { position: absolute; top: 40%; }
 .fw small { font-size: 11px; text-align: center; }
+
+/* QR para conectar el mando: solo mientras corre un minijuego sin celular (js/mandoqr.js) */
+.mandoqr {
+  position: fixed; right: 16px; bottom: 52px; z-index: 8700; width: 232px;
+  padding: 3px; background: var(--face); color: var(--ink);
+  box-shadow: var(--bevel-out), 2px 2px 0 rgba(0,0,0,.35);
+  font: 12px/1.35 var(--ui);
+}
+.mandoqr-bar {
+  height: 20px; padding: 0 5px; margin-bottom: 2px; display: flex; align-items: center;
+  background: linear-gradient(90deg, var(--title-1) 0%, var(--title-2) 100%);
+  color: #fff; font-size: 11px; font-weight: bold;
+}
+.mandoqr-body { display: flex; flex-direction: column; gap: 6px; padding: 8px; }
+.mandoqr-body p { margin: 0; }
+.mandoqr-code { padding: 8px; background: #fff; box-shadow: var(--bevel-in); }
+.mandoqr-code svg { display: block; width: 100%; height: auto; shape-rendering: crispEdges; }
+.mandoqr-ip { color: var(--ink-dim); font-size: 11px; overflow-wrap: anywhere; }
+.mandoqr code { font-family: var(--mono); }

@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.rectangulo_node"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -48,5 +48,6 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     implementation("com.squareup.okhttp3:okhttp:5.1.0")
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
 
 }

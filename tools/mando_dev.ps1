@@ -13,12 +13,25 @@ $srv  = "$PSScriptRoot\mando_server"
 
 # --- 1) Relay ---
 if (-not (Test-Path "$srv\node_modules")) { Push-Location $srv; npm install --silent; Pop-Location }
-if (Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue) {
-    Write-Host 'Relay: ya estaba corriendo en el puerto 3000'
+$escucha = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($escucha -and $Red -and $escucha.LocalAddress -eq '127.0.0.1') {   # estaba solo local: se reinicia abierto a la red
+    Stop-Process -Id $escucha.OwningProcess -Force
+    Start-Sleep 1
+    $escucha = $null
+}
+if ($escucha) {
+    Write-Host ('Relay: ya estaba corriendo en ' + $escucha.LocalAddress + ':3000')
 } else {
     if ($Red) { $env:HOST = '0.0.0.0' }
     Start-Process node -ArgumentList 'server.js' -WorkingDirectory $srv -WindowStyle Minimized
     Write-Host ('Relay: arrancado en ws://' + $(if ($Red) { '0.0.0.0 (toda la red local)' } else { 'localhost' }) + ':3000')
+}
+if ($Red) {
+    Write-Host 'IP para poner en la app del celular (misma Wi-Fi):'
+    Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -match '^(192\.168|10|172\.(1[6-9]|2\d|3[01]))\.' } |
+        ForEach-Object { Write-Host ('  ' + $_.IPAddress + '  (' + $_.InterfaceAlias + ')') }
+    Write-Host 'Si no conecta, abrir el puerto 3000 (PowerShell como admin):'
+    Write-Host '  New-NetFirewallRule -DisplayName "Mando Glitch.TEC" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow -Profile Any'
 }
 if ($SinEmulador) { return }
 
