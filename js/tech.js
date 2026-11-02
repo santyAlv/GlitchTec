@@ -894,7 +894,7 @@
      gabinete: el cliente y el software del equipo.
      ============================================================ */
   var ZONE_ORDER = ['cliente', 'cable', 'fuente', 'boton', 'monitor', 'patch', 'switch',
-                    'placa', 'ram', 'cooler', 'gpu', 'nic', 'disco', 'software'];
+                    'placa', 'pila', 'ram', 'cooler', 'gpu', 'nic', 'disco', 'periferico', 'software'];
 
   var ZONE_LABEL = {
     cliente:  'CLIENTE',
@@ -912,7 +912,11 @@
     /* Laboratorio de redes */
     patch:    'CABLE DE RED',
     nic:      'PLACA DE RED',
-    'switch': 'SWITCH'
+    'switch': 'SWITCH',
+
+    /* Pila CMOS y periféricos (teclado, mouse, USB, audio) */
+    pila:       'PILA CMOS',
+    periferico: 'PERIFÉRICOS Y PUERTOS'
   };
 
   /* ============================================================
@@ -998,6 +1002,7 @@
     GT.state.techMinutes = 0;
     GT.state.techCost = 0;
     GT.state.techSolved = 0;
+    if (GT.tienda) GT.tienda.reset();
   };
 
   tech.start = function () {
@@ -1013,6 +1018,8 @@
     GT.bench.onTool = function () { renderTools(); renderTray(); };
 
     bindOnce('tech-power', testEquipment);
+    bindOnce('tech-shop', function () { GT.tienda.open(); });
+    GT.tienda.onChange = function () { renderTray(); renderHud(); };
     bindOnce('tech-turn', function () {
       var atras = GT.bench.turn();
       GT.audio.open();
@@ -1083,6 +1090,12 @@
     logLine('Síntoma declarado: ' + currentSymptom(), 'sym');
     if (cur.antecedente) logLine(cur.antecedente, 'warn');
     logLine('Empezá inspeccionando. Cada revisión consume minutos de taller.', 'dim');
+
+    /* El cliente deja un anticipo para repuestos; los repuestos se compran en la tienda */
+    var anticipo = cur.presupuesto * 1000;
+    GT.tienda.cobrar(anticipo);
+    logLine('El cliente deja $' + money(anticipo) + ' de anticipo. Los repuestos se compran en la 🛒 TIENDA, con tu plata.', 'dim');
+    renderHud();
   }
 
   function pad3(n) { return (n < 100 ? '0' : '') + (n < 10 ? '0' : '') + n; }
@@ -1232,10 +1245,13 @@
       var tool = st.tool || 'mano';
       var faltaTool = (tool !== 'mano' && GT.bench.held() !== tool);
       var faltaLado = (st.lado === 'atras' && !GT.bench.facingBack());
-      var locked = (st.req && !doneSteps[st.req]) || faltaTool || faltaLado;
+      var rep = st.costo ? GT.tienda.repuestoDe(id) : null;
+      var faltaRep = !!rep && !GT.tienda.hay(rep);
+      var locked = (st.req && !doneSteps[st.req]) || faltaTool || faltaLado || faltaRep;
 
       var pide = '';
-      if (faltaTool) pide = ' · necesita ' + GT.bench.toolName(tool).toLowerCase();
+      if (faltaRep) pide = ' · comprá ' + GT.tienda.nombreDe(rep).toLowerCase() + ' en la tienda';
+      else if (faltaTool) pide = ' · necesita ' + GT.bench.toolName(tool).toLowerCase();
       else if (faltaLado) pide = ' · girá el gabinete';
       else if (st.req && !doneSteps[st.req]) pide = ' · requiere: ' + STEPS[st.req].label.toLowerCase();
       else if (tool !== 'mano') pide = ' · con ' + GT.bench.toolName(tool).toLowerCase();
@@ -1276,7 +1292,7 @@
   }
 
   function insideZone(z) {
-    return ['fuente', 'placa', 'ram', 'cooler', 'gpu', 'disco', 'nic'].indexOf(z) !== -1;
+    return ['fuente', 'placa', 'ram', 'cooler', 'gpu', 'disco', 'nic', 'pila'].indexOf(z) !== -1;
   }
 
   function money(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
@@ -1296,7 +1312,7 @@
     mins.textContent = caseMinutes + ' min';
     mins.className = 'val' + (over > 0 ? ' over' : '');
 
-    document.getElementById('tech-val-cost').textContent = '$' + money(GT.state.techCost || 0);
+    document.getElementById('tech-val-cost').textContent = '$' + money(GT.tienda.dinero());
     document.getElementById('tech-val-score').textContent = GT.state.score;
     document.getElementById('tech-val-streak').textContent =
       GT.state.streak + ' · x' + GT.getMultiplier() + (GT.state.shieldLeft > 0 ? ' · ESCUDO' : '');
@@ -1370,6 +1386,15 @@
       GT.audio.error();
       logLine('✋ Primero tenés que "' + STEPS[st.req].label.toLowerCase() + '".', 'warn');
       GT.ui.toast('Paso bloqueado: ' + STEPS[st.req].label, 'warn');
+      return;
+    }
+
+    /* Los repuestos se compran antes en la tienda */
+    var repuesto = st.costo ? GT.tienda.repuestoDe(id) : null;
+    if (repuesto && !GT.tienda.hay(repuesto)) {
+      GT.audio.error();
+      logLine('✋ Te falta el repuesto: ' + GT.tienda.nombreDe(repuesto) + '. Comprálo en la tienda.', 'warn');
+      GT.ui.toast('Comprá en la tienda: ' + GT.tienda.nombreDe(repuesto), 'warn');
       return;
     }
 
@@ -1459,9 +1484,8 @@
     logLine('<b>› ' + st.label + '</b> <i>(' + st.min + ' min' +
             (st.costo ? ' · $' + money(st.costo) : '') + ')</i>', 'step');
 
-    if (st.costo) {
-      GT.state.techCost = (GT.state.techCost || 0) + st.costo;
-    }
+    /* El repuesto sale de la mochila y se gasta aunque no sirva */
+    if (st.costo) GT.tienda.usar(id);
 
     /* Abrir el gabinete no repara nada, pero destapa el equipo:
        hasta que no pasa esto, el interior no se puede tocar. */
@@ -1547,7 +1571,8 @@
       reasentar_ram: 'ram', cambiar_ram: 'ram', limpiar_contactos_ram: 'ram',
       reasentar_gpu: 'gpu', cambiar_gpu: 'gpu',
       cambiar_disco: 'disco', cambiar_fuente: 'fuente',
-      cambiar_pasta: 'cooler', cambiar_vent: 'cooler'
+      cambiar_pasta: 'cooler', cambiar_vent: 'cooler',
+      cambiar_pila: 'pila', reasentar_pila: 'pila'
     };
     if (sale[id]) GT.bench.pullPart(sale[id]);
   }
@@ -1798,6 +1823,10 @@
       ? 'Señalaste bien la pieza sobre el equipo (+120).'
       : 'Señalaste mal la pieza sobre el equipo (−60).');
 
+    var paga = cur.presupuesto * 1500;
+    GT.tienda.cobrar(paga);
+    resumen.push('El cliente paga $' + money(paga) + ' por el trabajo.');
+
     if (dataLost) resumen.push('Los datos del cliente se perdieron. Eso no se recupera con un descuento.');
 
     fb.innerHTML += '<ul class="td-sum"><li>' + resumen.join('</li><li>') + '</li></ul>' +
@@ -1870,6 +1899,10 @@
 
   /* Utilidades para el resumen final */
   tech.totalCases = CASES.length;
+
+  /* Lo que usa js/tech_ordenes.js para sumar órdenes sin tocar este archivo */
+  tech.STEPS = STEPS;
+  tech.FAULT_SCREEN = FAULT_SCREEN;
   tech.solved = function () { return GT.state.techSolved || 0; };
   tech.minutes = function () { return GT.state.techMinutes || 0; };
 

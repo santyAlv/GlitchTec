@@ -475,7 +475,7 @@ glitch-tec/
 │   ├── boss.js             # Nivel final (purge)
 │   ├── hacker.js           # GL1TCH-M4N: paseo, bloqueo de teclas, colores
 │   ├── bench3d.js          # Sketch p5 WEBGL: escritorio 3D (gabinete, monitor, herramientas)
-│   ├── tech.js             # Modo Servicio Técnico (8 órdenes de trabajo)
+│   ├── tech.js             # Modo Servicio Técnico (órdenes 1-9)
 │   ├── chatbot.js          # TEC-Bot: temas, buscador y pistas sin costo
 │   ├── api.js              # Cliente PHP / fallback local
 │   ├── auth.js             # Cuentas: registro, sesión e historial
