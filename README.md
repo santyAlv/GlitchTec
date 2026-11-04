@@ -134,6 +134,8 @@ y devuelve la lista de piezas que faltan dibujar.
 
 ### Modo 1 — PC Corrompida
 
+Antes de los cinco niveles hay un **tutorial** (nivel 0, "Primeros pasos"): un solo pop-up de práctica que no drena integridad, sin hacker, y objetivos para abrir la Terminal, escribir `help` y `objetivos`, abrir Mi PC y pedirle una pista a TEC-Bot. Con `saltar` en la Terminal se va directo al nivel 1.
+
 Son cinco niveles:
 
 | # | Nivel | Qué hay que hacer | Qué enseña |
@@ -174,6 +176,8 @@ Las piezas se ven: la tapa queda apoyada en la mesa, la RAM sale del zócalo, el
 tapa el disipador hasta que lo soplás, el sulfato deja su verdín sobre las pistas y el cable
 de video se ve pasar de un puerto al otro. Cada orden trae el equipo como lo dejó el cliente:
 con polvo, con sulfato o con humedad adentro.
+
+La primera orden es una **práctica guiada**: un recuadro GUÍA indica cada paso (preguntar, medir con el tester, abrir, comprar el repuesto en la tienda, reparar, probar y cerrar la orden). Se puede saltar con "Ya sé jugar: saltar la práctica".
 
 ### Las ocho órdenes de trabajo
 

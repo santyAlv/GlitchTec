@@ -35,6 +35,58 @@
      aca y el motor de abajo no se entera. */
   var DEFS = {
 
+    /* ---------------- NIVEL 0 · TUTORIAL ---------------- */
+    /* Un recorrido por el escritorio antes del ataque: no hay pop-ups en
+       serie ni hacker, y el único pop-up que aparece no drena integridad.
+       Cada objetivo lo marca el módulo de esa herramienta, igual que en los
+       demás niveles. Con  saltar  en la Terminal se pasa directo al nivel 1. */
+    0: {
+      name: 'Primeros pasos',
+      bonus: 100,
+      objectives: [
+        { id: 't_popup', text: 'Cerrar el pop-up sin aceptar lo que ofrece' },
+        { id: 't_term',  text: 'Abrir la Terminal (doble clic en su ícono)' },
+        { id: 't_help',  text: 'Escribir "help" en la Terminal' },
+        { id: 't_obj',   text: 'Escribir "objetivos" en la Terminal' },
+        { id: 't_pc',    text: 'Abrir "Mi PC" para ver tus archivos' },
+        { id: 't_bot',   text: 'Pedirle una pista a TEC-Bot' }
+      ],
+      intro: [
+        { friendly: true, who: 'SISTEMA',
+          text: 'Bienvenido a WinTEC 95. Antes de empezar, un recorrido corto para que sepas dónde está cada cosa.' },
+        { friendly: true, who: 'SISTEMA',
+          text: 'En el panel del costado, INTEGRIDAD es la salud del sistema: si llega a 0, perdés. ' +
+                'INFECCIÓN sube cuando el malware gana terreno.' },
+        { friendly: true, who: 'SISTEMA',
+          text: 'Debajo están los OBJETIVOS. Cada uno se marca solo cuando lo cumplís; con todos cumplidos, pasás de nivel.' },
+        { friendly: true, who: 'SISTEMA',
+          text: 'Las herramientas son los íconos del escritorio y se abren con doble clic.' },
+        { friendly: true, who: 'SISTEMA',
+          text: 'Ya apareció un pop-up. En el juego, cada uno abierto te baja la integridad: cerralo con la X ' +
+                'o con el botón que no acepta nada. Este es de práctica.' },
+        { friendly: true, who: 'SISTEMA',
+          text: 'Si ya sabés jugar, abrí la Terminal y escribí  saltar  para ir directo al ataque.' }
+      ],
+      outro: [
+        { friendly: true, who: 'SISTEMA',
+          text: 'Listo: ya sabés abrir herramientas, leer los objetivos, cerrar pop-ups y pedir ayuda.' },
+        { friendly: true, who: 'SISTEMA',
+          text: 'TEC-Bot da algunas pistas gratis por nivel. El comando  pista  de la Terminal también ayuda, pero cuesta puntos.' },
+        { friendly: true, who: 'SISTEMA',
+          text: 'Ahora empieza de verdad. Alguien acaba de abrir una foto que no debía...' }
+      ],
+      hint: function () {
+        var f = doneMap();
+        if (!f.t_popup) return 'Cerrá la ventana emergente con la X o con el botón que no acepta nada. Nunca aceptes lo que ofrece.';
+        if (!f.t_term)  return 'Hacé doble clic en el ícono Terminal del escritorio.';
+        if (!f.t_help)  return 'En la Terminal escribí  help  y presioná Enter.';
+        if (!f.t_obj)   return 'Escribí  objetivos  en la Terminal y presioná Enter.';
+        if (!f.t_pc)    return 'Hacé doble clic en el ícono "Mi PC".';
+        if (!f.t_bot)   return 'Abrí TEC-Bot y tocá "Dame una pista", o escribile  pista .';
+        return 'Ya completaste el tutorial.';
+      }
+    },
+
     /* ---------------- NIVEL 1 ---------------- */
     1: {
       name: 'Reconocimiento',
@@ -207,7 +259,7 @@
   /* Cuantos niveles hay y cual es el de la purga, calculados de la tabla:
      el HUD, la Terminal y las herramientas de mantenimiento preguntan aca en
      vez de tener un "4" escrito cada uno por su lado. */
-  levels.COUNT = Object.keys(DEFS).length;
+  levels.COUNT = Object.keys(DEFS).filter(function (k) { return k > 0; }).length;   // el 0 es el tutorial
   levels.PURGE_LEVEL = levels.COUNT;
   levels.RANSOM_LEVEL = 4;
 
@@ -268,10 +320,17 @@
     if (n === levels.RANSOM_LEVEL) GT.ransom.start();
     else GT.ransom.stop();
 
+    /* Tutorial: un solo pop-up de práctica, sin la tanda automática */
+    if (n === 0) GT.popups.spawn(0);
+
     GT.ui.say(def.intro, function () {
       if (n === 1) {
         GT.popups.start();
         GT.terminal.open();
+        /* El hacker entra en escena unos segundos después del diálogo */
+        setTimeout(function () {
+          if (GT.state.running && !GT.state.finished && GT.state.mode === 'virus') GT.hacker.start();
+        }, 9000);
       }
       // El reloj del rescate arranca cuando el jugador ya leyo de que se trata
       if (n === levels.RANSOM_LEVEL) GT.ransom.arm();
@@ -434,6 +493,16 @@
     if (o) { o.done = true; o.count = o.total; }
     levels.renderObjectives('purge_boss');
     GT.emit('victory');
+  };
+
+  /** Comando  saltar : sale del tutorial directo al nivel 1. */
+  levels.skipTutorial = function () {
+    if (GT.state.level !== 0 || GT.state.finished) return false;
+    advancing = true;
+    GT.ui.hideDialog();
+    GT.popups.clearAll();
+    levels.start(1);
+    return true;
   };
 
   levels.reset = function () { advancing = false; };

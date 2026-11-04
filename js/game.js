@@ -268,12 +268,7 @@
 
       // Los pop-ups arrancan después del diálogo introductorio (ver levels.start)
       startLoop();
-      GT.levels.start(1);
-
-      // El hacker entra en escena unos segundos después del diálogo
-      setTimeout(function () {
-        if (GT.state.running && !GT.state.finished && GT.state.mode === 'virus') GT.hacker.start();
-      }, 9000);
+      GT.levels.start(0);         // tutorial; el hacker entra en el nivel 1 (ver levels.start)
     });
   };
 
@@ -353,7 +348,8 @@
 
     var def = GT.levels.DEFS[s.level];
 
-    document.getElementById('hud-level').textContent = 'NIVEL ' + s.level + ' / ' + GT.levels.COUNT;
+    document.getElementById('hud-level').textContent =
+      s.level === 0 ? 'TUTORIAL' : 'NIVEL ' + s.level + ' / ' + GT.levels.COUNT;
     /* En el nivel del ransomware el nombre lleva pegado el reloj del rescate:
        es lo que apura al jugador y tiene que estar siempre a la vista, aunque
        haya cerrado la nota. */

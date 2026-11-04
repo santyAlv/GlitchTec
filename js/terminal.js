@@ -168,6 +168,7 @@
       print('');
       print('Tip: usa las flechas ARRIBA/ABAJO para repetir comandos.', 'dim');
       GT.levels.complete('l1_help');
+      GT.levels.complete('t_help');
     }
   };
   /* ALIAS: las tres claves apuntan al MISMO objeto en memoria, no a copias.
@@ -780,6 +781,15 @@
         print('  ' + mark + ' ' + o.text + extra, o.done ? 'ok' : '');
       });
       print('');
+      GT.levels.complete('t_obj');
+    }
+  };
+
+  /* ---------- saltar ---------- */
+  COMMANDS.saltar = {
+    desc: 'Saltea el tutorial.',
+    run: function () {
+      if (!GT.levels.skipTutorial()) print('saltar: sólo sirve durante el tutorial.', 'dim');
     }
   };
   COMMANDS.obj = COMMANDS.objetivos;
@@ -911,6 +921,7 @@
      Ventana
      ============================================================ */
   term.open = function () {
+    GT.levels.complete('t_term');
     if (GT.ui.isOpen(WIN_ID)) { GT.ui.focusWindow(WIN_ID); focusInput(); return; }
 
     var body = document.createElement('div');

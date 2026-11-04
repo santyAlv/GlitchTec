@@ -49,6 +49,7 @@
   }
 
   exp.open = function (startPath) {
+    GT.levels.complete('t_pc');
     if (startPath) path = startPath.slice();
 
     if (GT.ui.isOpen(WIN_ID)) { GT.ui.focusWindow(WIN_ID); exp.refresh(); return; }
