@@ -373,6 +373,7 @@
     s.used++;
     s.total++;
     if (GT.api) GT.api.logEvent('bot_hint', { level: GT.state.level, mode: GT.state.mode });
+    GT.levels.complete('t_bot');
     return { type: 'hint', ok: true, title: 'Pista (sin costo)', text: hint, left: bot.hintsLeft() };
   }
 

@@ -514,6 +514,79 @@
      los sintomas (ver currentSymptom). */
   var CASES = [
 
+    /* ---------------- ORDEN DE PRÁCTICA (tutorial) ---------------- */
+    /* La primera orden es guiada. Además de los campos de siempre trae:
+         explica  líneas que se escriben en la bitácora al empezar
+         guia     los pasos en orden; el recuadro GUÍA muestra el primero
+                  que falte (ver renderGuia). Cada entrada es una de:
+                    { paso: id }              hasta que se ejecuta ese paso
+                    { compra: rep, usa: id }  hasta tener el repuesto o usarlo
+                    { probar: true }          mientras se sigue trabajando
+                    { cerrar: true }          durante el cierre de la orden */
+    {
+      id: 'c0',
+      titulo: 'Orden de práctica',
+      cliente: 'Profe Ibáñez — Taller de la escuela',
+      equipo: 'WinTEC Tower 2000 de práctica',
+      relato: '"Es tu primer día en el taller. Esta PC se apaga sola cuando la exigen. La arreglamos ' +
+              'juntos, paso a paso, y después ya trabajás solo."',
+      antecedente: 'PRÁCTICA GUIADA: seguí el recuadro GUÍA de la orden de trabajo.',
+      explica: [
+        'Arriba ves TIEMPO DE TALLER (contra el presupuesto de la orden), TU PLATA para repuestos y la ' +
+          'REPUTACIÓN del taller: si llega a 0, se termina la partida.',
+        'Abajo del banco elegís una ZONA del equipo. Ahí aparecen las INSPECCIONES (mirar, no cuesta plata) ' +
+          'y las ACCIONES (meter mano). Algunas piden una herramienta en la mano.',
+        'Regla del taller: diagnosticar antes de cambiar. Cambiar una pieza sana cuesta plata y reputación.'
+      ],
+      presupuesto: 60,
+      fallas: ['pasta'],
+      pieza: 'cooler',
+      sintomas: {
+        pasta: 'En reposo anda bien. Con carga el procesador trepa a 97 °C y el equipo se apaga solo.'
+      },
+      exito: 'Con pasta nueva el procesador se queda en 60 °C con carga y el equipo no se apaga más.',
+      pasos: ['preguntar', 'medir_temp', 'abrir', 'ver_disipador', 'ver_pasta', 'limpiar_polvo', 'cambiar_pasta'],
+      guia: [
+        { paso: 'preguntar',
+          texto: 'Empezá por la zona CLIENTE, abajo del banco, y tocá "Preguntarle al cliente cuándo y cómo falla". ' +
+                 'Preguntar es gratis y siempre da pistas.' },
+        { paso: 'medir_temp',
+          texto: 'Agarrá el TESTER (tocalo sobre la mesa o en la fila de HERRAMIENTAS), elegí la zona CPU Y ' +
+                 'DISIPADOR y tocá "Medir temperaturas con carga".' },
+        { paso: 'abrir',
+          texto: 'Para mirar adentro hay que abrir el gabinete: agarrá el DESTORNILLADOR, elegí PLACA MADRE y ' +
+                 'tocá "Abrir el gabinete".' },
+        { paso: 'ver_pasta',
+          texto: 'Con el destornillador en la mano, en CPU Y DISIPADOR tocá "Sacar el disipador y mirar la ' +
+                 'pasta térmica".' },
+        { compra: 'pasta', usa: 'cambiar_pasta',
+          texto: 'Ya sabés qué falla. Abrí la 🛒 TIENDA y comprá PASTA TÉRMICA: los repuestos salen de tu plata, ' +
+                 'así que se compra sólo lo que el diagnóstico pide.' },
+        { paso: 'cambiar_pasta',
+          texto: 'Agarrá la PASTA TÉRMICA de la mesa y, en CPU Y DISIPADOR, tocá "Cambiar la pasta térmica ' +
+                 'del procesador".' },
+        { probar: true,
+          texto: 'Reparado. Tocá ⏻ ENCENDER Y PROBAR y mirá el monitor: ahí se ve si el equipo quedó bien.' },
+        { cerrar: true,
+          texto: 'Anda. Para cerrar la orden, señalá la pieza que falló (tocá CPU Y DISIPADOR en el equipo o en ' +
+                 'la lista) y después elegí la causa correcta.' }
+      ],
+      diagnostico: {
+        pregunta: '¿Por qué se apagaba la PC de práctica?',
+        opciones: [
+          'La pasta térmica estaba seca y el procesador se recalentaba',
+          'La fuente no tenía potencia',
+          'Le faltaba memoria RAM',
+          'El sistema operativo estaba dañado'
+        ],
+        correcta: 0,
+        porque: 'El tester mostró <b>97 °C con carga</b> y la pasta estaba seca: el calor del procesador no ' +
+                'pasaba al disipador y el equipo se apagaba para protegerse. Así se trabaja en el taller: ' +
+                '<b>inspeccionar, encontrar la falla, comprar sólo el repuesto que hace falta, reparar y probar</b>.'
+      },
+      leccion: 'El método del taller: preguntar, inspeccionar, reparar lo que encontraste y probar antes de entregar.'
+    },
+
     /* ---------------- CASO 1 ---------------- */
     {
       id: 'c1',
@@ -1089,6 +1162,7 @@
     logLine('Cliente: ' + cur.cliente, 'dim');
     logLine('Síntoma declarado: ' + currentSymptom(), 'sym');
     if (cur.antecedente) logLine(cur.antecedente, 'warn');
+    if (cur.explica) cur.explica.forEach(function (t) { logLine(t, 'dim'); });
     logLine('Empezá inspeccionando. Cada revisión consume minutos de taller.', 'dim');
 
     /* El cliente deja un anticipo para repuestos; los repuestos se compran en la tienda */
@@ -1134,8 +1208,10 @@
       '<p class="tk-relato">' + GT.escapeHtml(cur.relato) + '</p>' +
       '<h4>LO QUE SE VE EN EL EQUIPO</h4>' +
       '<p class="tk-sintoma" id="tech-sintoma">' + GT.escapeHtml(currentSymptom()) + '</p>' +
+      (cur.guia ? '<div class="tk-guia" id="tech-guia" aria-live="polite"></div>' : '') +
       '<p class="tk-tip">Regla del taller: <b>diagnosticar antes de cambiar</b>. ' +
          'Cada repuesto que ponés sin motivo sale del bolsillo del cliente.</p>';
+    guiaPrev = null;
 
     document.getElementById('tech-log').innerHTML = '';
     document.getElementById('tech-actions').innerHTML = '';
@@ -1297,10 +1373,49 @@
 
   function money(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
 
+  /* ============================================================
+     Guía de la orden de práctica
+     El recuadro muestra el primer paso de "guia" que todavía no se
+     cumplió. Se recalcula con el HUD, así sigue al jugador sin que
+     cada acción tenga que avisarle; sólo se redibuja si cambió.
+     ============================================================ */
+  var guiaPrev = null;
+
+  function guiaTexto() {
+    for (var i = 0; i < cur.guia.length; i++) {
+      var g = cur.guia[i];
+      if (g.paso && !doneSteps[g.paso]) return g.texto;
+      if (g.compra && !doneSteps[g.usa] && !GT.tienda.hay(g.compra)) return g.texto;
+      if (g.probar && phase === 'trabajo') return g.texto;
+      if (g.cerrar && phase === 'diagnostico') return g.texto;
+    }
+    return null;
+  }
+
+  function renderGuia() {
+    var box = document.getElementById('tech-guia');
+    if (!box || !cur || !cur.guia) return;
+    var txt = guiaTexto();
+    if (txt === guiaPrev) return;
+    guiaPrev = txt;
+
+    if (!txt) {
+      box.innerHTML = '<h4>GUÍA</h4><p>Práctica terminada. Desde la próxima orden trabajás solo; ' +
+                      'si te trabás, TEC-Bot te da pistas.</p>';
+      return;
+    }
+    box.innerHTML = '<h4>GUÍA</h4><p>' + GT.escapeHtml(txt) + '</p>' +
+                    '<button type="button" class="tk-guia-saltar">Ya sé jugar: saltar la práctica</button>';
+    box.querySelector('.tk-guia-saltar').addEventListener('click', function () {
+      if (caseIdx === 0 && phase !== 'cerrado') loadCase(1);
+    });
+  }
+
   function renderHud() {
     var rep = Math.max(0, Math.round(GT.state.integrity));
     var bar = document.getElementById('tech-bar-rep');
     if (!bar) return;
+    renderGuia();
 
     bar.style.width = rep + '%';
     bar.parentNode.classList.toggle('crit', rep <= 25);

@@ -191,6 +191,7 @@
 
   function dismiss(entry) {
     removePopup(entry, true);
+    GT.levels.complete('t_popup');
     GT.addScore(10, 'pop-up cerrado');
     GT.audio.close();
     if (entry.tpl.lesson && Math.random() < 0.55) {
@@ -216,7 +217,9 @@
     GT.terminal.notify('[GLITCH] Hiciste click. Siempre hacen click.', 'evil');
 
     // Aceptar la trampa invoca mas ventanas
-    setTimeout(function () { if (running) pop.spawn(); }, 700);
+    /* En el tutorial la tanda está apagada, pero igual vuelve uno: así se
+       ve el castigo y queda otro para cerrar bien. */
+    setTimeout(function () { if (running || GT.state.level === 0) pop.spawn(); }, 700);
     GT.emit('hud');
   }
 
