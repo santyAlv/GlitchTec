@@ -2,14 +2,23 @@
 /**
  * Glitch.TEC — conexión a MySQL / MariaDB
  * Ajustá usuario, clave y nombre de BD según tu XAMPP/WAMP.
+ * En el hosting van en config.local.php, que no está en git
+ * (copiá config.local.example.php).
  */
 declare(strict_types=1);
 
-const DB_HOST = '127.0.0.1';
-const DB_NAME = 'glitchtec';
-const DB_USER = 'root';
-const DB_PASS = '';          // XAMPP por defecto: vacío
-const DB_CHARSET = 'utf8mb4';
+if (is_file(__DIR__ . '/config.local.php')) {
+    require __DIR__ . '/config.local.php';
+}
+
+/* define() y no const: const no se puede declarar adentro de un if, y acá
+   cada valor se define sólo si config.local.php no lo definió antes. */
+defined('DB_HOST')     || define('DB_HOST', '127.0.0.1');
+defined('DB_NAME')     || define('DB_NAME', 'glitchtec');
+defined('DB_USER')     || define('DB_USER', 'root');
+defined('DB_PASS')     || define('DB_PASS', '');          // XAMPP por defecto: vacío
+defined('DB_CHARSET')  || define('DB_CHARSET', 'utf8mb4');
+defined('CORS_ORIGIN') || define('CORS_ORIGIN', '*');    // en producción, el dominio propio
 
 /**
  * Devuelve LA conexion a la base (patron singleton hecho a mano).
@@ -57,14 +66,14 @@ function db(): PDO
  * Los headers Access-Control-Allow-* son CORS: el permiso que el navegador le
  * pide al servidor para dejar que una pagina de un origen consulte a otro.
  * Los necesito porque el juego se puede abrir desde file:// o desde otro
- * puerto. El '*' acepta cualquier origen: para un TP local esta bien, pero si
- * esto saliera a produccion habria que limitarlo al dominio propio.
+ * puerto. El '*' acepta cualquier origen: sirve para un TP local; en el
+ * hosting, config.local.php lo limita al dominio propio (CORS_ORIGIN).
  */
 function json_out(array $data, int $code = 200): void
 {
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
-    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Origin: ' . CORS_ORIGIN);
     header('Access-Control-Allow-Headers: Content-Type');
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
