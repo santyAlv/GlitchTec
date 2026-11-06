@@ -17,7 +17,8 @@ if [ "${1:-}" = "sql" ]; then
 fi
 
 [ -f tools/desplegar.env ] || { echo "Falta tools/desplegar.env (copiá desplegar.env.example)"; exit 1; }
-. tools/desplegar.env
+# tr: si el .env se editó en Windows, cada valor terminaría con \r
+. <(tr -d '\r' < tools/desplegar.env)
 SSH="ssh -i ${SSH_CLAVE/#\~/$HOME} -p $SSH_PUERTO $SSH_DESTINO"
 
 [ -z "$(git status --porcelain -- . ':!.agentes')" ] ||
