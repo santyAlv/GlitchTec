@@ -84,12 +84,11 @@ Así está publicado hoy, en el VPS de HostGator (`69.6.206.117`, SSH en el
 puerto 22022) donde ya corren n8n y otros sitios detrás de Traefik.
 
 - `/opt/glitchtec` tiene `tools/vps/Dockerfile` (PHP 8.3 + Apache con
-  `pdo_mysql`), `tools/vps/docker-compose.yml` y `sql/schema.sql`. El compose
-  levanta el juego y un MariaDB propio. Traefik lo publica con HTTPS de Let's
-  Encrypt en cuanto el dominio apunta al VPS.
-- `/opt/glitchtec/.env` (600) tiene las claves de la base, generadas en el
-  servidor con `openssl rand`. `sitio/api/config.local.php` se generó a partir
-  de ese archivo; no hay copia local.
+  `pdo_mysql` y `pdo_pgsql`) y `tools/vps/docker-compose.yml`, que levanta sólo
+  la web: la base está en Supabase (ver abajo). Traefik lo publica con HTTPS de
+  Let's Encrypt en cuanto el dominio apunta al VPS.
+- `sitio/api/config.local.php` (640, no está en git ni hay copia local) tiene
+  los datos de conexión; lo escribe `tools/vps/usar_supabase.sh`.
 - `tools/desplegar.env` apunta a `root@69.6.206.117`, puerto 22022, con
   `CARPETA=/opt/glitchtec/sitio`. Para actualizar el juego basta con correr
   `tools/desplegar.sh`: Apache sirve la carpeta directo, sin reiniciar nada.
@@ -99,7 +98,7 @@ puerto 22022) donde ya corren n8n y otros sitios detrás de Traefik.
 
 ## La base en Supabase
 
-La API funciona con MySQL (XAMPP, MariaDB del VPS) y con Postgres. En
+La API funciona con MySQL (XAMPP) y con Postgres. En
 producción la base vive en Supabase, proyecto `klltsnmcdjwnibylespr`
 (`us-east-1`):
 
@@ -117,8 +116,11 @@ producción la base vive en Supabase, proyecto `klltsnmcdjwnibylespr`
    ```
 
    El script (`tools/vps/usar_supabase.sh`) la pide sin mostrarla, prueba la
-   conexión y sólo si anda reemplaza `config.local.php`. Para volver a MariaDB:
-   `cp /opt/glitchtec/config.local.mariadb.php /opt/glitchtec/sitio/api/config.local.php`.
+   conexión y sólo si anda reemplaza `config.local.php`.
+
+La MariaDB que el VPS usó al principio está apagada. Su volumen
+(`glitchtec_glitchtec_db`, sólo datos de prueba) quedó por si hiciera falta;
+para borrarlo: `docker volume rm glitchtec_glitchtec_db`.
 
 No hacen falta las claves anon ni service_role: el juego no usa la API REST.
 
