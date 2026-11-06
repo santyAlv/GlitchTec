@@ -70,7 +70,7 @@ try {
             $upd = db()->prepare(
                 'UPDATE usuarios
                  SET intentos_fallidos = 0,
-                     bloqueado_hasta = DATE_ADD(NOW(), INTERVAL ' . LOGIN_BLOQUEO_MIN . ' MINUTE)
+                     bloqueado_hasta = NOW() + INTERVAL \'' . (int)LOGIN_BLOQUEO_MIN . '\' MINUTE
                  WHERE id = :id'
             );
             $upd->execute([':id' => $uid]);

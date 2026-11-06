@@ -13,7 +13,9 @@ if (is_file(__DIR__ . '/config.local.php')) {
 
 /* define() y no const: const no se puede declarar adentro de un if, y acá
    cada valor se define sólo si config.local.php no lo definió antes. */
+defined('DB_DRIVER')   || define('DB_DRIVER', 'mysql');     // 'pgsql' para Supabase
 defined('DB_HOST')     || define('DB_HOST', '127.0.0.1');
+defined('DB_PORT')     || define('DB_PORT', DB_DRIVER === 'pgsql' ? 5432 : 3306);
 defined('DB_NAME')     || define('DB_NAME', 'glitchtec');
 defined('DB_USER')     || define('DB_USER', 'root');
 defined('DB_PASS')     || define('DB_PASS', '');          // XAMPP por defecto: vacío
@@ -49,7 +51,10 @@ function db(): PDO
     }
 
     // DSN = "Data Source Name": la cadena que describe a que base me conecto
-    $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
+    /* Postgres no lleva charset en el DSN (usa UTF-8) y Supabase exige SSL */
+    $dsn = DB_DRIVER === 'pgsql'
+        ? 'pgsql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';sslmode=require'
+        : 'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
     $pdo = new PDO($dsn, DB_USER, DB_PASS, [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
