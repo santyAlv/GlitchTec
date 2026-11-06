@@ -86,20 +86,21 @@
       Esta funcioncita es la que hace que el juego se ponga cada vez mas
       agobiante sin que yo tenga que scriptear nada:
 
-        base = 17 - (inf/100)*9   con 0% de infeccion sale un pop-up cada 17s,
-                                  con 100% cada 8s.
-        lvl  = 1.2s menos por cada nivel superado (el -1 es porque el nivel 1
-               todavia no tiene que descontar nada).
-        Math.max(6, ...) es el piso: nunca menos de 6 segundos, porque abajo de
+        base = de POPUP_EVERY_MAX (26s) con 0% de infeccion a POPUP_EVERY_MIN
+               (13s) con 100%.
+        lvl  = POPUP_LEVEL_FASTER (0.8s) menos por cada nivel superado (el -1
+               es porque el nivel 1 todavia no tiene que descontar nada).
+        Math.max(POPUP_EVERY_FLOOR, ...) es el piso: nunca menos de 9 segundos, porque abajo de
         eso el juego deja de ser dificil y pasa a ser injugable.
 
       Es un BUCLE DE REALIMENTACION: mas pop-ups abiertos -> mas dano -> mas
       infeccion -> aparecen mas seguido. Por eso el piso no es opcional. */
   function interval() {
+    var C = GT.CONFIG;
     var inf = GT.getInfection();
-    var base = 17 - (inf / 100) * 9;             // de 17s a 8s
-    var lvl = Math.max(0, GT.state.level - 1) * 1.2;
-    return Math.max(6, base - lvl);
+    var base = C.POPUP_EVERY_MAX - (inf / 100) * (C.POPUP_EVERY_MAX - C.POPUP_EVERY_MIN);
+    var lvl = Math.max(0, GT.state.level - 1) * C.POPUP_LEVEL_FASTER;
+    return Math.max(C.POPUP_EVERY_FLOOR, base - lvl);
   }
 
   pop.tick = function (dt) {
