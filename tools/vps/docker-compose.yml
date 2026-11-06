@@ -19,6 +19,7 @@ services:
       - traefik.http.routers.glitchtec-http.middlewares=glitchtec-https
       - traefik.http.routers.glitchtec.entrypoints=websecure
       - traefik.http.routers.glitchtec.rule=Host(`glitchtec.dpdns.org`)
+      - traefik.http.routers.glitchtec.tls=true
       - traefik.http.routers.glitchtec.tls.certresolver=le
       - traefik.http.services.glitchtec.loadbalancer.server.port=80
 
