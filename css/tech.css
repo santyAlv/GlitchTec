@@ -565,6 +565,48 @@
 @media (max-width: 620px) {
   .rig-views { margin-left: 0; }
   .rig-power, .rig-turn { flex: 1; }
+
+  /* La cabecera ocupaba 340px fijos y al banco le quedaba media pantalla.
+     Acá scrollea la pantalla entera (la cabecera se va para arriba) y los
+     indicadores van en una grilla de tres. */
+  #screen-tech.is-active { overflow-y: auto; }
+  .tech-main { flex: 0 0 auto; grid-template-columns: minmax(0, 1fr); }
+  .tech-col { overflow: visible; min-width: 0; }
+  .tech-top { gap: 6px; padding: 6px; }
+  .tech-brand { border-right: 0; box-shadow: none; padding: 0; }
+  .tech-metrics {
+    margin-left: 0;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .tech-metric, .tech-metric.rep { min-width: 0; }
+  .tech-metric label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tech-metric .val { font-size: 12px; }
+
+  /* Botones con tamaño de dedo */
+  .rig-turn, .rig-power, .view-btn, .tool-btn, .zone-tab, .tech-test, .td-opt { min-height: 40px; }
+  .rig-views { flex-wrap: wrap; }
+  .view-btn { flex: 1; }
+  .tech-btns { grid-template-columns: 1fr; }
+  .tech-btn { min-height: 44px; }
+  .tech-foot { padding: 4px; gap: 6px; }
+  .tech-foot span { font-size: 10.5px; }
+  .tech-foot button { min-width: 0; min-height: 40px; }
+
+  /* Ficha técnica, tienda y soldadura cuelgan de #screen-tech: como ahora la
+     pantalla scrollea, se fijan a la ventana para que aparezcan donde se mira. */
+  #screen-tech .detalle, #screen-tech .sold { position: fixed; padding: 8px; }
+}
+
+/* Celular apaisado: con cabecera y pie fijos al banco le quedaban 200px.
+   Scrollea la pantalla entera, igual que en vertical. */
+@media (max-height: 500px) and (max-width: 940px) {
+  #screen-tech.is-active { overflow-y: auto; }
+  .tech-main { flex: 0 0 auto; grid-template-columns: minmax(0, 1fr); }
+  .tech-col { overflow: visible; min-width: 0; }
+  #screen-tech .detalle, #screen-tech .sold { position: fixed; padding: 8px; }
 }
 
 /* Recuadro de la orden de práctica: el globo amarillo de ayuda de WinTEC 95 */

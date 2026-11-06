@@ -531,3 +531,16 @@
 @media (max-width: 760px) {
   .modes-grid { grid-template-columns: 1fr; }
 }
+
+/* Celular: filtros del ranking con tamaño de dedo, y la tabla deja sólo
+   posición, jugador, modo y puntaje (racha, tiempo y fecha la obligaban
+   a scrollear de costado). */
+@media (max-width: 620px) {
+  .rk-btn { min-height: 40px; }
+  .rk-table th:nth-child(n+5),
+  .rk-table td:nth-child(n+5) { display: none; }
+  .rk-table { font-size: 11px; }
+  .rk-table th, .rk-table td { padding-left: 5px; padding-right: 5px; }
+  .rk-table td:nth-child(2) { max-width: 104px; overflow: hidden; text-overflow: ellipsis; }
+  .doc-actions .menu-btn { min-width: 0; flex: 1 1 140px; }
+}

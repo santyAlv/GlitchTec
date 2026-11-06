@@ -119,3 +119,13 @@
 @media (max-width: 520px) {
   .sold-intro { font-size: 11px; padding: 10px 12px; gap: 5px; overflow: auto; justify-content: flex-start; }
 }
+
+/* Celular: la cruz de cerrar con tamaño de dedo */
+@media (max-width: 620px) {
+  .sold-bar { height: 34px; }
+  /* El canvas en el celular mide unos 180px de alto: la intro y el
+     resultado encima quedaban cortados con el botón afuera. Van arriba
+     del canvas, en el flujo. */
+  .sold-intro, .sold-result { position: static; overflow: visible; padding: 12px; }
+  .sold-x { width: 32px; height: 28px; }
+}
