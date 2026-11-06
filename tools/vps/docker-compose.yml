@@ -1,0 +1,28 @@
+# Glitch.TEC en el VPS, detrás del Traefik que ya publica n8n.
+# La base está en Supabase (ver tools/LEEME_despliegue.md): acá corre sólo la web.
+# Los archivos del juego van en /opt/glitchtec/sitio (los sube tools/desplegar.sh).
+services:
+  glitchtec:
+    build: .
+    container_name: glitchtec
+    restart: unless-stopped
+    volumes:
+      - ./sitio:/var/www/html:ro
+    networks: [web]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=n8n-traefik_app_network
+      - traefik.http.middlewares.glitchtec-https.redirectscheme.scheme=https
+      - traefik.http.routers.glitchtec-http.entrypoints=web
+      - traefik.http.routers.glitchtec-http.rule=Host(`glitchtec.dpdns.org`)
+      - traefik.http.routers.glitchtec-http.middlewares=glitchtec-https
+      - traefik.http.routers.glitchtec.entrypoints=websecure
+      - traefik.http.routers.glitchtec.rule=Host(`glitchtec.dpdns.org`)
+      - traefik.http.routers.glitchtec.tls=true
+      - traefik.http.routers.glitchtec.tls.certresolver=le
+      - traefik.http.services.glitchtec.loadbalancer.server.port=80
+
+networks:
+  web:
+    external: true
+    name: n8n-traefik_app_network

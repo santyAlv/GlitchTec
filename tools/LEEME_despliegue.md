@@ -1,0 +1,131 @@
+# Publicar Glitch.TEC en HostGator con un dominio gratis
+
+El juego queda en `https://glitchtec.dpdns.org`: el dominio es gratis
+(DigitalPlat FreeDomain) y el hosting es el plan de HostGator con cPanel.
+Necesita PHP 8 y MySQL para las cuentas y el ranking; el resto es estático.
+
+Lo que pide cuentas o contraseñas (pasos 1 a 4) lo hacés vos desde el
+navegador. Lo demás lo hace `tools/desplegar.sh`.
+
+## 1. Pedir el dominio en DigitalPlat
+
+1. Entrá a <https://dash.domain.digitalplat.org/> y creá la cuenta con datos
+   reales (nombre, mail, teléfono y dirección). Es un dominio por cuenta.
+2. Registrá `glitchtec.dpdns.org`.
+3. En **Nameservers** cargá los dos de tu cuenta de HostGator, tal cual
+   aparecen en el mail de bienvenida o en el cPanel (*Información general*).
+   Son nombres de servidor, no direcciones IP. DigitalPlat no tiene editor de
+   registros DNS: desde acá en adelante el DNS lo maneja HostGator.
+
+## 2. Agregar el dominio en el cPanel
+
+*Dominios → Crear un dominio nuevo*: `glitchtec.dpdns.org`, con la carpeta
+que propone (`glitchtec.dpdns.org`). Esa carpeta es la que va en `CARPETA`.
+
+## 3. Crear la base de datos
+
+1. *Bases de datos MySQL*: creá la base `glitchtec` y un usuario con una
+   clave nueva. Asignale el usuario a la base con **todos los privilegios**.
+   El cPanel les agrega tu usuario adelante (`usuariocpanel_glitchtec`).
+2. Generá el SQL para importar (sin `CREATE DATABASE` ni `USE`, que en un
+   hosting compartido fallan):
+
+   ```bash
+   tools/desplegar.sh sql > glitchtec.sql
+   ```
+
+3. *phpMyAdmin*: elegí la base y, en **Importar**, subí `glitchtec.sql`.
+
+## 4. Autorizar la clave SSH
+
+La clave del despliegue está en `~/.ssh/glitchtec_hostgator` (la privada no
+sale de tu PC). En *Seguridad → Acceso SSH → Administrar claves SSH →
+Importar clave*, pegá el contenido de `~/.ssh/glitchtec_hostgator.pub` y
+después tocá **Autorizar**. Si el plan no tiene SSH habilitado, se pide por
+chat al soporte de HostGator.
+
+## 5. Completar los dos archivos locales
+
+Ninguno de los dos va a git:
+
+- `api/config.local.php`: copiá `api/config.local.example.php` y poné la base,
+  el usuario y la clave del paso 3.
+- `tools/desplegar.env`: copiá `tools/desplegar.env.example` y poné tu usuario
+  de cPanel, el servidor y la carpeta del paso 2.
+
+## 6. Subir
+
+```bash
+tools/desplegar.sh
+```
+
+Sube lo que está commiteado (sin `tools`, `mando_android`, `capturas`, `sql`
+ni los `.md`) y `api/config.local.php` con permisos 600. Para actualizar el
+sitio, commiteá y volvé a correrlo.
+
+## 7. HTTPS y verificación
+
+1. Los nameservers tardan de minutos a horas en propagarse:
+
+   ```bash
+   nslookup -type=NS glitchtec.dpdns.org
+   ```
+
+   tiene que responder los dos nameservers de HostGator.
+2. *SSL/TLS Status → Run AutoSSL* para emitir el certificado.
+3. Con el certificado emitido, descomentá las tres líneas de HTTPS en
+   `.htaccess`, commiteá y volvé a subir.
+4. `https://glitchtec.dpdns.org/api/ping.php` tiene que responder
+   `"ok":true,"db":true`. Si `db` da `false`, revisá `api/config.local.php`.
+
+## Alternativa: el VPS con Docker y Traefik
+
+Así está publicado hoy, en el VPS de HostGator (`69.6.206.117`, SSH en el
+puerto 22022) donde ya corren n8n y otros sitios detrás de Traefik.
+
+- `/opt/glitchtec` tiene `tools/vps/Dockerfile` (PHP 8.3 + Apache con
+  `pdo_mysql` y `pdo_pgsql`) y `tools/vps/docker-compose.yml`, que levanta sólo
+  la web: la base está en Supabase (ver abajo). Traefik lo publica con HTTPS de
+  Let's Encrypt en cuanto el dominio apunta al VPS.
+- `sitio/api/config.local.php` (640, no está en git ni hay copia local) tiene
+  los datos de conexión; lo escribe `tools/vps/usar_supabase.sh`.
+- `tools/desplegar.env` apunta a `root@69.6.206.117`, puerto 22022, con
+  `CARPETA=/opt/glitchtec/sitio`. Para actualizar el juego basta con correr
+  `tools/desplegar.sh`: Apache sirve la carpeta directo, sin reiniciar nada.
+- DNS: `glitchtec.dpdns.org` necesita un registro A a `69.6.206.117` en un DNS
+  externo (por ejemplo Cloudflare, con la nube en gris para que Traefik pueda
+  emitir el certificado), y esos nameservers cargados en DigitalPlat.
+
+## La base en Supabase
+
+La API funciona con MySQL (XAMPP) y con Postgres. En
+producción la base vive en Supabase, proyecto `klltsnmcdjwnibylespr`
+(`us-east-1`):
+
+1. El esquema es `sql/schema_postgres.sql`, ejecutado una vez en el SQL Editor.
+   Las cuatro tablas tienen RLS activo y sin políticas: la API REST de Supabase
+   (clave anon) no puede leerlas, y el PHP entra con el rol dueño.
+2. El VPS sólo tiene IPv4, así que se conecta por el **Session pooler**:
+   `aws-0-us-east-1.pooler.supabase.com:5432`, usuario
+   `postgres.klltsnmcdjwnibylespr`, base `postgres`, con SSL.
+3. La contraseña no está en el repo ni la muestra Supabase. Se pone en
+   *Project Settings → Database → Reset database password* y después, en el VPS:
+
+   ```bash
+   bash /opt/glitchtec/usar_supabase.sh
+   ```
+
+   El script (`tools/vps/usar_supabase.sh`) la pide sin mostrarla, prueba la
+   conexión y sólo si anda reemplaza `config.local.php`.
+
+La MariaDB que el VPS usó al principio está apagada. Su volumen
+(`glitchtec_glitchtec_db`, sólo datos de prueba) quedó por si hiciera falta;
+para borrarlo: `docker volume rm glitchtec_glitchtec_db`.
+
+No hacen falta las claves anon ni service_role: el juego no usa la API REST.
+
+## Qué no funciona en el hosting
+
+El relay del mando (`tools/mando_server`) es Node con WebSocket y un hosting
+compartido no lo corre: el juego anda igual y el panel del QR avisa que el
+relay no está encendido.
