@@ -35,6 +35,6 @@ if [ -f api/config.local.php ]; then
   $SSH "cat > '$CARPETA/api/config.local.php' && chmod 600 '$CARPETA/api/config.local.php'" < api/config.local.php
   echo "Subí api/config.local.php (permisos 600)."
 else
-  echo "No hay api/config.local.php: la API va a intentar conectarse con los datos de XAMPP."
+  echo "No hay api/config.local.php local: queda el que ya esté en el servidor (sin ninguno, la API usa los datos de XAMPP)."
 fi
 echo "Listo."

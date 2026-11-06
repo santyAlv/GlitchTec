@@ -78,6 +78,25 @@ sitio, commiteá y volvé a correrlo.
 4. `https://glitchtec.dpdns.org/api/ping.php` tiene que responder
    `"ok":true,"db":true`. Si `db` da `false`, revisá `api/config.local.php`.
 
+## Alternativa: el VPS con Docker y Traefik
+
+Así está publicado hoy, en el VPS de HostGator (`69.6.206.117`, SSH en el
+puerto 22022) donde ya corren n8n y otros sitios detrás de Traefik.
+
+- `/opt/glitchtec` tiene `tools/vps/Dockerfile` (PHP 8.3 + Apache con
+  `pdo_mysql`), `tools/vps/docker-compose.yml` y `sql/schema.sql`. El compose
+  levanta el juego y un MariaDB propio. Traefik lo publica con HTTPS de Let's
+  Encrypt en cuanto el dominio apunta al VPS.
+- `/opt/glitchtec/.env` (600) tiene las claves de la base, generadas en el
+  servidor con `openssl rand`. `sitio/api/config.local.php` se generó a partir
+  de ese archivo; no hay copia local.
+- `tools/desplegar.env` apunta a `root@69.6.206.117`, puerto 22022, con
+  `CARPETA=/opt/glitchtec/sitio`. Para actualizar el juego basta con correr
+  `tools/desplegar.sh`: Apache sirve la carpeta directo, sin reiniciar nada.
+- DNS: `glitchtec.dpdns.org` necesita un registro A a `69.6.206.117` en un DNS
+  externo (por ejemplo Cloudflare, con la nube en gris para que Traefik pueda
+  emitir el certificado), y esos nameservers cargados en DigitalPlat.
+
 ## Qué no funciona en el hosting
 
 El relay del mando (`tools/mando_server`) es Node con WebSocket y un hosting

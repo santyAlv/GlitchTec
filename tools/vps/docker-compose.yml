@@ -1,0 +1,47 @@
+# Glitch.TEC en el VPS, detrás del Traefik que ya publica n8n.
+# Va en /opt/glitchtec junto a un .env (no está en git) con DB_ROOT_PASS y DB_PASS.
+# Los archivos del juego van en /opt/glitchtec/sitio (los sube tools/desplegar.sh).
+services:
+  glitchtec:
+    build: .
+    container_name: glitchtec
+    restart: unless-stopped
+    depends_on: [glitchtec-db]
+    volumes:
+      - ./sitio:/var/www/html:ro
+    networks: [web, interna]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=n8n-traefik_app_network
+      - traefik.http.middlewares.glitchtec-https.redirectscheme.scheme=https
+      - traefik.http.routers.glitchtec-http.entrypoints=web
+      - traefik.http.routers.glitchtec-http.rule=Host(`glitchtec.dpdns.org`)
+      - traefik.http.routers.glitchtec-http.middlewares=glitchtec-https
+      - traefik.http.routers.glitchtec.entrypoints=websecure
+      - traefik.http.routers.glitchtec.rule=Host(`glitchtec.dpdns.org`)
+      - traefik.http.routers.glitchtec.tls.certresolver=le
+      - traefik.http.services.glitchtec.loadbalancer.server.port=80
+
+  glitchtec-db:
+    image: mariadb:11
+    container_name: glitchtec-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASS}
+      MARIADB_DATABASE: glitchtec
+      MARIADB_USER: glitch
+      MARIADB_PASSWORD: ${DB_PASS}
+    volumes:
+      - glitchtec_db:/var/lib/mysql
+      # El esquema se aplica solo la primera vez, con la base vacía
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    networks: [interna]
+
+networks:
+  web:
+    external: true
+    name: n8n-traefik_app_network
+  interna: {}
+
+volumes:
+  glitchtec_db: {}
