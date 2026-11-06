@@ -97,6 +97,31 @@ puerto 22022) donde ya corren n8n y otros sitios detrás de Traefik.
   externo (por ejemplo Cloudflare, con la nube en gris para que Traefik pueda
   emitir el certificado), y esos nameservers cargados en DigitalPlat.
 
+## La base en Supabase
+
+La API funciona con MySQL (XAMPP, MariaDB del VPS) y con Postgres. En
+producción la base vive en Supabase, proyecto `klltsnmcdjwnibylespr`
+(`us-east-1`):
+
+1. El esquema es `sql/schema_postgres.sql`, ejecutado una vez en el SQL Editor.
+   Las cuatro tablas tienen RLS activo y sin políticas: la API REST de Supabase
+   (clave anon) no puede leerlas, y el PHP entra con el rol dueño.
+2. El VPS sólo tiene IPv4, así que se conecta por el **Session pooler**:
+   `aws-0-us-east-1.pooler.supabase.com:5432`, usuario
+   `postgres.klltsnmcdjwnibylespr`, base `postgres`, con SSL.
+3. La contraseña no está en el repo ni la muestra Supabase. Se pone en
+   *Project Settings → Database → Reset database password* y después, en el VPS:
+
+   ```bash
+   bash /opt/glitchtec/usar_supabase.sh
+   ```
+
+   El script (`tools/vps/usar_supabase.sh`) la pide sin mostrarla, prueba la
+   conexión y sólo si anda reemplaza `config.local.php`. Para volver a MariaDB:
+   `cp /opt/glitchtec/config.local.mariadb.php /opt/glitchtec/sitio/api/config.local.php`.
+
+No hacen falta las claves anon ni service_role: el juego no usa la API REST.
+
 ## Qué no funciona en el hosting
 
 El relay del mando (`tools/mando_server`) es Node con WebSocket y un hosting
