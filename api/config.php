@@ -16,6 +16,7 @@ if (is_file(__DIR__ . '/config.local.php')) {
 defined('DB_DRIVER')   || define('DB_DRIVER', 'mysql');     // 'pgsql' para Supabase
 defined('DB_HOST')     || define('DB_HOST', '127.0.0.1');
 defined('DB_PORT')     || define('DB_PORT', DB_DRIVER === 'pgsql' ? 5432 : 3306);
+defined('DB_SSLMODE')  || define('DB_SSLMODE', 'require');   // Postgres: Supabase exige SSL
 defined('DB_NAME')     || define('DB_NAME', 'glitchtec');
 defined('DB_USER')     || define('DB_USER', 'root');
 defined('DB_PASS')     || define('DB_PASS', '');          // XAMPP por defecto: vacío
@@ -53,7 +54,7 @@ function db(): PDO
     // DSN = "Data Source Name": la cadena que describe a que base me conecto
     /* Postgres no lleva charset en el DSN (usa UTF-8) y Supabase exige SSL */
     $dsn = DB_DRIVER === 'pgsql'
-        ? 'pgsql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';sslmode=require'
+        ? 'pgsql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';sslmode=' . DB_SSLMODE
         : 'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
     $pdo = new PDO($dsn, DB_USER, DB_PASS, [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
