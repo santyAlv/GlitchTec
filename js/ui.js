@@ -196,6 +196,18 @@
      ============================================================ */
   function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
+  /** Pantalla de celular (el mismo corte que css/desktop.css). */
+  ui.esMovil = function () { return window.matchMedia('(max-width: 620px)').matches; };
+
+  /** En el celular el HUD es una franja de ancho completo arriba del
+      escritorio: devuelve dónde termina, para abrir ventanas y pop-ups
+      debajo. En pantallas grandes devuelve 0 (el HUD va al costado). */
+  ui.topLibre = function () {
+    var hud = document.getElementById('hud');
+    if (!ui.esMovil() || !hud || !hud.offsetHeight) return 0;
+    return hud.offsetTop + hud.offsetHeight + 4;
+  };
+
   /* Enfocar = apagar visualmente a todas y prender esta, mas subirla al tope
      del z-index. Recorro TODAS en lugar de acordarme de cual estaba activa
      antes: son 5 o 6 ventanas como mucho, y asi no puedo quedar en un estado
@@ -257,9 +269,23 @@
        me escape para abajo infinitamente. */
     var x = opts.x;
     var y = opts.y;
+
+    /* En el celular no hay lugar para la cascada: la ventana ocupa todo el
+       ancho y arranca debajo del HUD, que si no le tapa la barra de título. */
+    var arriba = ui.topLibre();
+    if (arriba) {
+      w = deskW - 8;
+      h = deskH - arriba - 4;
+      x = 4;
+      y = arriba;
+    }
     if (x === undefined) x = clamp(Math.round((deskW - w) / 2) - 90 + cascade * 26, 8, deskW - w - 8);
     if (y === undefined) y = clamp(30 + cascade * 24, 8, Math.max(8, deskH - h - 8));
     cascade = (cascade + 1) % 6;
+    /* Las que piden posición fija (la Terminal) tampoco pueden salirse: en un
+       celular apaisado quedaban cortadas abajo y el escritorio se corría. */
+    x = clamp(x, 0, Math.max(0, deskW - w));
+    y = clamp(y, 0, Math.max(0, deskH - h));
 
     var el = document.createElement('div');
     el.className = 'win' + (opts.className ? ' ' + opts.className : '');
@@ -442,13 +468,16 @@
         var sel = layer.querySelector('.desk-icon.selected');
         if (sel) sel.classList.remove('selected');
         b.classList.add('selected');
+        /* En pantalla táctil el doble toque hace zoom o no llega: un toque abre */
+        if (window.matchMedia('(pointer: coarse)').matches) abrir();
       });
 
       /* Doble click para abrir (como en Windows). "def" queda capturado en la
          CLAUSURA de esta funcion: aunque renderIcons ya haya terminado hace
          rato, cuando el jugador haga doble click dentro de dos minutos este
          callback va a seguir teniendo SU definicion, la correcta. */
-      b.addEventListener('dblclick', function () {
+      b.addEventListener('dblclick', abrir);
+      function abrir() {
         if (def.locked) {
           GT.audio.error();
           ui.toast('Acceso bloqueado: todavía no disponible', 'warn');
@@ -457,7 +486,7 @@
         if (frozenFor(def)) return;
         b.classList.remove('pulse');
         def.onOpen();
-      });
+      }
 
       layer.appendChild(b);
     });

@@ -584,3 +584,36 @@ table.tm-table { width: 100%; border-collapse: collapse; font-size: 11px; }
 .mandoqr-code svg { display: block; width: 100%; height: auto; shape-rendering: crispEdges; }
 .mandoqr-ip { color: var(--ink-dim); font-size: 11px; overflow-wrap: anywhere; }
 .mandoqr code { font-family: var(--mono); }
+
+/* ---------------- Celular ----------------
+   Las ventanas ya abren a todo el ancho (GT.ui.openWindow); acá se agrandan
+   los controles para el dedo y el pop-up deja de medir más que la pantalla. */
+@media (max-width: 620px) {
+  .win { min-width: 0; }
+  .win-bar { height: 30px; flex-basis: 30px; }
+  .win-title { font-size: 12px; }
+  .win-btns { gap: 4px; }
+  .win-btns button { width: 30px; height: 26px; font-size: 12px; }
+
+  .popup { width: calc(100% - 18px); max-width: 360px; }
+  .popup-bar { height: 30px; }
+  .popup-x { width: 30px; height: 26px; font-size: 12px; }
+  .popup-foot button { min-height: 40px; }
+
+  /* Mi PC: el panel de ayuda se achica para que entren los archivos */
+  .exp-side { flex-basis: 108px; padding: 8px 7px; }
+  .exp-btn { min-height: 36px; }
+
+  /* TEC-Mail: en dos columnas el correo quedaba de una palabra por renglón.
+     La bandeja va arriba (corta, con scroll) y el correo abajo a lo ancho. */
+  .mail-main { flex-direction: column; }
+  .mail-list { flex: 0 0 auto; max-height: 34%; }
+  .mail-meta dl { grid-template-columns: 48px 1fr; }
+  .mail-actions { flex-wrap: wrap; }
+  .mail-actions button { min-height: 40px; }
+
+  .tm-foot button { min-height: 40px; }
+
+  .boss-opt { min-height: 44px; }
+  .boss-next { min-height: 40px; }
+}
