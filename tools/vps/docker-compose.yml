@@ -22,6 +22,30 @@ services:
       - traefik.http.routers.glitchtec.tls.certresolver=le
       - traefik.http.services.glitchtec.loadbalancer.server.port=80
 
+  # Relay del mando (celular -> juego). Código en /opt/glitchtec/mando_server.
+  # El juego entra por wss://glitchtec.dpdns.org/mando/<sala> (https) y la app del
+  # celular por ws://glitchtec.dpdns.org:80/mando/<sala>: la app sólo habla ws://, así que
+  # el router "web" de /mando va SIN redirección a https y con prioridad sobre el del sitio.
+  mando:
+    build: ./mando_server
+    container_name: glitchtec-mando
+    restart: unless-stopped
+    environment:
+      PUBLIC_ADDR: glitchtec.dpdns.org:80/mando
+    networks: [web]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=n8n-traefik_app_network
+      - traefik.http.routers.glitchtec-mando-http.entrypoints=web
+      - traefik.http.routers.glitchtec-mando-http.rule=Host(`glitchtec.dpdns.org`) && PathPrefix(`/mando`)
+      - traefik.http.routers.glitchtec-mando-http.priority=100
+      - traefik.http.routers.glitchtec-mando.entrypoints=websecure
+      - traefik.http.routers.glitchtec-mando.rule=Host(`glitchtec.dpdns.org`) && PathPrefix(`/mando`)
+      - traefik.http.routers.glitchtec-mando.priority=100
+      - traefik.http.routers.glitchtec-mando.tls=true
+      - traefik.http.routers.glitchtec-mando.tls.certresolver=le
+      - traefik.http.services.glitchtec-mando.loadbalancer.server.port=3000
+
 networks:
   web:
     external: true

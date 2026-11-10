@@ -105,11 +105,30 @@
     emit('pad:relay', { relay: input.relay, lan: input.lan });
   }
 
+  /* Alojado en https (el VPS) el relay está en wss://<dominio>/mando/<sala>. La sala es un
+     código al azar por pestaña: sólo el celular que escanee ese QR entra a esta partida. */
+  function sala() {
+    var s = '';
+    try { s = window.sessionStorage.getItem('gt_sala') || ''; } catch (e) { /* sin storage */ }
+    if (!s) {
+      var abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', r = new Uint8Array(10);
+      window.crypto.getRandomValues(r);
+      for (var i = 0; i < r.length; i++) s += abc.charAt(r[i] % abc.length);
+      try { window.sessionStorage.setItem('gt_sala', s); } catch (e) { /* sin storage */ }
+    }
+    return s;
+  }
+  function relayUrl() {
+    return window.location.protocol === 'https:'
+      ? 'wss://' + window.location.host + '/mando/' + sala()
+      : 'ws://localhost:3000';
+  }
+
   /* ---------- Conexion ---------- */
   function connect() {
     var m = /[?&]mando=([^&]+)/.exec(window.location.search);
     var ws;
-    try { ws = new window.WebSocket('ws://' + (m ? decodeURIComponent(m[1]) : 'localhost:3000')); }
+    try { ws = new window.WebSocket(m ? 'ws://' + decodeURIComponent(m[1]) : relayUrl()); }
     catch (e) { return; }
     ws.onopen = function () { input.relay = true; refresh(); };
     ws.onmessage = function (ev) { apply(ev.data); };
