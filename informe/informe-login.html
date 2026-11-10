@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Informe de prueba de login — Glitch.TEC</title>
+<style>
+@page{size:A4;margin:14mm 15mm}
+*{box-sizing:border-box}
+body{font:10pt/1.4 "Segoe UI",Arial,sans-serif;color:#1a1d2e;margin:0}
+h1{font-size:19pt;margin:0 0 2px;color:#2b1d6e}
+h2{font-size:12pt;margin:12px 0 5px;color:#2b1d6e;border-bottom:2px solid #c46bff;padding-bottom:2px}
+.sub{color:#555;font-size:9pt;margin-bottom:8px}
+.res{display:flex;gap:8px;margin:8px 0}
+.res div{flex:1;background:#f1edff;border-left:4px solid #6b4bff;padding:6px 8px}
+.res b{display:block;font-size:15pt;color:#2b1d6e}
+table{border-collapse:collapse;width:100%;font-size:8.5pt}
+th,td{border:1px solid #cfc8ee;padding:3px 5px;text-align:left}
+th{background:#2b1d6e;color:#fff}
+.ok{color:#0a7a3a;font-weight:700}.pend{color:#b36b00;font-weight:700}
+.figs{display:flex;gap:8px}
+figure{flex:1;margin:0}
+figure img{width:100%;border:1px solid #999;display:block}
+figcaption{font-size:8pt;color:#555;margin-top:2px}
+ul{margin:3px 0 3px 18px;padding:0}
+.pg{page-break-after:always}
+code{background:#eee;padding:0 3px;font-size:8.5pt}
+</style></head><body>
+
+<div class="pg">
+<h1>Prueba de login — Glitch.TEC</h1>
+<div class="sub">10 de noviembre de 2026 · Sitio en producción <code>glitchtec.dpdns.org</code> · API PHP 8.3 + Supabase (Postgres)</div>
+
+<h2>1. Resumen</h2>
+<p>Se verificó que la base en Supabase está activa y se probó el inicio de sesión por API y desde la interfaz del juego. El login rechaza correctamente todos los casos inválidos probados, sin filtrar información ni romperse ante entradas hostiles. El ingreso exitoso se probó con una cuenta de prueba que corrió el propio equipo: funciona, con cookie segura y sin exponer el hash. La sesión se abre y se cierra bien. El bloqueo tras 5 intentos fallidos también funciona.</p>
+<div class="res">
+<div><b>10 / 10</b>casos negativos y de borde correctos</div>
+<div><b>db: true</b>Supabase conectado vía <code>ping.php</code></div>
+<div><b>0</b>errores 500 ni fugas de datos</div>
+<div><b>T11 OK</b>login correcto, cookie segura, sin hash en la respuesta</div>
+</div>
+
+<h2>2. Estado de Supabase</h2>
+<ul>
+<li><code>GET /api/ping.php</code> → 200, <code>"db":true</code>, <code>"cuentas":true</code>: la API alcanza la base y la tabla de usuarios responde.</li>
+</ul>
+
+<h2>3. Prueba desde la interfaz</h2>
+<div class="figs">
+<figure><img src="login-form.jpg"><figcaption>Fig. 1 — Pantalla «Cuenta de usuario»: pestañas Iniciar sesión / Crear cuenta, botón VER para la contraseña y «Jugar sin cuenta».</figcaption></figure>
+<figure><img src="login-error.jpg"><figcaption>Fig. 2 — Usuario inexistente: mensaje genérico «Usuario o contraseña incorrectos.», el usuario se conserva y la contraseña se borra.</figcaption></figure>
+</div>
+</div>
+
+<div>
+<h2>4. Resultados por API (<code>POST /api/login.php</code>)</h2>
+<table>
+<tr><th>#</th><th>Caso</th><th>Esperado</th><th>Obtenido</th><th>Estado</th></tr>
+<tr><td>T1</td><td>GET en vez de POST</td><td>405</td><td>405 «Método no permitido»</td><td class="ok">OK</td></tr>
+<tr><td>T2</td><td>Usuario y clave vacíos</td><td>422</td><td>422 «Completá el usuario y la contraseña»</td><td class="ok">OK</td></tr>
+<tr><td>T3</td><td>JSON mal formado</td><td>Error controlado</td><td>422 (sin error 500)</td><td class="ok">OK</td></tr>
+<tr><td>T4</td><td>Usuario inexistente</td><td>401 genérico</td><td>401 «Usuario o contraseña incorrectos»</td><td class="ok">OK</td></tr>
+<tr><td>T5</td><td>Correo inexistente</td><td>Mismo mensaje que T4</td><td>401, mismo texto</td><td class="ok">OK</td></tr>
+<tr><td>T6</td><td>Inyección SQL en el campo login</td><td>Rechazo</td><td>401 (consulta preparada)</td><td class="ok">OK</td></tr>
+<tr><td>T7</td><td>Contraseña de 5000 caracteres</td><td>Rechazo sin calcular hash</td><td>401</td><td class="ok">OK</td></tr>
+<tr><td>T8</td><td>Login de 200 caracteres</td><td>Rechazo</td><td>401</td><td class="ok">OK</td></tr>
+<tr><td>T9</td><td>Consultar sesión sin login</td><td>Sin usuario</td><td>200 <code>{"user":null}</code></td><td class="ok">OK</td></tr>
+<tr><td>T10</td><td>OPTIONS (CORS)</td><td>200</td><td>200, origen limitado a <code>glitchtec.dpdns.org</code></td><td class="ok">OK</td></tr>
+<tr><td>T11</td><td>Login correcto con cuenta de prueba (≈1,6 s)</td><td>200, cookie HttpOnly + Secure + SameSite, sin hash</td><td>200; las tres banderas presentes; sin <code>password_hash</code>; también entra con el usuario en mayúsculas; clave incorrecta → 401</td><td class="ok">OK</td></tr>
+<tr><td>T11b</td><td>Sesión visible justo después del login (script)</td><td><code>user</code> con datos</td><td>La primera corrida dio <code>user:null</code> por un error del script (mandaba la cookie vieja). Corregido, la sesión queda activa y se cierra con el logout</td><td class="ok">OK</td></tr>
+<tr><td>T12</td><td>Bloqueo tras intentos fallidos</td><td>429 tras 5 fallos (5 min)</td><td>Intentos 1–5 → 401; intentos 6 y 7 → 429 «Demasiados intentos fallidos»</td><td class="ok">OK</td></tr>
+</table>
+
+<h2>5. Hallazgos</h2>
+<ul>
+<li><b>Bien resuelto:</b> mensaje único para usuario inexistente y clave errónea (no se pueden enumerar cuentas); consultas preparadas; límite de largo antes de hashear; CORS restringido al dominio propio; tiempos de respuesta parejos (≈1,0–1,6 s desde este equipo, incluida la red), sin diferencia que delate si el usuario existe.</li>
+<li><b>Menor:</b> el JSON mal formado devuelve 422 con el mensaje de «campos vacíos»; sería más claro un 400 «Cuerpo inválido». No afecta a la seguridad.</li>
+<li><b>Latencia:</b> ~1 s por petición es alto para un login. Conviene revisar si se debe a la distancia al pooler de Supabase (us-east-1) o al VPS.</li>
+</ul>
+
+<h2>6. Conclusión y pendientes</h2>
+<p>Las 12 pruebas pasan. Un detalle a considerar: al bloquearse, la API responde 429 solo para cuentas que existen (las inexistentes siguen dando 401), lo que permite saber si un usuario existe tras 5 intentos. Es un riesgo bajo y habitual; se evita contando también los fallos de usuarios inexistentes por IP. La cuenta de prueba quedó bloqueada 5 minutos por esta prueba.</p>
+<p style="font-size:8pt;color:#777;margin-top:10px">T1–T10 con credenciales inexistentes; T11 lo ejecutó el equipo con una cuenta de prueba; T12 usó claves inventadas sobre esa cuenta. No se crearon cuentas.</p>
+</div>
+</body></html>
