@@ -603,6 +603,7 @@
        El sonidito cada 3 letras (i % 3) es para que no sature el oido. */
     var full = line.text;
     var i = 0;
+    if (line.friendly) GT.audio.callar(); else GT.audio.voz(full);
     txt.textContent = '';
     dlgTyping = true;
     clearInterval(dlgTimer);
@@ -639,6 +640,7 @@
       renderDialogLine(dlgQueue[0]);
     } else {
       document.getElementById('dialog').classList.add('hidden');
+      GT.audio.callar();
       /* Copio el callback a una variable local y LIMPIO dlgDone ANTES de
          llamarlo. Parece un detalle al pedo pero no lo es: ese callback suele
          arrancar el nivel siguiente, que puede abrir otro dialogo enseguida.
@@ -662,6 +664,7 @@
     dlgQueue = [];
     dlgDone = null;
     dlgTyping = false;
+    GT.audio.callar();
     var d = document.getElementById('dialog');
     if (d) d.classList.add('hidden');
   };

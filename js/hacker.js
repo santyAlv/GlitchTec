@@ -579,6 +579,7 @@
     if (!bubble) return;
     bubble.textContent = text;
     bubble.classList.remove('hidden');
+    GT.audio.voz(text);
     clearTimeout(bubbleTimer);
     bubbleTimer = setTimeout(function () {
       if (bubble) bubble.classList.add('hidden');
