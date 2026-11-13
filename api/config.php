@@ -23,6 +23,8 @@ defined('DB_PASS')     || define('DB_PASS', '');          // XAMPP por defecto: 
 defined('DB_CHARSET')  || define('DB_CHARSET', 'utf8mb4');
 defined('CORS_ORIGIN') || define('CORS_ORIGIN', '*');    // en producción, el dominio propio
 
+require_once __DIR__ . '/filtro.php';                     // es_ofensivo(): nombres y correos
+
 /**
  * Devuelve LA conexion a la base (patron singleton hecho a mano).
  *

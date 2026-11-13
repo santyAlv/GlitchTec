@@ -73,11 +73,29 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 268px 1fr 292px;
+  /* Orden | banco con la bitácora abajo | mesa de trabajo entera: las
+     acciones quedan al lado del equipo, sin scrollear. */
+  grid-template-columns: 250px minmax(0, 1fr) 340px;
+  grid-template-rows: auto minmax(120px, 1fr);
+  grid-template-areas:
+    "ticket bench work"
+    "ticket log   work";
   gap: 3px;
   padding: 3px;
   background: var(--face);
 }
+#tech-ticket  { grid-area: ticket; }
+#tech-bench   { grid-area: bench; }
+#tech-work    { grid-area: work; display: flex; flex-direction: column; gap: 10px; }
+#tech-log-col { grid-area: log; }
+
+.work-title {
+  margin: 0;
+  font-size: 10.5px;
+  letter-spacing: 1.5px;
+  color: var(--ink);
+}
+#tech-work .tk-guia { margin: 0; }
 .tech-col {
   min-height: 0;
   overflow: auto;
@@ -248,11 +266,32 @@
 
 /* Herramientas: las mismas que están sobre la mesa en 3D */
 .rig-tools {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 3px;
   flex-wrap: wrap;
   padding: 2px 4px 6px;
+}
+
+/* La próxima herramienta del taller, todavía bloqueada */
+.tool-next {
+  padding: 4px 8px;
+  font-size: 10px;
+  letter-spacing: .5px;
+  color: #6f8a86;
+  border: 1px dashed #3d5560;
+  white-space: nowrap;
+  cursor: default;
+}
+
+/* El control que destraba lo que se quiso hacer (herramienta, girar, tienda) */
+.is-wanted { animation: wanted .32s steps(2) 5; }
+@keyframes wanted {
+  50% { outline: 3px solid #ffc63c; outline-offset: 1px; background: #fff3c4; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .is-wanted { animation: none; outline: 3px solid #ffc63c; }
 }
 .rig-tools .tool-lead {
   font-size: 9px;
@@ -547,24 +586,82 @@
 .tech-foot button:hover { background: #ffffff; }
 .tech-foot button:active { box-shadow: var(--bevel-press); }
 
+/* En la mesa de trabajo los pasos van en una columna: se leen de un vistazo */
+#tech-work .tech-btns { grid-template-columns: 1fr; }
+
 @media (max-width: 1180px) {
-  .tech-main { grid-template-columns: 228px 1fr 232px; }
+  .tech-main { grid-template-columns: 214px minmax(0, 1fr) 296px; }
   .zone-tabs { grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); }
 }
+
+/* Tablet y celular: una sola columna que scrollea entera, en el orden en que
+   se juega: el equipo, dónde trabajás y qué hacés, la orden y la bitácora. */
 @media (max-width: 940px) {
-  .tech-main { grid-template-columns: 1fr; grid-auto-rows: min-content; }
-  .tech-col { max-height: none; }
-  /* El equipo primero: en celular el banco es lo que se mira. */
-  #tech-bench { order: -1; }
-  .rig-bar { flex-wrap: wrap; }
-  .rig-power { width: 100%; }
+  #screen-tech.is-active { overflow-y: auto; }
+  .tech-main {
+    flex: 0 0 auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-template-areas: "bench" "work" "ticket" "log";
+  }
+  .tech-col { overflow: visible; min-width: 0; }
+  #tech-log { max-height: 50vh; min-height: 0; overflow-y: auto; }
+  .zone-tabs { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+
+  /* Ficha técnica, tienda y soldadura cuelgan de #screen-tech: como ahora la
+     pantalla scrollea, se fijan a la ventana para que aparezcan donde se mira. */
+  #screen-tech .detalle, #screen-tech .sold { position: fixed; padding: 8px; }
 }
 
-/* En pantallas chicas el equipo no se achica hasta volverse ilegible:
-   se deja un ancho mínimo y la mesa se corre de costado. */
 @media (max-width: 620px) {
-  .rig-views { margin-left: 0; }
-  .rig-power, .rig-turn { flex: 1; }
+  /* Cabecera compacta: el título de la orden y los indicadores en tres por fila */
+  .tech-top { gap: 4px; padding: 4px 6px; }
+  .tech-brand { display: none; }
+  #tech-case-title {
+    width: 100%;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tech-metrics {
+    margin-left: 0;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+  }
+  .tech-metric, .tech-metric.rep { min-width: 0; padding: 2px 6px; }
+  .tech-metric label { font-size: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tech-metric .val { font-size: 12px; }
+
+  .tech-col { padding: 8px; }
+  .lg-only { display: none; }
+
+  /* Encender, girar y tienda en una fila; las vistas en otra */
+  .rig-bar { gap: 4px; }
+  .rig-power, .rig-turn { flex: 1; padding: 6px 4px; font-size: 10.5px; }
+  .rig-views { width: 100%; margin-left: 0; }
+  .view-btn { flex: 1; padding: 6px 2px; }
+
+  /* Herramientas en una sola tira que se desliza de costado */
+  .rig-tools {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+  .rig-tools .tool-lead { display: none; }
+  .tool-btn, .tool-next { flex: 0 0 auto; white-space: nowrap; }
+
+  /* Botones con tamaño de dedo */
+  .rig-turn, .rig-power, .view-btn, .tool-btn, .zone-tab, .tech-test, .td-opt { min-height: 40px; }
+  .zone-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tech-btns { grid-template-columns: 1fr; }
+  .tech-btn { min-height: 44px; }
+  .tech-foot { padding: 4px; gap: 6px; }
+  .tech-foot span { font-size: 10.5px; }
+  .tech-foot button { min-width: 0; min-height: 40px; }
 }
 
 /* Recuadro de la orden de práctica: el globo amarillo de ayuda de WinTEC 95 */

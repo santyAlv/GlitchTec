@@ -143,6 +143,13 @@
     var maxY = Math.max(10, layer.clientHeight - 220);
     el.style.left = GT.rand(20, maxX) + 'px';
     el.style.top = GT.rand(20, maxY) + 'px';
+    /* En el celular el pop-up ocupa casi todo el ancho (css/windows.css) y
+       nace debajo de la franja del HUD, para que se vea y se pueda cerrar. */
+    var arriba = GT.ui.topLibre();
+    if (arriba) {
+      el.style.left = GT.rand(4, 14) + 'px';
+      el.style.top = GT.rand(arriba, Math.max(arriba, layer.clientHeight - 230)) + 'px';
+    }
     el.style.zIndex = 320 + (seq++);         // el mas nuevo, arriba de todo
 
     el.innerHTML =
