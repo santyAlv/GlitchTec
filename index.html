@@ -74,7 +74,9 @@
 
       <label class="player-field">
         <span>TU NOMBRE PARA EL RANKING</span>
-        <input id="player-name" type="text" maxlength="40" autocomplete="off" spellcheck="false" placeholder="estudiante">
+        <input id="player-name" type="text" maxlength="40" autocomplete="off" spellcheck="false" placeholder="estudiante"
+               aria-describedby="player-name-error">
+        <small class="player-error hidden" id="player-name-error" role="alert">Ese nombre no está permitido: si lo dejás, en el ranking vas a figurar como "estudiante".</small>
       </label>
 
       <div class="modes-grid">
@@ -693,6 +695,7 @@
 <script src="js/soldadura.js"></script>
 <script src="js/chatbot.js"></script>
 <script src="js/tips.js"></script>
+<script src="js/filtro.js"></script>
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/ranking.js"></script>

@@ -133,7 +133,13 @@
     if (input) {
       var saved = GT.api.getPlayerName();
       input.value = (saved === 'estudiante') ? '' : saved;
-      input.addEventListener('input', function () { GT.api.setPlayerName(input.value); });
+      var aviso = document.getElementById('player-name-error');
+      input.addEventListener('input', function () {
+        var malo = GT.filtro.esOfensivo(input.value);
+        input.setAttribute('aria-invalid', malo ? 'true' : 'false');
+        if (aviso) aviso.classList.toggle('hidden', !malo);
+        GT.api.setPlayerName(input.value);
+      });
     }
   });
 
