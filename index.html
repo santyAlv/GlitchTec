@@ -201,8 +201,8 @@
              con el equipo del cliente, un <b>monitor de prueba</b> y las
              <b>herramientas sobre la mesa</b>.</p>
           <ul class="cmd-list">
-            <li><b>Agarrá una herramienta</b> (destornillador, aire comprimido, pasta térmica,
-                tester, disco de respaldo). Sin la herramienta correcta no se puede hacer el trabajo</li>
+            <li><b>Empezás con lo básico</b> (destornillador y pasta térmica) y cada orden que lo pida
+                suma una herramienta a la mesa: aire comprimido, tester, disco de respaldo y más</li>
             <li><b>Sacá la tapa</b> con el destornillador: con la tapa puesta no se toca el interior</li>
             <li><b>Girá el gabinete</b> (arrastrándolo o con el botón) para llegar a los
                 conectores de atrás: la ficha de corriente, el interruptor y los puertos de video</li>
@@ -544,7 +544,7 @@
 
           <div class="rig-bar">
             <button class="rig-power" id="tech-power">⏻ ENCENDER Y PROBAR</button>
-            <button class="rig-turn" id="tech-turn">⟲ GIRAR EL GABINETE</button>
+            <button class="rig-turn" id="tech-turn">⟲ GIRAR<span class="lg-only"> EL GABINETE</span></button>
             <button class="rig-turn" id="tech-shop">🛒 TIENDA</button>
             <span class="rig-views">
               <button class="view-btn is-sel" id="tech-view-general">BANCO</button>
@@ -557,14 +557,22 @@
           <!-- Las mismas herramientas que están sobre la mesa -->
           <div class="rig-tools" id="tech-tools"></div>
 
-          <span class="rig-hint" id="tech-rig-hint">Agarrá una herramienta y tocá la pieza del equipo. El gabinete se puede girar arrastrándolo.</span>
+          <span class="rig-hint" id="tech-rig-hint">Tocá una pieza del equipo (o elegila en «¿Dónde trabajás?») y elegí qué hacerle. El gabinete se gira arrastrándolo.</span>
         </div>
+      </section>
 
+      <!-- Mesa de trabajo: al lado del banco en PC, justo debajo en el
+           celular. Primero dónde trabajás (la pieza), después qué hacés. -->
+      <section class="tech-col" id="tech-work">
+        <!-- Guía de la orden de práctica -->
+        <div class="tk-guia hidden" id="tech-guia" aria-live="polite"></div>
+
+        <h3 class="work-title">¿DÓNDE TRABAJÁS?</h3>
         <!-- Zonas del equipo: las mismas piezas del dibujo, en lista,
              para poder llegar a todas sin depender del mouse. -->
         <nav class="zone-tabs" id="tech-zones"></nav>
 
-        <!-- Herramientas de la pieza seleccionada -->
+        <!-- Inspecciones y acciones de la pieza seleccionada -->
         <div id="tech-tray"></div>
 
         <!-- Cierre de la orden (ficha de servicio) -->
@@ -684,6 +692,7 @@
 <script src="js/tech_ordenes.js"></script>
 <script src="js/soldadura.js"></script>
 <script src="js/chatbot.js"></script>
+<script src="js/tips.js"></script>
 <script src="js/api.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/ranking.js"></script>

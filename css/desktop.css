@@ -486,6 +486,38 @@
 .toast.warn   { border-left-color: #9b2ef0; }
 .toast.info   { border-left-color: var(--title-2); }
 .toast.streak { border-left-color: #6b3aa8; }
+/* ---------------- Tip cuando el jugador se traba ---------------- */
+/* El globo amarillo de ayuda de WinTEC 95: aparece solo (js/tips.js) */
+.tip {
+  position: absolute;
+  right: 12px;
+  bottom: 56px;
+  z-index: 8700;
+  width: min(340px, calc(100% - 24px));
+  padding: 9px 11px 10px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #000;
+  background: #ffffe1;
+  border: 1px solid #000;
+  box-shadow: 3px 3px 0 rgba(0,0,0,.35);
+  animation: toastIn .12s steps(2);
+}
+.tip-head { display: block; margin-bottom: 4px; font-size: 11.5px; }
+.tip-text { margin: 0; }
+.tip-ok {
+  margin-top: 8px;
+  padding: 4px 12px;
+  font-size: 11px;
+  color: var(--ink);
+  background: var(--face);
+  box-shadow: var(--bevel-out);
+}
+.tip-ok:active { box-shadow: var(--bevel-press); }
+@media (max-width: 620px) {
+  .tip { position: fixed; left: 8px; right: 8px; width: auto; bottom: 52px; }
+}
+
 @keyframes toastIn  { from { opacity: 0; transform: translateY(-8px); } }
 @keyframes toastOut { to { opacity: 0; transform: translateY(-8px); } }
 
