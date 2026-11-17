@@ -7,8 +7,8 @@
 
      1. no pagar
      2. contener: terminar el proceso que cifra (ps / kill)
-     3. conseguir la clave: quedo en el volcado de memoria del
-        proceso, y hay que calcularla (un XOR de dos bytes)
+     3. conseguir la clave: quedo en binario en el volcado de memoria
+        del proceso, y se copia tal cual
      4. recuperar: descifrar carpeta por carpeta (decrypt) y traer
         del backup lo que el cifrador rompio
 
@@ -452,9 +452,9 @@
     s.alive = false;
     s.queue = [];
 
-    /* Al morir, el proceso deja un volcado de memoria. Ahi quedaron los dos
-       numeros con los que armo la clave: de la clave en si, solo la formula.
-       El calculo es el ejercicio del nivel. */
+    /* Al morir, el proceso deja un volcado de memoria y la clave quedó ahí,
+       en binario: el jugador la copia tal cual. La lección del nivel es que
+       no hay que pagar, no la cuenta. */
     var dir = GT.fs.ensureDir(DUMP_PATH);
     dir.children[DUMP_NAME] = {
       type: 'file', name: DUMP_NAME, kind: 'log', size: 2048, system: true,
@@ -463,16 +463,11 @@
         'VOLCADO DE MEMORIA  -  ' + CIPHER.name + ' (PID ' + s.pid + ')\r\n' +
         '-------------------------------------------------\r\n' +
         'algoritmo ........ XOR, clave de 8 bits\r\n' +
-        'semilla .......... 0x' + hex2(s.seed) + '  =  ' + bin8(s.seed) + '\r\n' +
-        'id_victima ....... 0x' + hex2(s.victim) + '  =  ' + bin8(s.victim) + '\r\n' +
-        'clave ............ semilla XOR id_victima\r\n' +
+        'clave ............ ' + bin8(s.key) + '\r\n' +
         '\r\n' +
-        'XOR compara los dos numeros bit a bit:\r\n' +
-        '  bits IGUALES    -> 0\r\n' +
-        '  bits DISTINTOS  -> 1\r\n' +
-        '\r\n' +
-        'Con la clave:  decrypt <clave>   en cada carpeta con archivos ' + EXT + '\r\n' +
-        '(se acepta en decimal, o en hexadecimal con 0x adelante)\r\n'
+        'El proceso se murió con la clave en memoria.\r\n' +
+        'Escribila tal cual:  decrypt ' + bin8(s.key) + '\r\n' +
+        'en cada carpeta con archivos ' + EXT + '\r\n'
     };
     GT.emit('fs', { op: 'write', path: DUMP_PATH.slice(), name: DUMP_NAME });
 
@@ -509,13 +504,13 @@
     }
     if (!args.length) {
       print('Uso: decrypt <clave>      descifra los archivos ' + EXT + ' de la carpeta actual', 'warn');
-      print('La clave se calcula con los datos de  \\Sistema\\' + DUMP_NAME, 'dim');
+      print('La clave está en  \\Sistema\\' + DUMP_NAME + ' : copiala tal cual', 'dim');
       return;
     }
 
     var key = parseKey(args.join(''));
     if (isNaN(key)) {
-      print('La clave tiene que ser un numero de 8 bits: decimal (0 a 255) o hexadecimal (0x00 a 0xFF).', 'err');
+      print('La clave son 8 ceros y unos, como aparece en  \\Sistema\\' + DUMP_NAME + ' .', 'err');
       GT.audio.error();
       return;
     }
@@ -523,7 +518,7 @@
     if (key !== s.key) {
       print('Clave incorrecta. El intento fallido corrompio un bloque de datos (-' +
             GT.CONFIG.RANSOM_WRONG_KEY + ' integridad).', 'err');
-      print('Revisa el XOR bit por bit: iguales da 0, distintos da 1.', 'dim');
+      print('Copiá la clave del volcado tal cual:  type \\Sistema\\' + DUMP_NAME, 'dim');
       GT.audio.error();
       GT.wrong(0, 'clave de descifrado incorrecta');
       GT.damage(GT.CONFIG.RANSOM_WRONG_KEY, 'clave de descifrado incorrecta');
@@ -533,12 +528,11 @@
     if (!s.keyFound) {
       s.keyFound = true;
       print('');
-      print('  CLAVE CORRECTA — ' + bin8(s.seed) + ' XOR ' + bin8(s.victim) + ' = ' + bin8(s.key) +
-            '  (0x' + hex2(s.key) + ' = ' + s.key + ')', 'ok');
+      print('  CLAVE CORRECTA — ' + bin8(s.key), 'ok');
       GT.audio.ok();
       GT.correct(200, 'clave de descifrado');
       GT.levels.complete('l4_key');
-      GT.learn('XOR: bits iguales dan 0, distintos dan 1. Aplicar dos veces la misma clave devuelve el dato original.');
+      GT.learn('Ransomware: nunca pagues. Si se corta el proceso a tiempo, la clave puede quedar en memoria y los archivos se recuperan.');
     }
 
     var cwd = GT.terminal.getCwd();

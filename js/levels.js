@@ -119,7 +119,7 @@
         if (!f.l1_note)    return 'Usá:  cd Documentos   y después   type leeme.txt';
         if (!f.l1_scan)    return 'En C:\\Descargas hay un archivo que termina en .jpg.exe. Usá:  scan foto_vacaciones.jpg.exe';
         if (!f.l1_log)     return 'Andá a C:\\Sistema con  cd \\Sistema  y leé:  type registro.log';
-        if (!f.l1_unlock)  return 'El log dice bin2dec(101101). Pasá 101101 de binario a decimal y usá:  unlock <numero>';
+        if (!f.l1_unlock)  return 'El log muestra la clave: 101101. Andá a C:\\Sistema y escribila tal cual:  unlock 101101';
         if (!f.l1_payload) return 'Entrá con  cd cuarentena  y ejecutá:  scan payload.bin';
         if (!f.l1_backup)  return 'Antes de pelear contra el malware, copiá tus archivos a otra partición:  backup create \\Documentos';
         return 'Ya completaste todo este nivel.';
@@ -220,8 +220,8 @@
         if (!f.l4_note) return 'Abrí la nota de rescate (está en la ventana GL1TCH-LOCK, o doble click en un archivo .locked) y elegí NO PAGAR.';
         if (!f.l4_kill) return 'El Administrador de tareas está bloqueado, pero la Terminal no: ' +
                                'ps  lista los procesos. Buscá el que no tiene firma y terminalo con  kill <pid> .';
-        if (!f.l4_key)  return 'Leé  type \\Sistema\\volcado.dmp . La clave es el XOR de los dos números: ' +
-                               'comparalos bit a bit (iguales = 0, distintos = 1), pasá el resultado a decimal y usá  decrypt <clave> .';
+        if (!f.l4_key)  return 'Leé  type \\Sistema\\volcado.dmp : ahí está la clave en binario. ' +
+                               'Entrá a una carpeta con archivos .locked y escribila tal cual:  decrypt <clave> .';
         return 'decrypt <clave>  descifra sólo la carpeta donde estás parado: entrá con  cd  a cada carpeta que tenga ' +
                'archivos .locked. El que tiene la cabecera dañada sólo vuelve con  backup restore <n> .';
       }

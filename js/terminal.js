@@ -669,20 +669,21 @@
         return;
       }
 
-      /* Comparo como STRING y no como numero a proposito: si el jugador
-         escribe "45" entra, pero si escribe "101101" (el binario sin convertir)
-         no, que es justo el error que el ejercicio quiere provocar. */
+      /* La clave se escribe tal cual aparece en el log (101101). Si alguien
+         la pasa a decimal (45) también entra: no está mal, es otra forma de
+         escribir el mismo número. */
       var attempt = args[0].trim();
-      if (attempt === node.children[lockedName].password) {
+      var pw = node.children[lockedName].password;
+      if (attempt === pw || attempt === String(parseInt(pw, 2))) {
         node.children[lockedName].locked = false;
         print('');
-        print('  CLAVE CORRECTA — 101101 (binario) = 45 (decimal)', 'ok');
+        print('  CLAVE CORRECTA — ' + pw, 'ok');
         print('  Carpeta "' + lockedName + '" desbloqueada.', 'ok');
         print('');
         GT.audio.ok();
         GT.correct(60, 'clave correcta');
         GT.levels.complete('l1_unlock');
-        GT.learn('Conversión binario → decimal: 101101₂ = 45₁₀.');
+        GT.learn('Binario: la computadora guarda todo con ceros y unos, hasta las claves (101101).');
         if (GT.explorer) GT.explorer.refresh();
       } else {
         print('Clave incorrecta: "' + attempt + '"', 'err');
