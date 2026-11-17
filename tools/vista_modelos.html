@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelos del taller</title>
+<!-- Vista previa de los modelos 3D nuevos del Servicio Técnico (tools/modelar_piezas.js).
+     Abrir por http:// desde la carpeta del proyecto: http://localhost:8137/tools/vista_modelos.html
+     No toca el juego: carga js/bench3d.js, le cambia en memoria la carpeta de modelos y el lector de OBJ. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --mat: #1b2c30;        /* alfombra antiestática */
+    --mat-2: #22383d;
+    --linea: #34525a;
+    --texto: #e3ece8;
+    --suave: #9db3ae;
+    --cinta: #e8c13a;      /* cinta de rotular */
+    --cinta-texto: #1d1a0e;
+    --cian: #4fd2ff;
+    --fondo-3d: rgb(9, 14, 18);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    color: var(--texto);
+    background-color: var(--mat);
+    background-image:
+      linear-gradient(var(--mat-2) 1px, transparent 1px),
+      linear-gradient(90deg, var(--mat-2) 1px, transparent 1px);
+    background-size: 24px 24px;
+    font: 400 15px/1.55 Barlow, system-ui, sans-serif;
+  }
+  main { max-width: 1280px; margin: 0 auto; padding: 28px 16px 64px; }
+  h1, h2 { font-family: "Barlow Condensed", Barlow, sans-serif; font-weight: 700; line-height: 1.05; margin: 0; }
+  h1 { font-size: clamp(30px, 5vw, 46px); letter-spacing: .2px; }
+  h2 { font-size: 26px; margin-bottom: 4px; }
+  p { margin: 0; max-width: 68ch; color: var(--suave); }
+  header { display: grid; gap: 10px; margin-bottom: 26px; }
+  .aviso {
+    justify-self: start;
+    background: var(--cinta); color: var(--cinta-texto);
+    font: 600 14px/1.3 Barlow, sans-serif;
+    padding: 6px 12px 6px 10px;
+    clip-path: polygon(0 0, 100% 0, 98% 50%, 100% 100%, 0 100%, 2% 50%);
+  }
+
+  section { margin-top: 34px; }
+  .cabeza { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+
+  .botones { display: flex; flex-wrap: wrap; gap: 6px; }
+  button {
+    font: 600 15px/1 "Barlow Condensed", sans-serif; letter-spacing: .3px;
+    color: var(--texto); background: var(--mat-2);
+    border: 1px solid var(--linea); border-radius: 3px;
+    padding: 8px 12px; cursor: pointer; min-height: 36px;
+  }
+  button:hover { border-color: var(--suave); }
+  button[aria-pressed="true"] { border-color: var(--cian); color: #fff; box-shadow: inset 0 -2px 0 var(--cian); }
+  button:focus-visible, .bin:focus-visible { outline: 2px solid var(--cian); outline-offset: 2px; }
+  .separa { width: 1px; background: var(--linea); margin: 0 4px; }
+
+  /* El banco: el mismo módulo del juego */
+  #banco { position: relative; line-height: 0; border: 1px solid var(--linea); background: var(--fondo-3d); }
+  #banco canvas { display: block; width: 100% !important; height: auto !important; }
+  .rig-labels { position: absolute; inset: 0; pointer-events: none; }
+  .rig-tag { position: absolute; transform: translate(-50%, -100%); white-space: nowrap; padding: 2px 7px;
+             font: 500 11px/1.4 Barlow, sans-serif; color: #d4e4de; background: rgba(6, 11, 14, .92);
+             box-shadow: 0 0 0 1px rgba(170, 190, 186, .5); }
+  .rig-tool, .rig-banner { display: none; }
+  .pie { margin-top: 8px; font-size: 13.5px; }
+
+  /* Pieza por pieza: bandejas de repuestos a la izquierda, visor a la derecha */
+  .taller { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 18px; align-items: start; }
+  .bandejas { display: grid; gap: 22px; }
+  .grupo h3 { font: 600 17px/1.2 "Barlow Condensed", sans-serif; color: var(--suave); margin: 0 0 8px; }
+  .grilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 8px; }
+  .bin {
+    display: grid; grid-template-rows: auto auto; padding: 0; text-align: left;
+    background: var(--fondo-3d); border: 1px solid var(--linea); border-radius: 2px;
+    min-height: 0; cursor: pointer; overflow: hidden;
+  }
+  .bin img, .bin .vacio { width: 100%; aspect-ratio: 4 / 3; display: block; object-fit: cover; }
+  .bin .vacio { background: var(--fondo-3d); }
+  .bin span {
+    font: 600 14px/1.15 "Barlow Condensed", sans-serif; letter-spacing: .2px;
+    background: var(--cinta); color: var(--cinta-texto);
+    padding: 5px 8px; margin: 0 6px 6px; border-radius: 1px;
+  }
+  .bin[aria-pressed="true"] { border-color: var(--cian); box-shadow: 0 0 0 1px var(--cian); }
+
+  .visor { position: sticky; top: 12px; border: 1px solid var(--linea); background: var(--fondo-3d); }
+  #lienzo { line-height: 0; touch-action: none; }
+  #lienzo canvas { display: block; width: 100% !important; height: auto !important; cursor: grab; }
+  .ficha { padding: 14px 16px 16px; background: var(--mat); border-top: 1px solid var(--linea); display: grid; gap: 8px; }
+  .ficha h2 { font-size: 28px; }
+  .ficha ul { margin: 0; padding-left: 18px; color: var(--texto); max-width: 68ch; }
+  .ficha li { margin: 2px 0; }
+  .datos { font-size: 13.5px; color: var(--suave); }
+
+  @media (max-width: 860px) {
+    .taller { grid-template-columns: 1fr; }
+    .visor { position: static; order: -1; }
+    .grilla { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+  }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Modelos nuevos del banco de trabajo</h1>
+    <p>Cada herramienta y cada pieza del Servicio Técnico, modelada con más detalle para que se reconozca de un vistazo.
+       Mismo tamaño y mismo lugar que las de ahora: lo que cambia es el dibujo.</p>
+    <span class="aviso">Vista previa: el juego todavía usa los modelos de antes</span>
+  </header>
+
+  <section aria-labelledby="t-banco">
+    <div class="cabeza">
+      <div>
+        <h2 id="t-banco">En el banco</h2>
+        <p>El banco del juego funcionando, con los modelos nuevos. Arrastrá sobre el gabinete para girarlo.</p>
+      </div>
+      <div class="botones" role="group" aria-label="Cámara del banco">
+        <button data-vista="general" aria-pressed="true">Mesa</button>
+        <button data-vista="herramientas">Herramientas</button>
+        <button data-vista="interior">Por dentro</button>
+        <button data-vista="atras">Atrás</button>
+        <button data-vista="monitor">Monitor</button>
+        <span class="separa" aria-hidden="true"></span>
+        <button id="comparar" aria-pressed="false">Ver los de antes</button>
+      </div>
+    </div>
+    <div id="banco"></div>
+    <p class="pie" id="estado-banco">Cargando el banco…</p>
+  </section>
+
+  <section aria-labelledby="t-piezas">
+    <div class="cabeza">
+      <div>
+        <h2 id="t-piezas">Pieza por pieza</h2>
+        <p>Elegí una pieza para verla grande. Arrastrá para girarla y usá la rueda o dos dedos para acercarte.</p>
+      </div>
+    </div>
+    <div class="taller">
+      <div class="bandejas" id="bandejas"></div>
+      <div class="visor">
+        <div id="lienzo"></div>
+        <div class="ficha">
+          <div class="cabeza" style="margin:0">
+            <h2 id="f-nombre">—</h2>
+            <div class="botones" role="group" aria-label="Versión">
+              <button id="v-nuevo" aria-pressed="true">Nuevo</button>
+              <button id="v-viejo" aria-pressed="false">Antes</button>
+            </div>
+          </div>
+          <ul id="f-detalle"></ul>
+          <p class="datos" id="f-datos"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="../js/vendor/p5.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var BASE = '../EntidadesGraficas/dise%C3%B1os3d/';
+  var ESCALA = 1000;
+
+  var PIEZAS = [
+    { g: 'Herramientas', id: 'herr_destornillador', n: 'Destornillador', d: ['Mango rojo con seis franjas de goma', 'Virola cromada, vástago y punta Phillips en cruz'] },
+    { g: 'Herramientas', id: 'herr_aire', n: 'Aire comprimido', d: ['Lata azul con etiqueta y hombro metálico', 'Pulsador, boquilla y la pajita roja'] },
+    { g: 'Herramientas', id: 'herr_alcohol', n: 'Alcohol isopropílico', d: ['Botella con etiqueta y tapa dosificadora', 'Pincel antiestático al lado'] },
+    { g: 'Herramientas', id: 'herr_pasta', n: 'Pasta térmica', d: ['Jeringa con la pasta gris a la vista', 'Aletas para los dedos, émbolo y tapita del pico'] },
+    { g: 'Herramientas', id: 'herr_tester', n: 'Tester', d: ['Funda amarilla, display marcando 3.30', 'Perilla selectora, bornes COM y VΩ', 'Puntas roja y negra con sus cables'] },
+    { g: 'Herramientas', id: 'herr_respaldo', n: 'Disco de respaldo', d: ['Disco externo con borde de goma verde', 'Luz de actividad y cable USB con su ficha'] },
+    { g: 'Herramientas', id: 'herr_crimpeadora', n: 'Crimpeadora', d: ['Cabezal con matrices 8P y 6P y cuchilla', 'Perno, trinquete y mangos de goma roja'] },
+    { g: 'Herramientas', id: 'herr_lantester', n: 'Probador de red', d: ['Unidad principal con 8 luces y G', 'Unidad remota y cable de prueba entre las dos'] },
+    { g: 'Herramientas', id: 'herr_pila', n: 'Pila CR2032', d: ['Blíster con cartón y agujero para colgar', 'Pila de botón con el signo +'] },
+    { g: 'Herramientas', id: 'herr_pinza', n: 'Pinza de punta', d: ['Mordazas largas que terminan en punta', 'Articulación remachada y mangos amarillos'] },
+
+    { g: 'Dentro del gabinete', id: 'fuente', n: 'Fuente', d: ['Rejilla de alambre delante del ventilador', 'Etiqueta con datos y triángulo de advertencia', 'Haz de cables de colores con la ficha de 24 pines'] },
+    { g: 'Dentro del gabinete', id: 'ventilador_fuente', n: 'Ventilador de la fuente', d: ['Siete aspas con paso y cubo con pegatina', 'Gira cuando el equipo tiene corriente'] },
+    { g: 'Dentro del gabinete', id: 'placa_madre', n: 'Placa madre', d: ['Disipadores de VRM, tapa del panel trasero y chipset', 'Ranuras de RAM y PCIe, conector ATX de 24 pines', 'Condensadores, agujeros de montaje y pistas'] },
+    { g: 'Dentro del gabinete', id: 'cpu_disipador', n: 'CPU y disipador', d: ['Base de cobre, aletas de aluminio y heatpipes', 'Marco del ventilador con tornillos y clip de retención'] },
+    { g: 'Dentro del gabinete', id: 'ventilador_cpu', n: 'Ventilador del CPU', d: ['Nueve aspas con paso', 'Cubo con pegatina cian'] },
+    { g: 'Dentro del gabinete', id: 'ram', n: 'Memoria RAM', d: ['Dos módulos con disipador violeta y etiqueta', 'Contactos dorados abajo (ahí se ve el sulfato)'] },
+    { g: 'Dentro del gabinete', id: 'placa_video', n: 'Placa de video', d: ['Dos ventiladores abajo, placa trasera con ranuras', 'Heatpipes de cobre, soporte con salidas de video', 'Contactos PCIe y conector de alimentación'] },
+    { g: 'Dentro del gabinete', id: 'disco', n: 'Disco rígido', d: ['Tapa de aluminio con etiqueta y código de barras', 'Jaula de montaje y cable SATA rojo'] },
+    { g: 'Dentro del gabinete', id: 'pila_cmos', n: 'Pila CMOS', d: ['Portapila negro con traba metálica', 'Pila de botón con el signo +'] },
+
+    { g: 'Gabinete por fuera', id: 'gabinete_chasis', n: 'Gabinete', d: ['Frente con bahías y rejilla de listones', 'Extractor trasero con rejilla, ranuras en el techo y patas'] },
+    { g: 'Gabinete por fuera', id: 'tapa_lateral', n: 'Tapa lateral', d: ['Rejilla de ventilación sobre el CPU y la placa de video', 'Tornillos de mano y tirador del lado de atrás'] },
+    { g: 'Gabinete por fuera', id: 'panel_frontal', n: 'Panel frontal', d: ['Botón redondo con el símbolo de encendido', 'Dos USB y las fichas de audio verde y rosa'] },
+    { g: 'Gabinete por fuera', id: 'fuente_trasera', n: 'Fuente (atrás)', d: ['Rejilla de panal', 'Interruptor 0 / I y cuatro tornillos'] },
+    { g: 'Gabinete por fuera', id: 'entrada_corriente', n: 'Entrada de corriente', d: ['Zócalo IEC con la ficha del cable enchufada', 'Nervios de agarre y alivio del cable'] },
+    { g: 'Gabinete por fuera', id: 'puertos_video', n: 'Panel trasero', d: ['Escudo de la placa madre con USB, red y audio', 'Tapas de las ranuras y soporte de la placa de video', 'Los dos conectores de video los sigue dibujando el juego'] },
+
+    { g: 'Monitor y pared', id: 'monitor', n: 'Monitor', d: ['Marco fino con mentón, logo, luz y botones', 'Atrás: ventilación y placa VESA'] },
+    { g: 'Monitor y pared', id: 'monitor_soporte', n: 'Pie del monitor', d: ['Base ovalada apoyada en la mesa', 'Cuello y bisagra al VESA'] },
+    { g: 'Monitor y pared', id: 'toma_pared', n: 'Toma de pared', d: ['Toma doble tipo I (patas en V y tierra)', 'Ficha del cable enchufada abajo'] }
+  ];
+
+  /* De qué lado conviene mirar cada pieza (dirección de la cámara, Y hacia abajo como en p5). */
+  var LADO = { fuente_trasera: [-1, -0.45, 0.55], entrada_corriente: [-1, -0.4, 0.6], puertos_video: [-1, -0.35, 0.5],
+               panel_frontal: [1, -0.35, 0.55], placa_video: [0.35, 0.8, 0.9], gabinete_chasis: [0.85, -0.5, 0.8],
+               ventilador_fuente: [0.2, -0.3, 1], ventilador_cpu: [0.2, -0.3, 1], monitor: [0.45, -0.25, 1],
+               ram: [0.3, -0.25, 1], pila_cmos: [0.3, -0.3, 1], disco: [0.35, -0.35, 1], tapa_lateral: [0.4, -0.3, 1],
+               toma_pared: [0.4, -0.2, 1], placa_madre: [0.3, -0.35, 1], cpu_disipador: [0.5, -0.45, 1] };
+  var LADO_HERR = [0.45, -1.05, 0.95];
+
+  /* ---------------------------------------------------------------
+     Lector de OBJ nuevo: igual al del juego, pero usa las normales
+     (vn) del archivo para que lo redondo se vea liso. Es el que va a
+     reemplazar a leerObj() en js/bench3d.js si se aprueba.
+     --------------------------------------------------------------- */
+  var LEER_OBJ = [
+    '  function leerObj(nombre, texto, kd) {',
+    '    var P = window.p5;',
+    '    var v = [], vn = [], porMat = {}, orden = [], mat = \'sin_material\';',
+    '    texto.split(/\\r?\\n/).forEach(function (l) {',
+    '      var t = l.trim().split(/\\s+/);',
+    '      if (t[0] === \'v\') v.push([+t[1] * MODELOS_ESCALA, -t[2] * MODELOS_ESCALA, +t[3] * MODELOS_ESCALA]);',
+    '      else if (t[0] === \'vn\') vn.push([+t[1], -t[2], +t[3]]);     // la Y va al revés, igual que en los vértices',
+    '      else if (t[0] === \'usemtl\') mat = t[1];',
+    '      else if (t[0] === \'f\') {',
+    '        var ix = t.slice(1).map(function (q) {',
+    '          var s = q.split(\'/\'), i = parseInt(s[0], 10), n = parseInt(s[2], 10);',
+    '          return [i < 0 ? v.length + i : i - 1, isNaN(n) ? -1 : (n < 0 ? vn.length + n : n - 1)];',
+    '        });',
+    '        if (!porMat[mat]) { porMat[mat] = []; orden.push(mat); }',
+    '        for (var k = 1; k < ix.length - 1; k++) porMat[mat].push([ix[0], ix[k], ix[k + 1]]);   // abanico',
+    '      }',
+    '    });',
+    '    return orden.map(function (m) {',
+    '      var g = new P.Geometry(1, 1);',
+    '      g.gid = \'banco:\' + nombre + \':\' + m;',
+    '      porMat[m].forEach(function (tri) {',
+    '        var a = v[tri[0][0]], b = v[tri[1][0]], c = v[tri[2][0]];',
+    '        /* Sin vn en el archivo: normal plana, hacia afuera (el OBJ viene antihorario con Y arriba). */',
+    '        var ux = b[0] - a[0], uy = -(b[1] - a[1]), uz = b[2] - a[2];',
+    '        var wx = c[0] - a[0], wy = -(c[1] - a[1]), wz = c[2] - a[2];',
+    '        var nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx;',
+    '        var len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;',
+    '        var plana = [nx / len, -ny / len, nz / len];',
+    '        var base = g.vertices.length;',
+    '        [a, b, c].forEach(function (q, j) {',
+    '          var n = tri[j][1] >= 0 && vn[tri[j][1]] ? vn[tri[j][1]] : plana;',
+    '          g.vertices.push(new P.Vector(q[0], q[1], q[2]));',
+    '          g.vertexNormals.push(new P.Vector(n[0], n[1], n[2]));',
+    '          g.uvs.push(0, 0);',
+    '        });',
+    '        g.faces.push([base, base + 1, base + 2]);',
+    '      });',
+    '      return { geom: g, col: colorDeMaterial(m, kd[m]) };',
+    '    });',
+    '  }'
+  ].join('\n');
+
+  function colorDeMaterial(nombre, kd) {
+    if (kd) return kd;
+    var m = /^mat_([0-9a-f]{6})$/i.exec(nombre);
+    if (m) return [0, 2, 4].map(function (i) { return parseInt(m[1].substr(i, 2), 16); });
+    return [200, 200, 200];
+  }
+  function leerMtl(texto) {
+    var kd = {}, cur = null;
+    texto.split(/\r?\n/).forEach(function (l) {
+      var t = l.trim().split(/\s+/);
+      if (t[0] === 'newmtl') cur = t[1];
+      else if (t[0] === 'Kd' && cur) kd[cur] = [+t[1] * 255, +t[2] * 255, +t[3] * 255];
+    });
+    return kd;
+  }
+  var leerObj = new Function('MODELOS_ESCALA', 'colorDeMaterial', LEER_OBJ + '\nreturn leerObj;')(ESCALA, colorDeMaterial);
+
+  function texto(url) { return fetch(url).then(function (r) { if (!r.ok) throw new Error(url + ' ' + r.status); return r.text(); }); }
+
+  /* Carga las dos versiones de cada pieza: la nueva y la de antes. */
+  var cache = { propuesta: {}, piezas: {} }, kds = {};
+  function cargar(carpeta, id) {
+    if (cache[carpeta][id]) return cache[carpeta][id];
+    var mtl = kds[carpeta] || (kds[carpeta] = texto(BASE + carpeta + '/materiales.mtl').then(leerMtl).catch(function () { return {}; }));
+    cache[carpeta][id] = Promise.all([mtl, texto(BASE + carpeta + '/' + id + '.obj')]).then(function (r) {
+      var mallas = leerObj(carpeta + ':' + id, r[1], r[0]);
+      var min = [1e9, 1e9, 1e9], max = [-1e9, -1e9, -1e9];
+      mallas.forEach(function (m) { m.geom.vertices.forEach(function (q) {
+        [q.x, q.y, q.z].forEach(function (c, i) { min[i] = Math.min(min[i], c); max[i] = Math.max(max[i], c); });
+      }); });
+      var tris = mallas.reduce(function (s, m) { return s + m.geom.faces.length; }, 0);
+      return { mallas: mallas, centro: [0, 1, 2].map(function (i) { return (min[i] + max[i]) / 2; }),
+               radio: Math.max(8, Math.hypot(max[0] - min[0], max[1] - min[1], max[2] - min[2]) / 2), tris: tris,
+               tam: [0, 1, 2].map(function (i) { return Math.round(max[i] - min[i]); }) };
+    });
+    return cache[carpeta][id];
+  }
+
+  /* Las mismas luces del banco (js/bench3d.js). */
+  function luces(p) {
+    p.ambientLight(54, 58, 62);
+    p.directionalLight(196, 202, 192, -0.45, 0.72, -0.38);
+    p.pointLight(110, 140, 128, -240, -520, 420);
+    p.pointLight(64, 72, 78, 220, -260, 640);
+  }
+  function dibujar(p, mod) {
+    p.noStroke();
+    p.translate(-mod.centro[0], -mod.centro[1], -mod.centro[2]);
+    mod.mallas.forEach(function (m) { p.fill(m.col[0], m.col[1], m.col[2]); p.ambientMaterial(m.col[0], m.col[1], m.col[2]); p.model(m.geom); });
+  }
+  function lado(id) { var d = LADO[id] || (id.indexOf('herr_') === 0 ? LADO_HERR : [0.6, -0.5, 1]); var l = Math.hypot(d[0], d[1], d[2]); return d.map(function (c) { return c / l; }); }
+
+  /* ---------------- bandejas con miniaturas ---------------- */
+  var bandejas = document.getElementById('bandejas'), botonDe = {};
+  var grupos = {};
+  PIEZAS.forEach(function (pz) {
+    if (!grupos[pz.g]) {
+      var g = document.createElement('div'); g.className = 'grupo';
+      g.innerHTML = '<h3></h3><div class="grilla"></div>';
+      g.querySelector('h3').textContent = pz.g;
+      bandejas.appendChild(g); grupos[pz.g] = g.querySelector('.grilla');
+    }
+    var b = document.createElement('button');
+    b.className = 'bin'; b.type = 'button'; b.setAttribute('aria-pressed', 'false');
+    b.innerHTML = '<div class="vacio"></div><span></span>';
+    b.querySelector('span').textContent = pz.n;
+    b.addEventListener('click', function () { elegir(pz.id); });
+    grupos[pz.g].appendChild(b); botonDe[pz.id] = b;
+  });
+
+  /* Un p5 aparte saca una foto de cada pieza y después se apaga. */
+  new p5(function (p) {
+    var i = 0, listo = {};
+    p.setup = function () { p.createCanvas(320, 240, p.WEBGL); p.pixelDensity(1); p.canvas.style.display = 'none';
+      PIEZAS.forEach(function (pz) { cargar('propuesta', pz.id).then(function (m) { listo[pz.id] = m; }); }); };
+    p.draw = function () {
+      if (i >= PIEZAS.length) { p.remove(); return; }
+      var pz = PIEZAS[i], mod = listo[pz.id];
+      if (!mod) return;
+      var d = lado(pz.id), r = mod.radio * 2.75;
+      p.perspective(0.62, 4 / 3, 1, 8000);
+      p.camera(d[0] * r, d[1] * r, d[2] * r, 0, 0, 0, 0, 1, 0);
+      p.background(9, 14, 18); luces(p); dibujar(p, mod);
+      var img = new Image(); img.alt = ''; img.src = p.canvas.toDataURL('image/png');
+      var hueco = botonDe[pz.id].querySelector('.vacio'); hueco.replaceWith(img);
+      i++;
+    };
+  });
+
+  /* ---------------- visor grande ---------------- */
+  var actual = null, version = 'propuesta', modActual = null, ultimoToque = 0;
+  var zoom = 1, yaw = 0, pitch = 0, arrastre = null;
+  new p5(function (p) {
+    p.setup = function () {
+      var c = p.createCanvas(640, 480, p.WEBGL); c.parent('lienzo'); p.pixelDensity(Math.min(2, window.devicePixelRatio || 1));
+      ajustar(); window.addEventListener('resize', ajustar);
+      c.elt.addEventListener('wheel', function (e) { e.preventDefault(); zoom = Math.max(0.35, Math.min(2.5, zoom * (e.deltaY > 0 ? 1.1 : 0.9))); tocado(); }, { passive: false });
+      c.elt.addEventListener('pointerdown', function (e) { arrastre = { x: e.clientX, y: e.clientY, yaw: yaw, pitch: pitch }; c.elt.setPointerCapture(e.pointerId); tocado(); });
+      c.elt.addEventListener('pointermove', function (e) { if (!arrastre) return; yaw = arrastre.yaw + (e.clientX - arrastre.x) * 0.01; pitch = Math.max(-1.2, Math.min(1.2, arrastre.pitch + (e.clientY - arrastre.y) * 0.01)); tocado(); });
+      c.elt.addEventListener('pointerup', function () { arrastre = null; });
+      var pinza = null;
+      c.elt.addEventListener('touchmove', function (e) { if (e.touches.length !== 2) return; e.preventDefault();
+        var dd = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        if (pinza) zoom = Math.max(0.35, Math.min(2.5, zoom * pinza / dd)); pinza = dd; tocado(); }, { passive: false });
+      c.elt.addEventListener('touchend', function () { pinza = null; });
+    };
+    function ajustar() { var w = document.getElementById('lienzo').clientWidth || 640; p.resizeCanvas(w, Math.round(w * 0.75)); }
+    function tocado() { ultimoToque = p.millis(); }
+    p.draw = function () {
+      p.background(9, 14, 18);
+      if (!modActual) return;
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!arrastre && !reduce && p.millis() - ultimoToque > 2500) yaw += 0.006;
+      var d = lado(actual), r = modActual.radio * 2.6 * zoom;
+      p.perspective(0.62, p.width / p.height, 1, 8000);
+      p.camera(d[0] * r, d[1] * r, d[2] * r, 0, 0, 0, 0, 1, 0);
+      luces(p);
+      p.rotateX(pitch); p.rotateY(yaw);
+      dibujar(p, modActual);
+    };
+  });
+
+  function mostrar() {
+    cargar(version, actual).then(function (m) {
+      modActual = m;
+      document.getElementById('f-datos').textContent =
+        m.tris.toLocaleString('es-AR') + ' triángulos, ' + m.tam.join(' × ') + ' mm' + (version === 'piezas' ? ' (versión de antes)' : '');
+    }).catch(function () { modActual = null; document.getElementById('f-datos').textContent = 'No se encontró el archivo de esta pieza.'; });
+  }
+  function elegir(id) {
+    actual = id; yaw = 0; pitch = 0; zoom = 1;
+    var pz = PIEZAS.filter(function (x) { return x.id === id; })[0];
+    document.getElementById('f-nombre').textContent = pz.n;
+    var ul = document.getElementById('f-detalle'); ul.innerHTML = '';
+    pz.d.forEach(function (t) { var li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+    Object.keys(botonDe).forEach(function (k) { botonDe[k].setAttribute('aria-pressed', String(k === id)); });
+    mostrar();
+  }
+  function setVersion(v) {
+    version = v;
+    document.getElementById('v-nuevo').setAttribute('aria-pressed', String(v === 'propuesta'));
+    document.getElementById('v-viejo').setAttribute('aria-pressed', String(v === 'piezas'));
+    mostrar();
+  }
+  document.getElementById('v-nuevo').addEventListener('click', function () { setVersion('propuesta'); });
+  document.getElementById('v-viejo').addEventListener('click', function () { setVersion('piezas'); });
+  elegir('herr_destornillador');
+
+  /* ---------------- el banco del juego, con los modelos nuevos ---------------- */
+  var estado = document.getElementById('estado-banco');
+  texto('../js/bench3d.js').then(function (src) {
+    var reemplazos = 0;
+    src = src.replace(/\r\n/g, '\n');
+    src = src.replace(/  function leerObj\(nombre, texto, kd\) \{[\s\S]*?\n  \}\n/, function () { reemplazos++; return LEER_OBJ + '\n'; });
+    src = src.replace("'EntidadesGraficas/dise%C3%B1os3d/piezas/'", function () { reemplazos++; return "'" + BASE + "propuesta/'"; });
+    /* Una cámara más, sólo para esta vista previa: la mesa con todas las herramientas. */
+    src = src.replace('var VIEWS = {', function () { reemplazos++; return 'var VIEWS = {\n    herramientas: { eye: [0, -390, 650], at: [0, -10, 170] },'; });
+    if (reemplazos !== 3) throw new Error('js/bench3d.js cambió: no se pudo preparar la vista previa');
+    var s = document.createElement('script'); s.textContent = src; document.body.appendChild(s);
+    var bench = window.GlitchTec.bench;
+    bench.mount('banco');
+    var espera = setInterval(function () {
+      var n = bench.modelosCargados().length;
+      estado.textContent = n + ' modelos cargados en el banco.';
+      if (n >= 28) clearInterval(espera);
+    }, 400);
+
+    var vistas = document.querySelectorAll('[data-vista]');
+    vistas.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var v = b.getAttribute('data-vista');
+        vistas.forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+        if (v === 'interior') { bench.turn(false); bench.setOpen(true); }
+        else if (v === 'atras') { bench.turn(true); }
+        else { bench.turn(false); bench.setOpen(false); bench.look(v); }
+      });
+    });
+    var comp = document.getElementById('comparar');
+    comp.addEventListener('click', function () {
+      var antes = comp.getAttribute('aria-pressed') !== 'true';
+      comp.setAttribute('aria-pressed', String(antes));
+      bench.setModelos(!antes);
+    });
+  }).catch(function (e) { estado.textContent = 'No se pudo cargar el banco: ' + e.message; });
+})();
+</script>
+</body>
+</html>
