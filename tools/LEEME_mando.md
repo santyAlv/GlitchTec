@@ -39,6 +39,17 @@ juego al conectarse. Requiere Google Play Services y que Windows deje pasar el p
 servidor estático (`python -m http.server 8123` en la raíz) en `http://localhost:8123`, o con
 PHP (ver "Backend"). Si el relay está en otra máquina: `index.html?mando=IP:PUERTO`.
 
+## En el VPS (glitchtec.dpdns.org)
+
+El relay también corre en el VPS (servicio `mando` de `tools/vps/docker-compose.yml`, código en
+`/opt/glitchtec/mando_server`). Con la página en https el juego se conecta solo a
+`wss://glitchtec.dpdns.org/mando/<sala>`: la sala es un código al azar por pestaña y el relay solo
+reenvía dentro de ella, así que dos jugadores no se mueven entre sí. El QR trae
+`glitchtec.dpdns.org:80/mando/<sala>` y la app actual lo usa sin recompilar (arma
+`ws://glitchtec.dpdns.org:80/mando/<sala>`; Traefik no redirige esa ruta a https porque la app solo
+habla `ws://`). Se activa con `PUBLIC_ADDR` en el relay; sin esa variable funciona como siempre, local.
+Para actualizar: copiar `tools/mando_server/*` y el compose al VPS y `docker compose up -d --build mando`.
+
 ## Mensajes (app → relay → juego)
 
 | Mensaje | Significado |

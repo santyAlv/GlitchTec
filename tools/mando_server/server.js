@@ -17,12 +17,20 @@ import WebSocket, { WebSocketServer } from 'ws';
 
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
+/* Modo público (VPS): PUBLIC_ADDR="dominio:80/mando". Cada partida usa una SALA (el último
+   tramo de la URL: /mando/ABCD2345) y el relay solo reenvía dentro de la sala, así dos
+   jugadores no se mueven entre sí. Sin PUBLIC_ADDR (uso local) hay una sola sala "". */
+const PUBLIC_ADDR = process.env.PUBLIC_ADDR || '';
+const SALA_OK = /^[A-Z0-9]{8,16}$/;
+const salaDe = (req) => (req.url || '/').split('?')[0].split('/').filter(Boolean).pop() || '';
+
 const wss = new WebSocketServer({ port: PORT, host: HOST });
-console.log('Relay del mando escuchando en ws://' + HOST + ':' + PORT);
+console.log('Relay del mando escuchando en ws://' + HOST + ':' + PORT + (PUBLIC_ADDR ? ' (público: ' + PUBLIC_ADDR + ')' : ''));
 
 /* Solo IPs de LAN: se saltan VPN (Radmin 26.x) y similares. Se calcula en cada conexion
-   porque la IP de la PC cambia de red en red. */
-function lan() {
+   porque la IP de la PC cambia de red en red. En modo público la dirección es la del dominio. */
+function lan(sala) {
+  if (PUBLIC_ADDR) return [PUBLIC_ADDR + '/' + sala];
   if (HOST === '127.0.0.1') return [];
   return Object.values(os.networkInterfaces()).flat()
     .filter((i) => i.family === 'IPv4' && !i.internal && /^(192\.168|10|172\.(1[6-9]|2\d|3[01]))\./.test(i.address))
@@ -30,21 +38,25 @@ function lan() {
 }
 
 const enviar = (c, obj) => { if (c.readyState === WebSocket.OPEN) c.send(JSON.stringify(obj)); };
-const mandos = (salvo) => [...wss.clients].filter((c) => c.esMando && c !== salvo).length;
-const avisarMandos = (salvo) => wss.clients.forEach((c) => enviar(c, { mandos: mandos(salvo) }));
+const sala = (s) => [...wss.clients].filter((c) => c.sala === s);
+const mandos = (s, salvo) => sala(s).filter((c) => c.esMando && c !== salvo).length;
+const avisarMandos = (s, salvo) => sala(s).forEach((c) => enviar(c, { mandos: mandos(s, salvo) }));
 
 wss.on('connection', (ws, req) => {
-  console.log('Cliente conectado:', req.socket.remoteAddress);
-  enviar(ws, { lan: lan(), mandos: mandos() });
+  ws.sala = salaDe(req);
+  if (PUBLIC_ADDR && !SALA_OK.test(ws.sala)) return ws.close(1008, 'sala invalida');
+  console.log('Cliente conectado:', req.socket.remoteAddress, ws.sala ? 'sala ' + ws.sala : '');
+  enviar(ws, { lan: lan(ws.sala), mandos: mandos(ws.sala) });
   ws.on('message', (msg) => {
     const text = msg.toString();
+    if (text.length > 512) return;   // los mensajes del mando son diminutos
     try {
-      if (JSON.parse(text).hello === 'mando') { ws.esMando = true; return avisarMandos(); }
+      if (JSON.parse(text).hello === 'mando') { ws.esMando = true; return avisarMandos(ws.sala); }
     } catch { /* no era JSON: se reenvia igual, el juego lo ignora */ }
-    wss.clients.forEach((c) => { if (c.readyState === WebSocket.OPEN) c.send(text); });
+    sala(ws.sala).forEach((c) => { if (c.readyState === WebSocket.OPEN) c.send(text); });
   });
   ws.on('close', () => {
     console.log('Cliente desconectado');
-    if (ws.esMando) avisarMandos(ws);
+    if (ws.esMando) avisarMandos(ws.sala, ws);
   });
 });

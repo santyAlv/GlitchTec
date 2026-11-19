@@ -33,8 +33,8 @@
        junk             -> basura que escribio el malware para llenar el disco */
   fs.ROOT_NAME = 'C:';
 
-  /* Clave del directorio en cuarentena: 101101 binario = 45 decimal */
-  fs.QUARANTINE_PASSWORD = '45';
+  /* Clave del directorio en cuarentena: se escribe tal cual aparece en el log */
+  fs.QUARANTINE_PASSWORD = '101101';
 
   /** Construye un arbol NUEVO en cada partida.
       Es una funcion y no una constante a proposito: el juego MODIFICA el arbol
@@ -167,8 +167,8 @@
                 '[12:06:41] WARN  Proceso hijo sin firma digital creado desde \\Descargas\r\n' +
                 '[12:07:55] WARN  Escritura no autorizada en \\Sistema\\cuarentena\r\n' +
                 '[12:08:02] ERROR 1 objeto movido a cuarentena: payload.bin\r\n' +
-                '[12:08:03] DEBUG clave_cuarentena = bin2dec(101101)\r\n' +
-                '[12:08:04] DEBUG (recordatorio: convertir ese binario a decimal)\r\n' +
+                '[12:08:03] DEBUG clave_cuarentena = 101101\r\n' +
+                '[12:08:04] DEBUG (la clave se guarda en binario: ceros y unos)\r\n' +
                 '[12:09:17] ERROR El servicio de cuarentena dejo de responder.\r\n' +
                 '[12:09:18] ????  h o l a   e s t u d i a n t e\r\n'
             },
@@ -182,7 +182,7 @@
             'cuarentena': {
               type: 'dir', name: 'cuarentena',
               locked: true,
-              password: '45',
+              password: fs.QUARANTINE_PASSWORD,
               hint: 'La clave esta en \\Sistema\\registro.log (linea DEBUG).',
               children: {
                 'payload.bin': {

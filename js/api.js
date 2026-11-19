@@ -101,6 +101,7 @@
 
   api.setPlayerName = function (name) {
     playerName = String(name || '').trim().slice(0, 40) || 'estudiante';
+    if (GT.filtro && GT.filtro.esOfensivo(playerName)) playerName = 'estudiante';   // el servidor hace lo mismo
     try { localStorage.setItem(PLAYER_KEY, playerName); } catch (e) { /* ignore */ }
   };
 

@@ -534,8 +534,10 @@
       explica: [
         'Arriba ves TIEMPO DE TALLER (contra el presupuesto de la orden), TU PLATA para repuestos y la ' +
           'REPUTACIÓN del taller: si llega a 0, se termina la partida.',
-        'Abajo del banco elegís una ZONA del equipo. Ahí aparecen las INSPECCIONES (mirar, no cuesta plata) ' +
-          'y las ACCIONES (meter mano). Algunas piden una herramienta en la mano.',
+        'En "¿Dónde trabajás?" elegís una ZONA del equipo. Ahí aparecen las INSPECCIONES (mirar, no cuesta plata) ' +
+          'y las ACCIONES (meter mano). Cada paso dice qué herramienta usa y la agarrás al tocarlo.',
+        'Arrancás con lo básico: destornillador y pasta térmica. Cada orden nueva que lo pida suma una ' +
+          'herramienta a la mesa.',
         'Regla del taller: diagnosticar antes de cambiar. Cambiar una pieza sana cuesta plata y reputación.'
       ],
       presupuesto: 60,
@@ -548,23 +550,18 @@
       pasos: ['preguntar', 'medir_temp', 'abrir', 'ver_disipador', 'ver_pasta', 'limpiar_polvo', 'cambiar_pasta'],
       guia: [
         { paso: 'preguntar',
-          texto: 'Empezá por la zona CLIENTE, abajo del banco, y tocá "Preguntarle al cliente cuándo y cómo falla". ' +
+          texto: 'Empezá por la zona CLIENTE (en "¿Dónde trabajás?") y tocá "Preguntarle al cliente cuándo y cómo falla". ' +
                  'Preguntar es gratis y siempre da pistas.' },
-        { paso: 'medir_temp',
-          texto: 'Agarrá el TESTER (tocalo sobre la mesa o en la fila de HERRAMIENTAS), elegí la zona CPU Y ' +
-                 'DISIPADOR y tocá "Medir temperaturas con carga".' },
         { paso: 'abrir',
-          texto: 'Para mirar adentro hay que abrir el gabinete: agarrá el DESTORNILLADOR, elegí PLACA MADRE y ' +
-                 'tocá "Abrir el gabinete".' },
+          texto: 'Para mirar adentro hay que abrir el gabinete: elegí PLACA MADRE y tocá "Abrir el gabinete". ' +
+                 'Cada paso dice qué herramienta usa y la agarrás sola al tocarlo.' },
         { paso: 'ver_pasta',
-          texto: 'Con el destornillador en la mano, en CPU Y DISIPADOR tocá "Sacar el disipador y mirar la ' +
-                 'pasta térmica".' },
+          texto: 'Ahora, en CPU Y DISIPADOR, tocá "Sacar el disipador y mirar la pasta térmica".' },
         { compra: 'pasta', usa: 'cambiar_pasta',
           texto: 'Ya sabés qué falla. Abrí la 🛒 TIENDA y comprá PASTA TÉRMICA: los repuestos salen de tu plata, ' +
                  'así que se compra sólo lo que el diagnóstico pide.' },
         { paso: 'cambiar_pasta',
-          texto: 'Agarrá la PASTA TÉRMICA de la mesa y, en CPU Y DISIPADOR, tocá "Cambiar la pasta térmica ' +
-                 'del procesador".' },
+          texto: 'En CPU Y DISIPADOR, tocá "Cambiar la pasta térmica del procesador".' },
         { probar: true,
           texto: 'Reparado. Tocá ⏻ ENCENDER Y PROBAR y mirá el monitor: ahí se ve si el equipo quedó bien.' },
         { cerrar: true,
@@ -916,6 +913,7 @@
                    'switch vive dentro de un armario cerrado. En redes se revisa primero lo físico: ' +
                    '¿hay luz de enlace?',
       presupuesto: 80,
+      herramientas: ['crimpeadora', 'lantester'],   // el laboratorio de redes trae sus herramientas
       fallas: ['nic', 'rj45', 'puerto', 'vent_switch'],
       piezas: ['switch', 'nic', 'patch'],
       sintomas: {
@@ -1035,6 +1033,68 @@
   };
 
   /* ============================================================
+     Herramientas que se desbloquean con las órdenes
+     Se arranca con lo básico y cada herramienta llega a la mesa en la
+     primera orden que la necesita de verdad: para encontrar la falla,
+     para repararla o para seguir la guía. Se calcula de los datos de
+     las órdenes, así una orden nueva nunca queda imposible por una
+     herramienta que todavía no está. Los pasos que piden una
+     herramienta bloqueada no se ofrecen.
+     ============================================================ */
+  var unlockAt = null;           // herramienta -> índice de la orden que la trae
+
+  function computeUnlocks() {
+    unlockAt = {};
+    CASES.forEach(function (c, i) {
+      function has(t) { return t === 'mano' || unlockAt[t] !== undefined; }
+      function ok(id) { var st = STEPS[id]; return has(st.tool || 'mano') && (!st.req || ok(st.req)); }
+      function need(id) {
+        var st = STEPS[id];
+        if (!st) return;
+        if (st.req) need(st.req);
+        if (!has(st.tool || 'mano')) unlockAt[st.tool] = i;
+      }
+      /* De varias formas de encontrar o reparar lo mismo alcanza con una:
+         si alguna ya se puede hacer, no hace falta herramienta nueva. */
+      function needOne(ids) {
+        if (ids.length) need(ids.filter(ok)[0] || ids[0]);
+      }
+      c.fallas.forEach(function (f) {
+        needOne(c.pasos.filter(function (id) { return STEPS[id] && STEPS[id].arregla === f; }));
+        needOne(c.pasos.filter(function (id) { return STEPS[id] && STEPS[id].detecta === f; }));
+      });
+      (c.guia || []).forEach(function (g) { need(g.paso); need(g.usa); });
+      /* Una orden puede traer herramientas aunque se resuelva sin ellas */
+      (c.herramientas || []).forEach(function (t) { if (!has(t)) unlockAt[t] = i; });
+    });
+  }
+
+  function toolOk(t) {
+    return !t || t === 'mano' || (unlockAt[t] !== undefined && unlockAt[t] <= caseIdx);
+  }
+
+  function stepOk(id) {
+    var st = STEPS[id];
+    return !!st && toolOk(st.tool) && (!st.req || stepOk(st.req));
+  }
+
+  function availableTools() {
+    return GT.bench.tools().filter(function (t) { return toolOk(t.id); });
+  }
+
+  /** La próxima herramienta que llega, para mostrarla bloqueada en la mesa. */
+  function nextTool() {
+    var best = null;
+    GT.bench.tools().forEach(function (t) {
+      var at = unlockAt[t.id];
+      if (at !== undefined && at > caseIdx && (!best || at < best.at)) best = { tool: t, at: at };
+    });
+    return best;
+  }
+
+  tech.unlocks = function () { if (!unlockAt) computeUnlocks(); return unlockAt; };
+
+  /* ============================================================
      Estado del modo
      ============================================================ */
   /* ESTADO DE LA ORDEN EN CURSO. Uso objetos como "conjuntos": en vez de
@@ -1107,8 +1167,7 @@
       bindOnce('tech-view-' + v, function () { GT.bench.look(v); renderViews(v); });
     });
 
-    renderTools();
-
+    computeUnlocks();
     loadCase(0);
   };
 
@@ -1141,10 +1200,11 @@
     GT.bench.setSulfato(tiene('sulfato') || tiene('sulfato_ram'));
     GT.bench.setWet(tiene('humedad'));
 
+    /* Herramientas de la mesa para esta orden: las que ya se ganaron */
+    GT.bench.setAvailable(availableTools().map(function (t) { return t.id; }));
+
     /* Zonas que esta orden pone en juego, en orden de recorrido */
-    zones = ZONE_ORDER.filter(function (z) {
-      return cur.pasos.some(function (id) { return STEPS[id] && STEPS[id].parte === z; });
-    });
+    zones = ZONE_ORDER.filter(function (z) { return stepsOf(z).length > 0; });
     zone = zones[0] || null;
     GT.bench.select(zone);
     GT.bench.look('general');
@@ -1164,6 +1224,15 @@
     if (cur.antecedente) logLine(cur.antecedente, 'warn');
     if (cur.explica) cur.explica.forEach(function (t) { logLine(t, 'dim'); });
     logLine('Empezá inspeccionando. Cada revisión consume minutos de taller.', 'dim');
+
+    /* Herramientas que llegan con esta orden */
+    if (i > 0) {
+      GT.bench.tools().forEach(function (t) {
+        if (unlockAt[t.id] !== i) return;
+        logLine('🔧 Nueva herramienta en la mesa: <b>' + t.label + '</b>.', 'warn');
+        GT.ui.toast('🔧 Nueva herramienta: ' + t.label, 'streak');
+      });
+    }
 
     /* El cliente deja un anticipo para repuestos; los repuestos se compran en la tienda */
     var anticipo = cur.presupuesto * 1000;
@@ -1208,10 +1277,11 @@
       '<p class="tk-relato">' + GT.escapeHtml(cur.relato) + '</p>' +
       '<h4>LO QUE SE VE EN EL EQUIPO</h4>' +
       '<p class="tk-sintoma" id="tech-sintoma">' + GT.escapeHtml(currentSymptom()) + '</p>' +
-      (cur.guia ? '<div class="tk-guia" id="tech-guia" aria-live="polite"></div>' : '') +
       '<p class="tk-tip">Regla del taller: <b>diagnosticar antes de cambiar</b>. ' +
          'Cada repuesto que ponés sin motivo sale del bolsillo del cliente.</p>';
     guiaPrev = null;
+    document.getElementById('tech-guia').classList.toggle('hidden', !cur.guia);
+    setWorkTitle('¿DÓNDE TRABAJÁS? Elegí una pieza');
 
     document.getElementById('tech-log').innerHTML = '';
     document.getElementById('tech-actions').innerHTML = '';
@@ -1248,7 +1318,7 @@
 
   /** Pasos de esta orden que corresponden a una zona. */
   function stepsOf(z) {
-    return cur.pasos.filter(function (id) { return STEPS[id] && STEPS[id].parte === z; });
+    return cur.pasos.filter(function (id) { return stepOk(id) && STEPS[id].parte === z; });
   }
 
   function doneInZone(z) {
@@ -1318,19 +1388,19 @@
     var html = '<div class="tech-group"><h4>' + title + ' <small>' + sub + '</small></h4><div class="tech-btns">';
     ids.forEach(function (id) {
       var st = STEPS[id];
+      /* La herramienta y el giro del gabinete se resuelven solos al tocar el
+         paso (doStep); lo único que lo traba es otro paso previo o un repuesto. */
       var tool = st.tool || 'mano';
-      var faltaTool = (tool !== 'mano' && GT.bench.held() !== tool);
-      var faltaLado = (st.lado === 'atras' && !GT.bench.facingBack());
+      var faltaReq = st.req && !doneSteps[st.req];
       var rep = st.costo ? GT.tienda.repuestoDe(id) : null;
       var faltaRep = !!rep && !GT.tienda.hay(rep);
-      var locked = (st.req && !doneSteps[st.req]) || faltaTool || faltaLado || faltaRep;
+      var locked = faltaReq || faltaRep;
 
       var pide = '';
-      if (faltaRep) pide = ' · comprá ' + GT.tienda.nombreDe(rep).toLowerCase() + ' en la tienda';
-      else if (faltaTool) pide = ' · necesita ' + GT.bench.toolName(tool).toLowerCase();
-      else if (faltaLado) pide = ' · girá el gabinete';
-      else if (st.req && !doneSteps[st.req]) pide = ' · requiere: ' + STEPS[st.req].label.toLowerCase();
+      if (faltaReq) pide = ' · primero: ' + STEPS[st.req].label.toLowerCase();
+      else if (faltaRep) pide = ' · comprá ' + GT.tienda.nombreDe(rep).toLowerCase() + ' en la tienda';
       else if (tool !== 'mano') pide = ' · con ' + GT.bench.toolName(tool).toLowerCase();
+      if (!faltaReq && st.lado === 'atras' && !GT.bench.facingBack()) pide += ' · atrás del gabinete';
 
       html +=
         '<button class="tech-btn' + (doneSteps[id] ? ' is-done' : '') + (locked ? ' is-locked' : '') +
@@ -1480,21 +1550,6 @@
     /* La herramienta que hace falta tiene que estar en la mano:
        la tapa no sale sin destornillador y el polvo no se va soplando. */
     var tool = st.tool || 'mano';
-    if (tool !== 'mano' && GT.bench.held() !== tool) {
-      GT.audio.error();
-      logLine('✋ Para eso necesitás: ' + GT.bench.toolName(tool) + '. Está sobre la mesa.', 'warn');
-      GT.ui.toast('Agarrá ' + GT.bench.toolName(tool).toLowerCase(), 'warn');
-      return;
-    }
-
-    /* Lo que está atrás del gabinete se trabaja desde atrás: hay que
-       girar el equipo, igual que en el banco. */
-    if (st.lado === 'atras' && !GT.bench.facingBack()) {
-      GT.audio.error();
-      logLine('✋ Eso está en la parte de atrás. Girá el gabinete.', 'warn');
-      GT.ui.toast('Girá el gabinete para llegar atrás', 'warn');
-      return;
-    }
 
     /* Requisito previo (abrir el gabinete, por ejemplo) */
     if (st.req && !doneSteps[st.req]) {
@@ -1504,12 +1559,28 @@
       return;
     }
 
+    /* Si hace falta una herramienta de la mesa, se agarra sola: el paso
+       ya dice cuál pide, no hay que ir a buscarla. */
+    if (tool !== 'mano' && GT.bench.held() !== tool) {
+      GT.bench.hold(tool);
+      logLine('🔧 Agarrás: ' + GT.bench.toolName(tool) + '.', 'dim');
+      pulse('[data-tool="' + tool + '"]');
+    }
+
+    /* Lo que está atrás del gabinete se trabaja desde atrás: se gira solo. */
+    if (st.lado === 'atras' && !GT.bench.facingBack()) {
+      GT.bench.turn();
+      logLine('⟲ Girás el gabinete para llegar a la parte de atrás.', 'dim');
+      setHint('Gabinete girado: tenés los conectores de atrás.');
+    }
+
     /* Los repuestos se compran antes en la tienda */
     var repuesto = st.costo ? GT.tienda.repuestoDe(id) : null;
     if (repuesto && !GT.tienda.hay(repuesto)) {
       GT.audio.error();
       logLine('✋ Te falta el repuesto: ' + GT.tienda.nombreDe(repuesto) + '. Comprálo en la tienda.', 'warn');
       GT.ui.toast('Comprá en la tienda: ' + GT.tienda.nombreDe(repuesto), 'warn');
+      pulse('#tech-shop');
       return;
     }
 
@@ -1753,9 +1824,27 @@
     return null;
   }
 
+  function setWorkTitle(txt) {
+    var el = document.querySelector('#tech-work .work-title');
+    if (el) el.textContent = txt;
+  }
+
   function setHint(txt) {
     var el = document.getElementById('tech-rig-hint');
     if (el) el.textContent = txt;
+  }
+
+  /** Hace titilar el control que resuelve un bloqueo (la herramienta, girar,
+      la tienda) para que se vea dónde está sin tener que buscarlo. */
+  function pulse(sel) {
+    var el = document.querySelector('#screen-tech ' + sel);
+    if (!el) return;
+    el.classList.remove('is-wanted');
+    void el.offsetWidth;                   // reinicia la animación
+    el.classList.add('is-wanted');
+    setTimeout(function () { el.classList.remove('is-wanted'); }, 1800);
+    var strip = el.parentNode;             // la fila de herramientas scrollea de costado
+    if (strip.scrollWidth > strip.clientWidth) strip.scrollLeft = el.offsetLeft - strip.clientWidth / 2;
   }
 
   function bindOnce(id, fn) {
@@ -1779,10 +1868,17 @@
 
     html += '<button class="tool-btn' + (held === 'mano' ? ' is-held' : '') +
             '" data-tool="mano">MANO</button>';
-    GT.bench.tools().forEach(function (t) {
+    availableTools().forEach(function (t) {
       html += '<button class="tool-btn' + (held === t.id ? ' is-held' : '') +
               '" data-tool="' + t.id + '">' + t.label + '</button>';
     });
+
+    /* La que viene, bloqueada: que se vea que el taller crece */
+    var prox = nextTool();
+    if (prox) {
+      html += '<span class="tool-next" title="Se desbloquea en la orden ' + pad3(prox.at + 1) + '">🔒 ' +
+              prox.tool.label + ' · orden ' + pad3(prox.at + 1) + '</span>';
+    }
     box.innerHTML = html;
 
     var btns = box.querySelectorAll('.tool-btn');
@@ -1809,6 +1905,7 @@
   function renderDiagnosis() {
     document.getElementById('tech-tray').innerHTML = '';
     GT.bench.setPickMode(true);
+    setWorkTitle('SEÑALÁ LA PIEZA QUE FALLÓ');
 
     document.getElementById('tech-actions').innerHTML =
       '<div class="tech-diag">' +
@@ -1851,6 +1948,7 @@
   function renderCause() {
     var d = cur.diagnostico;
     var box = document.getElementById('tech-actions');
+    setWorkTitle('CERRAR LA ORDEN');
 
     var html =
       '<div class="tech-diag">' +
@@ -1983,15 +2081,17 @@
 
     /* Falla ya encontrada: lo que falta es resolverla. */
     if (found[falla]) {
-      return 'Ya encontraste una falla. Ahora hay que resolverla con la acción que corresponde a esa pieza, ' +
-             'sin cambiar nada que no haga falta. Después, encendé y probá de nuevo.';
+      var malas = zones.filter(function (z) { return zoneState[z] === 'bad'; });
+      return 'Ya encontraste una falla' + (malas.length ? ' en ' + ZONE_LABEL[malas[0]] : '') + '. Elegí esa zona y ' +
+             'mirá sus ACCIONES: resolvela sin cambiar nada que no haga falta (si pide repuesto, está en la 🛒 TIENDA). ' +
+             'Después, encendé y probá de nuevo.';
     }
 
     /* Falla sin encontrar: nombro la zona de una inspección que la detecta
        y que todavía no se hizo. */
     var pendiente = cur.pasos.filter(function (id) {
       var st = STEPS[id];
-      return st && st.g === 'inspeccion' && st.detecta === falla && !doneSteps[id];
+      return stepOk(id) && st.g === 'inspeccion' && st.detecta === falla && !doneSteps[id];
     })[0];
     if (pendiente) {
       var st = STEPS[pendiente];

@@ -37,6 +37,9 @@ function validar_username(string $username): ?string
     if (!preg_match('/^[A-Za-z0-9_.\-]{3,24}$/', $username)) {
         return 'El usuario debe tener entre 3 y 24 caracteres: letras, números, punto, guion o guion bajo.';
     }
+    if (es_ofensivo($username)) {
+        return 'Ese nombre de usuario no está permitido: elegí uno sin insultos ni agresiones.';
+    }
     return null;
 }
 
@@ -44,6 +47,9 @@ function validar_email(string $email): ?string
 {
     if (strlen($email) > 120 || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
         return 'Ingresá un correo electrónico válido.';
+    }
+    if (es_ofensivo($email)) {
+        return 'Ese correo no está permitido: usá uno sin insultos ni agresiones.';
     }
     return null;
 }

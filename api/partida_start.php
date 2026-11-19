@@ -22,6 +22,7 @@ $body = read_json_body();
    parte un caracter multibyte por la mitad). */
 $name = trim((string)($body['player_name'] ?? 'estudiante'));
 $name = mb_substr($name !== '' ? $name : 'estudiante', 0, 40);
+if (es_ofensivo($name)) $name = 'estudiante';   // un insulto no entra al ranking
 
 // Modo de juego: 'virus' (PC corrompida) o 'tecnico' (servicio tecnico)
 $mode = (string)($body['mode'] ?? 'virus');

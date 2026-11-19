@@ -1,0 +1,22 @@
+{
+  "_leeme": "Lista compartida por api/filtro.php (el que manda) y js/filtro.js (aviso rápido). Todo en minúscula, sin acentos y sólo letras. 'bloqueadas' se busca en cualquier parte del texto, tolerando letras repetidas; 'permitidas' son palabras sanas que contienen una bloqueada y se sacan antes de buscar; 'numeros' se busca tal cual.",
+  "bloqueadas": [
+    "nigger", "nigga", "nignog", "negrata", "chink", "gook", "wetback", "beaner", "sudaca", "sudaka",
+    "hitler", "nazi", "siegheil", "kukluxklan", "kkk", "whitepower", "whitepride",
+    "faggot", "maricon", "marica", "trolo", "tranny", "travuco", "sodomita",
+    "retard", "retrasad", "mogolico", "mongolico", "subnormal",
+    "puta", "puto", "putit", "hijodeput", "hijueput", "hdp", "pendej", "gilipol", "imbecil", "idiota", "estupid",
+    "boludo", "pelotudo", "tarado", "cabron", "cojud", "culiao", "culiado", "culero", "malparid",
+    "gonorrea", "conchetumadre", "conchatumadre", "conchesumadre", "conchasumadre", "conchetumare",
+    "mamaguevo", "mamahuevo", "mierd", "carajo", "verga", "pija", "poronga", "chupala", "chupamela",
+    "pajero", "bastard", "violador", "suicidate", "killyourself",
+    "fuck", "shit", "bitch", "cunt", "whore", "slut", "asshole", "dickhead", "cocksucker", "pussy",
+    "rapist", "pedofil", "pedophil", "paedo", "porn", "dildo", "penis", "vagina", "jerkoff"
+  ],
+  "permitidas": [
+    "computa", "computo", "disputa", "disputo", "imputa", "imputo", "amputa", "amputo", "reputa", "reputo",
+    "diputa", "diputo", "putativ", "pijama", "maricarmen", "vergara", "autocontrolo", "controlo",
+    "therapist", "retardo", "retardante", "nazir", "nazim", "nazion", "scunthorpe", "shitake", "matsushita"
+  ],
+  "numeros": ["1488"]
+}

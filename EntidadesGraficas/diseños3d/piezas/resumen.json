@@ -1,0 +1,254 @@
+{
+  "herr_destornillador": {
+    "tris": 940,
+    "materiales": 5,
+    "tamano_mm": [
+      16,
+      17,
+      121
+    ]
+  },
+  "herr_aire": {
+    "tris": 1176,
+    "materiales": 6,
+    "tamano_mm": [
+      53,
+      56,
+      27
+    ]
+  },
+  "herr_alcohol": {
+    "tris": 1160,
+    "materiales": 8,
+    "tamano_mm": [
+      44,
+      53,
+      58
+    ]
+  },
+  "herr_pasta": {
+    "tris": 708,
+    "materiales": 7,
+    "tamano_mm": [
+      24,
+      13,
+      78
+    ]
+  },
+  "herr_tester": {
+    "tris": 1876,
+    "materiales": 13,
+    "tamano_mm": [
+      79,
+      26,
+      87
+    ]
+  },
+  "herr_respaldo": {
+    "tris": 500,
+    "materiales": 7,
+    "tamano_mm": [
+      73,
+      13,
+      88
+    ]
+  },
+  "herr_crimpeadora": {
+    "tris": 560,
+    "materiales": 6,
+    "tamano_mm": [
+      39,
+      12,
+      94
+    ]
+  },
+  "herr_lantester": {
+    "tris": 1392,
+    "materiales": 12,
+    "tamano_mm": [
+      60,
+      18,
+      82
+    ]
+  },
+  "herr_pila": {
+    "tris": 604,
+    "materiales": 8,
+    "tamano_mm": [
+      32,
+      5,
+      48
+    ]
+  },
+  "herr_pinza": {
+    "tris": 716,
+    "materiales": 6,
+    "tamano_mm": [
+      38,
+      7,
+      99
+    ]
+  },
+  "fuente": {
+    "tris": 2408,
+    "materiales": 11,
+    "tamano_mm": [
+      146,
+      100,
+      140
+    ]
+  },
+  "ventilador_fuente": {
+    "tris": 356,
+    "materiales": 3,
+    "tamano_mm": [
+      63,
+      63,
+      7
+    ]
+  },
+  "ventilador_cpu": {
+    "tris": 412,
+    "materiales": 3,
+    "tamano_mm": [
+      58,
+      58,
+      7
+    ]
+  },
+  "cpu_disipador": {
+    "tris": 1904,
+    "materiales": 6,
+    "tamano_mm": [
+      101,
+      95,
+      73
+    ]
+  },
+  "placa_madre": {
+    "tris": 2068,
+    "materiales": 18,
+    "tamano_mm": [
+      260,
+      240,
+      24
+    ]
+  },
+  "pila_cmos": {
+    "tris": 592,
+    "materiales": 5,
+    "tamano_mm": [
+      26,
+      28,
+      8
+    ]
+  },
+  "ram": {
+    "tris": 352,
+    "materiales": 6,
+    "tamano_mm": [
+      52,
+      114,
+      8
+    ]
+  },
+  "placa_video": {
+    "tris": 2088,
+    "materiales": 14,
+    "tamano_mm": [
+      207,
+      29,
+      68
+    ]
+  },
+  "disco": {
+    "tris": 788,
+    "materiales": 11,
+    "tamano_mm": [
+      86,
+      64,
+      56
+    ]
+  },
+  "panel_frontal": {
+    "tris": 908,
+    "materiales": 9,
+    "tamano_mm": [
+      5,
+      66,
+      76
+    ]
+  },
+  "fuente_trasera": {
+    "tris": 1172,
+    "materiales": 6,
+    "tamano_mm": [
+      8,
+      72,
+      68
+    ]
+  },
+  "entrada_corriente": {
+    "tris": 188,
+    "materiales": 4,
+    "tamano_mm": [
+      34,
+      72,
+      70
+    ]
+  },
+  "puertos_video": {
+    "tris": 664,
+    "materiales": 12,
+    "tamano_mm": [
+      4,
+      92,
+      90
+    ]
+  },
+  "gabinete_chasis": {
+    "tris": 1372,
+    "materiales": 11,
+    "tamano_mm": [
+      322,
+      382,
+      192
+    ]
+  },
+  "tapa_lateral": {
+    "tris": 656,
+    "materiales": 9,
+    "tamano_mm": [
+      300,
+      360,
+      12
+    ]
+  },
+  "monitor": {
+    "tris": 476,
+    "materiales": 8,
+    "tamano_mm": [
+      330,
+      260,
+      59
+    ]
+  },
+  "monitor_soporte": {
+    "tris": 520,
+    "materiales": 4,
+    "tamano_mm": [
+      176,
+      133,
+      127
+    ]
+  },
+  "toma_pared": {
+    "tris": 416,
+    "materiales": 5,
+    "tamano_mm": [
+      52,
+      78,
+      18
+    ]
+  }
+}

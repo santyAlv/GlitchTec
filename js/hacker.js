@@ -49,7 +49,7 @@
   /* Teclas candidatas: todas se usan al escribir comandos reales.
      No es una lista al azar: son las letras de dir, cd, type, scan, unlock,
      kill, purge... Si bloqueara la W o la Z el ataque no se sentiria. Tampoco
-     meto numeros, porque la clave de la cuarentena (45) se escribe con ellos y
+     meto numeros, porque las claves (101101 y la del volcado) se escriben con ellos y
      seria bloquear el progreso en vez de molestar. */
   var KEY_POOL = ['a', 'c', 'd', 'e', 'i', 'k', 'l', 'n', 'o', 'p', 'r', 's', 't', 'u'];
 
@@ -579,6 +579,7 @@
     if (!bubble) return;
     bubble.textContent = text;
     bubble.classList.remove('hidden');
+    GT.audio.voz(text);
     clearTimeout(bubbleTimer);
     bubbleTimer = setTimeout(function () {
       if (bubble) bubble.classList.add('hidden');
