@@ -486,6 +486,38 @@
 .toast.warn   { border-left-color: #9b2ef0; }
 .toast.info   { border-left-color: var(--title-2); }
 .toast.streak { border-left-color: #6b3aa8; }
+/* ---------------- Tip cuando el jugador se traba ---------------- */
+/* El globo amarillo de ayuda de WinTEC 95: aparece solo (js/tips.js) */
+.tip {
+  position: absolute;
+  right: 12px;
+  bottom: 56px;
+  z-index: 8700;
+  width: min(340px, calc(100% - 24px));
+  padding: 9px 11px 10px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #000;
+  background: #ffffe1;
+  border: 1px solid #000;
+  box-shadow: 3px 3px 0 rgba(0,0,0,.35);
+  animation: toastIn .12s steps(2);
+}
+.tip-head { display: block; margin-bottom: 4px; font-size: 11.5px; }
+.tip-text { margin: 0; }
+.tip-ok {
+  margin-top: 8px;
+  padding: 4px 12px;
+  font-size: 11px;
+  color: var(--ink);
+  background: var(--face);
+  box-shadow: var(--bevel-out);
+}
+.tip-ok:active { box-shadow: var(--bevel-press); }
+@media (max-width: 620px) {
+  .tip { position: fixed; left: 8px; right: 8px; width: auto; bottom: 52px; }
+}
+
 @keyframes toastIn  { from { opacity: 0; transform: translateY(-8px); } }
 @keyframes toastOut { to { opacity: 0; transform: translateY(-8px); } }
 
@@ -498,4 +530,49 @@
    ancho. */
 @media (max-width: 620px) {
   .dialog { width: calc(100% - 16px); bottom: 10px; }
+
+  /* El HUD de 226px tapaba medio escritorio y los pop-ups. En el celular es
+     una franja de ancho completo arriba: las tres barras lado a lado, los
+     contadores en fila y los objetivos en una lista corta con scroll.
+     Las ventanas y los pop-ups abren debajo (ver GT.ui.topLibre en ui.js). */
+  #hud {
+    top: 4px; left: 4px; right: 4px;
+    width: auto;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 2px;
+  }
+  .hud-head { grid-column: 1 / -1; margin-bottom: 4px; white-space: nowrap; overflow: hidden; }
+  .hud-row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "lbl val" "bar bar";
+    gap: 1px 3px;
+    margin: 0 2px 2px;
+  }
+  .hud-row label { grid-area: lbl; font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hud-row .val  { grid-area: val; font-size: 10px; }
+  .hud-row .bar  { grid-area: bar; height: 10px; }
+  .hud-stats { grid-column: 1 / -1; margin: 3px 2px; }
+  .hud-stats div { display: flex; align-items: baseline; justify-content: center; gap: 4px; padding: 2px; }
+  .hud-stats b { display: inline; font-size: 12px; }
+  .hud-obj { grid-column: 1 / -1; margin: 0 2px 2px; }
+  .hud-obj h4 { display: none; }
+  #objective-list { max-height: 62px; }
+  #objective-list li { font-size: 11.5px; }
+
+  /* Iconos debajo del HUD (que mide unos 150px), en columnas */
+  #icon-layer { top: 160px; max-height: calc(100% - 166px); }
+
+  /* Barra de tareas y menú Inicio con tamaño de dedo */
+  #taskbar { height: 44px; flex-basis: 44px; }
+  #start-btn { height: 38px; font-size: 13px; padding: 0 10px 0 6px; }
+  .task-btn { height: 38px; min-width: 44px; max-width: 120px; }
+  #tray { height: 38px; }
+  #mute-btn { min-width: 34px; height: 34px; }
+  #start-menu { bottom: 44px; max-width: calc(100% - 8px); }
+  .sm-foot button { min-height: 40px; }
+  .dialog-next { min-height: 40px; padding: 0 16px; }
+
+  /* Los avisos van abajo, sobre la barra: arriba tapaban el HUD */
+  #toast-layer { top: auto; bottom: 52px; width: calc(100% - 16px); }
 }

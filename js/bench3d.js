@@ -228,7 +228,9 @@
         if (!host) return false;
         var w = host.clientWidth;
         if (w < 40) return false;
-        var h = Math.round(Math.min(560, Math.max(320, w * 0.58)));
+        /* En el celular el banco no se come la pantalla: tope en la mitad
+           del alto, para que debajo se vean las herramientas y las acciones. */
+        var h = Math.round(Math.min(560, Math.max(220, w * 0.58), Math.max(200, window.innerHeight * 0.5)));
         if (pp.width !== w || pp.height !== h) pp.resizeCanvas(w, h);
         return true;
       }
@@ -351,9 +353,19 @@
   };
   bench.isBusy = function () { return !!seq; };
 
+  /* Herramientas que ya están sobre la mesa (null = todas). El taller las
+     va desbloqueando orden a orden (js/tech.js). */
+  var available = null;
+  function onTable(id) { return !available || available.indexOf(id) !== -1; }
+
+  bench.setAvailable = function (ids) {
+    available = ids ? ids.slice() : null;
+    if (held !== 'mano' && !onTable(held)) bench.hold('mano');
+  };
+
   /** Herramienta en la mano. 'mano' es no tener ninguna. */
   bench.hold = function (tool) {
-    held = tool || 'mano';
+    held = (tool && onTable(tool)) ? tool : 'mano';
     if (typeof bench.onTool === 'function') bench.onTool(held);
   };
   bench.held = function () { return held; };
@@ -570,6 +582,7 @@
      ============================================================ */
   function drawTools(p) {
     TOOLS.forEach(function (t) {
+      if (!onTable(t.id)) return;
       var isHeld = (held === t.id);
       var isHover = (hover === 'tool:' + t.id);
       p.push();
@@ -1381,7 +1394,7 @@
 
     /* Las herramientas sobre la mesa */
     TOOLS.forEach(function (t) {
-      pushBox('tool:' + t.id, null, t.x, -22, 190, 86, 56, 96, t.label);
+      if (onTable(t.id)) pushBox('tool:' + t.id, null, t.x, -22, 190, 86, 56, 96, t.label);
     });
   }
 

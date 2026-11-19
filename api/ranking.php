@@ -45,6 +45,7 @@ if ($mini !== '') {
             $r['puntos']    = (int)$r['puntos'];
             $r['precision'] = (int)$r['precision'];
             $r['time']      = (int)$r['time'];
+            if (es_ofensivo((string)$r['player'])) $r['player'] = 'estudiante';
         }
         unset($r);
         json_out(['ok' => true, 'offline' => false, 'minijuego' => $mini, 'ranking' => $rows]);
@@ -98,6 +99,7 @@ try {
         $r['level'] = (int)$r['level'];
         $r['time']  = (int)$r['time'];
         $r['streak'] = (int)$r['streak'];
+        if (es_ofensivo((string)$r['player'])) $r['player'] = 'estudiante';   // anotados antes del filtro
     }
     unset($r);
 

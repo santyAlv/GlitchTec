@@ -167,3 +167,16 @@
 .tienda-buy { padding: 5px 8px; font-size: 10px; letter-spacing: 1px; color: var(--ink); background: var(--face); box-shadow: var(--bevel-out); }
 .tienda-buy:active { box-shadow: var(--bevel-press); }
 .tienda-buy:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Celular: cerrar y comprar con tamaño de dedo; la fila de la tienda
+   deja el precio y el botón en una segunda línea para no apretar el nombre. */
+@media (max-width: 620px) {
+  .det-bar { height: 34px; }
+  .det-x { width: 32px; height: 28px; font-size: 13px; }
+  .det-cerrar, .tray-detalle { min-height: 40px; }
+  .tienda-fila { grid-template-columns: 1fr auto auto; grid-template-areas: "nom nom nom" "tengo precio buy"; }
+  .tienda-nom { grid-area: nom; }
+  .tienda-tengo { grid-area: tengo; }
+  .tienda-precio { grid-area: precio; }
+  .tienda-buy { grid-area: buy; min-height: 38px; padding: 0 12px; }
+}

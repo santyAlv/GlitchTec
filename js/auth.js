@@ -29,16 +29,22 @@
   auth.RULES = { USER_MIN: 3, USER_MAX: 24, PASS_MIN: 8, PASS_MAX: 72, EMAIL_MAX: 120 };
 
   auth.checkUsername = function (v) {
-    return /^[A-Za-z0-9_.\-]{3,24}$/.test(String(v || ''))
-      ? '' : 'El usuario debe tener entre 3 y 24 caracteres: letras, números, punto, guion o guion bajo.';
+    if (!/^[A-Za-z0-9_.\-]{3,24}$/.test(String(v || ''))) {
+      return 'El usuario debe tener entre 3 y 24 caracteres: letras, números, punto, guion o guion bajo.';
+    }
+    return GT.filtro.esOfensivo(v)
+      ? 'Ese nombre de usuario no está permitido: elegí uno sin insultos ni agresiones.' : '';
   };
 
   auth.checkEmail = function (v) {
     v = String(v || '');
     /* Chequeo de forma, nada mas: algo@algo.algo sin espacios. El formato
        exacto de un correo es mucho mas enredado y lo decide el servidor. */
-    return (v.length <= auth.RULES.EMAIL_MAX && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))
-      ? '' : 'Ingresá un correo electrónico válido.';
+    if (!(v.length <= auth.RULES.EMAIL_MAX && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))) {
+      return 'Ingresá un correo electrónico válido.';
+    }
+    return GT.filtro.esOfensivo(v)
+      ? 'Ese correo no está permitido: usá uno sin insultos ni agresiones.' : '';
   };
 
   auth.checkPassword = function (v, username) {

@@ -137,6 +137,24 @@
       return muted;
     },
 
+    /* Voz del hacker estilo Anonymous: voz sintetizada del navegador, en
+       castellano, grave y lenta. Respeta el mute. */
+    voz: function (text) {
+      var ss = window.speechSynthesis;
+      if (muted || !ss || !text) return;
+      ss.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      var vs = ss.getVoices().filter(function (v) { return /^es/i.test(v.lang); });
+      var h = vs.filter(function (v) { return /pablo|raul|jorge|diego|tom|male/i.test(v.name); })[0];
+      u.voice = h || vs[0] || null;
+      u.lang = u.voice ? u.voice.lang : 'es-ES';
+      u.pitch = 0.1;
+      u.rate = 0.82;
+      u.volume = 1;
+      ss.speak(u);
+    },
+    callar: function () { if (window.speechSynthesis) window.speechSynthesis.cancel(); },
+
     key:      function () { tone(1500 + GT.rand(-140, 140), 0.018, 'square', 0.022); },
     click:    function () { tone(880, 0.035, 'square', 0.05); },
     open:     function () { tone(520, 0.05, 'triangle', 0.06); tone(780, 0.06, 'triangle', 0.05, 0.05); },

@@ -55,6 +55,19 @@ nombre, **metros, Y arriba, el mismo origen**) y recargá la página.
 `node tools/exportar_modelos.js` **pisa** la carpeta y se pierden las ediciones.
 Por eso se niega a correr si ya existe `EntidadesGraficas/diseños3d/piezas/`; para forzarlo:
 `node tools/exportar_modelos.js --forzar` (hacé copia de lo editado antes).
+Ojo: eso también reemplaza los modelos detallados por las cajas.
+
+## Modelos detallados
+
+Las piezas del equipo, el monitor y las herramientas de `piezas/` salen de
+`tools/modelar_piezas.js`, con más geometría (tornos, biseles, cables) y las mismas
+medidas y orígenes que las cajas de `js/bench3d.js`:
+
+- `node tools/modelar_piezas.js` los genera en `diseños3d/propuesta/` para revisarlos
+  (`tools/vista_modelos.html`, abierto por `http://`, los muestra uno por uno).
+- `node tools/modelar_piezas.js --aplicar` los escribe en `piezas/`, que es lo que lee el
+  juego. Conserva los materiales de las piezas que no regenera (escritorio, cables, sala).
+- `piezas/resumen.json` anota triángulos, materiales y tamaño de cada modelo.
 
 ## Autoría y licencias
 
