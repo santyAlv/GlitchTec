@@ -228,7 +228,7 @@
       overloadFor += dt;
       if (overloadFor >= 1) {
         overloadFor = 0;
-        GT.damage(1.8, 'CPU al 100%');
+        GT.damage(GT.CONFIG.CPU_DRAIN, 'CPU al 100%');
         GT.ui.toast('CPU saturada: el sistema se degrada', 'bad');
       }
     } else {

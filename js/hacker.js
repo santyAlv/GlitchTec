@@ -30,18 +30,18 @@
     MOVE_MIN: 6.5,          // segundos entre reposicionamientos
     MOVE_MAX: 12,
 
-    LOCK_FIRST: 38,         // primer secuestro de teclado
-    LOCK_MIN: 54,           // y despues, cada tanto
-    LOCK_MAX: 80,
-    LOCK_DRAIN: 0.4,        // integridad por segundo con el teclado tomado
+    LOCK_FIRST: 60,         // primer secuestro de teclado
+    LOCK_MIN: 85,           // y despues, cada tanto
+    LOCK_MAX: 120,
+    LOCK_DRAIN: 0.25,       // integridad por segundo con el teclado tomado
     LOCK_KEYS_MIN: 3,
     LOCK_KEYS_MAX: 5,
     LOCK_REWARD: 150,
     LOCK_PENALTY: 9,
 
-    COLOR_FIRST: 64,        // primera corrupcion de colores
-    COLOR_MIN: 76,
-    COLOR_MAX: 112,
+    COLOR_FIRST: 95,        // primera corrupcion de colores
+    COLOR_MIN: 110,
+    COLOR_MAX: 160,
     COLOR_TIME: 20,         // duracion exacta pedida: 20 segundos
     COLOR_DAMAGE: 4
   };
@@ -427,7 +427,7 @@
   /* EL TICK: se llama ~60 veces por segundo desde el loop de game.js con el
      dt en segundos. Todo lo que hace es restar dt a los tres relojes y actuar
      cuando alguno llega a cero. Trabajar con dt (y no con "cada N frames")
-     hace que los tiempos sean reales: LOCK_FIRST = 38 son 38 segundos de
+     hace que los tiempos sean reales: LOCK_FIRST = 60 son 60 segundos de
      verdad en cualquier maquina. */
   hacker.tick = function (dt) {
     if (!running || !GT.state.running || GT.state.finished) return;

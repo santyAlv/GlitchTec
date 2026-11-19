@@ -23,28 +23,39 @@
      un "0.55" perdido en el medio de popups.js. */
   GT.CONFIG = {
     MAX_INTEGRITY: 100,
-    POPUP_DRAIN_PER_SEC: 0.55,   // integridad que roba cada pop-up abierto
+    /* RITMO DE LA PARTIDA. Todo lo que baja la integridad o sube la infección
+       con el paso del tiempo (no por errores) está acá, para ajustar cuánto
+       tiempo tiene el jugador para pensar sin tocar cada módulo. */
+    POPUP_DRAIN_PER_SEC: 0.3,    // integridad que roba cada pop-up abierto
     POPUP_MAX_ON_SCREEN: 6,
+    POPUP_EVERY_MAX: 26,         // segundos entre pop-ups con 0% de infección...
+    POPUP_EVERY_MIN: 13,         // ...y con 100%
+    POPUP_LEVEL_FASTER: 0.8,     // segundos menos por cada nivel superado
+    POPUP_EVERY_FLOOR: 9,        // nunca más seguido que esto
+    CPU_DRAIN: 1,                // integridad por segundo con la CPU al 100%
+    INFECTION_PER_LEVEL: 6,      // piso de infección que suma cada nivel...
+    INFECTION_LEVEL_CAP: 30,     // ...hasta este tope
+    INFECTION_FROM_DAMAGE: 0.6,  // cuánto de la integridad perdida se vuelve infección
     HINT_COST: 40,
     TICK_MS: 250,
 
     /* Disco de la PC corrompida (ver js/filesystem.js) */
     DISK_CAPACITY: 2048 * 1048576,   // tamanio de la unidad C:, en bytes (2 GB)
     DISK_WARN: 0.9,                  // desde el 90% de uso el sistema avisa
-    DISK_FULL_DAMAGE: 1,             // integridad por segundo con el disco lleno
-    JUNK_RATE: 1.6 * 1048576,        // bytes por segundo que escribe CADA proceso hostil
+    DISK_FULL_DAMAGE: 0.5,           // integridad por segundo con el disco lleno
+    JUNK_RATE: 1.0 * 1048576,        // bytes por segundo que escribe CADA proceso hostil
 
     /* Herramientas de mantenimiento (ver js/sysutils.js) */
     RESTORE_POINT_SIZE: 16 * 1048576,   // lo que ocupa en C: cada punto de restauracion
     RESTORE_MAX: 6,                     // cantidad maxima de puntos guardados
     BACKUP_CAPACITY: 1024 * 1048576,    // tamanio de la particion D:, donde van los backups
     FREEZE_DELAY: 0.6,                  // segundos entre que queda un solo proceso hostil y la tildada
-    FREEZE_DRAIN: 0.5,                  // integridad por segundo con el sistema tildado
+    FREEZE_DRAIN: 0.3,                  // integridad por segundo con el sistema tildado
 
     /* Nivel de ransomware (ver js/ransom.js) */
-    RANSOM_TIME: 240,          // segundos hasta que destruye el primer archivo
-    RANSOM_REPEAT: 45,         // y despues, uno cada tantos segundos
-    RANSOM_SPREAD: 20,         // cada cuanto cifra un archivo mas mientras el proceso viva
+    RANSOM_TIME: 360,          // segundos hasta que destruye el primer archivo
+    RANSOM_REPEAT: 70,         // y despues, uno cada tantos segundos
+    RANSOM_SPREAD: 30,         // cada cuanto cifra un archivo mas mientras el proceso viva
     RANSOM_LOSS_DAMAGE: 12,    // integridad que cuesta cada archivo perdido
     RANSOM_WRONG_KEY: 4,       // integridad que cuesta probar una clave equivocada
 
@@ -305,10 +316,11 @@
      aunque estes al 100%, avanzar de nivel implica un sistema mas comprometido.
 
      Desarmo la cuenta para acordarme de por que es asi:
-       base       = piso narrativo. Sube 8 por nivel pero lo topeo en 40 con
-                    Math.min, si no en el nivel 4 ya arrancaria en 32-40 y
-                    sumado al dano se iria a 100 sin que el jugador haga nada.
-       fromDamage = lo que perdi de integridad, pero pesado 0.75 para que
+       base       = piso narrativo. Sube INFECTION_PER_LEVEL (6) por nivel pero
+                    lo topeo en INFECTION_LEVEL_CAP (30) con Math.min, si no en
+                    el nivel 4 ya arrancaria alta y sumado al dano se iria a
+                    100 sin que el jugador haga nada.
+       fromDamage = lo que perdi de integridad, pero pesado 0.6 para que
                     perder 100 de integridad NO signifique 100 de infeccion:
                     quiero que las dos barras se muevan juntas pero no sean
                     espejo exacto (si fueran iguales, una de las dos sobra).
@@ -320,8 +332,9 @@
      pop-ups (cada cuanto aparecen): una sola formula, tres consumidores. */
   GT.getInfection = function () {
     var s = GT.state;
-    var base = Math.min(40, s.level * 8);
-    var fromDamage = (GT.CONFIG.MAX_INTEGRITY - s.integrity) * 0.75;
+    var C = GT.CONFIG;
+    var base = Math.min(C.INFECTION_LEVEL_CAP, s.level * C.INFECTION_PER_LEVEL);
+    var fromDamage = (C.MAX_INTEGRITY - s.integrity) * C.INFECTION_FROM_DAMAGE;
     return Math.max(0, Math.min(100, Math.round(base + fromDamage)));
   };
 

@@ -13,7 +13,7 @@
 
   var WIN_ID = 'boss';
 
-  var TIME_LIMIT = 120;          // segundos para completar la purga
+  var TIME_LIMIT = 180;          // segundos para completar la purga
   var MAX_HP = 100;
   /* 20 por acierto: sin errores ni racha son 5 respuestas, una vuelta justa
      al cuestionario. El multiplicador de racha lo sube (x1.5 = 30, x2 = 40),
