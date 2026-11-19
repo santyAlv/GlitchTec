@@ -56,12 +56,12 @@ try {
 
     json_out(['ok' => true, 'user' => usuario_publico($sel->fetch())], 201);
 } catch (PDOException $e) {
-    /* 1062 es el código de MySQL para "entrada duplicada": saltó alguno de
+    /* SQLSTATE de "entrada duplicada" (23000 en MySQL, 23505 en Postgres): saltó alguno de
        los dos UNIQUE de la tabla. No consulto antes si el usuario existe: lo
        intento y dejo que la base decida, porque entre un SELECT previo y el
        INSERT otro registro podría colarse. El mensaje del error trae el nombre
        del índice que falló, y de ahí saco a qué campo culpar. */
-    if ((int)($e->errorInfo[1] ?? 0) === 1062) {
+    if (in_array($e->errorInfo[0] ?? '', ['23000', '23505'], true)) {
         $campo = (strpos($e->getMessage(), 'uq_email') !== false) ? 'email' : 'username';
         $msg   = ($campo === 'email')
             ? 'Ya hay una cuenta registrada con ese correo.'

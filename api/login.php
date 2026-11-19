@@ -33,15 +33,18 @@ if (strlen($login) > 120 || strlen($password) > PASS_MAX) {
 
 try {
     /* :u y :e llevan el mismo valor pero son dos marcadores distintos: con
-       sentencias preparadas reales no se puede repetir un mismo nombre. */
+       sentencias preparadas reales no se puede repetir un mismo nombre.
+       LOWER() en los dos lados: en MySQL la collation ya ignora mayúsculas,
+       pero en Postgres el parámetro llega como text y "citext = text" las
+       distingue. Así "SANTI" entra igual que "santi" con cualquier motor. */
     $stmt = db()->prepare(
         'SELECT id, username, email, password_hash, fecha_registro, intentos_fallidos,
                 (bloqueado_hasta IS NOT NULL AND bloqueado_hasta > NOW()) AS bloqueado
          FROM usuarios
-         WHERE username = :u OR email = :e
+         WHERE LOWER(username) = :u OR LOWER(email) = :e
          LIMIT 1'
     );
-    $stmt->execute([':u' => $login, ':e' => strtolower($login)]);
+    $stmt->execute([':u' => mb_strtolower($login), ':e' => strtolower($login)]);
     $user = $stmt->fetch();
 
     if (!$user) {
@@ -70,7 +73,7 @@ try {
             $upd = db()->prepare(
                 'UPDATE usuarios
                  SET intentos_fallidos = 0,
-                     bloqueado_hasta = DATE_ADD(NOW(), INTERVAL ' . LOGIN_BLOQUEO_MIN . ' MINUTE)
+                     bloqueado_hasta = NOW() + INTERVAL \'' . (int)LOGIN_BLOQUEO_MIN . '\' MINUTE
                  WHERE id = :id'
             );
             $upd->execute([':id' => $uid]);

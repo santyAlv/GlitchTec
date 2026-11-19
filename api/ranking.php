@@ -29,8 +29,8 @@ if ($mini !== '') {
     }
     try {
         $stmt = db()->prepare(
-            'SELECT p.player_name AS player, m.puntos, m.precision_pct AS `precision`,
-                    m.segundos AS `time`, m.created_at AS `at`
+            'SELECT p.player_name AS player, m.puntos, m.precision_pct AS "precision",
+                    m.segundos AS "time", m.created_at AS "at"
              FROM minijuegos m
              JOIN partidas p ON p.id = m.partida_id
              WHERE m.tipo = :tipo AND p.sospechosa = 0 AND p.status IN (\'won\', \'lost\')

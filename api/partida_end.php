@@ -50,11 +50,14 @@ try {
        cliente adulterado. Se deja pasar un margen de 10 s por la latencia. Si
        se marca, la partida se cierra igual pero no entra al ranking. */
     $vio = db()->prepare(
-        'SELECT TIMESTAMPDIFF(SECOND, started_at, NOW()) FROM partidas
+        'SELECT started_at, NOW() AS ahora FROM partidas
          WHERE id = :id AND token = :token'
     );
     $vio->execute([':id' => $matchId, ':token' => $token]);
-    $visto = $vio->fetchColumn();
+    $fila  = $vio->fetch();
+    /* Las dos fechas salen del mismo reloj (el de la base), así que la resta
+       no depende de la zona horaria de PHP. */
+    $visto = $fila ? strtotime((string)$fila['ahora']) - strtotime((string)$fila['started_at']) : false;
     $sospechosa = ($visto !== false && $elapsed > (int)$visto + 10) ? 1 : 0;
 
     $stmt = db()->prepare(

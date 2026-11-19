@@ -33,3 +33,7 @@ local_scores.json
 # Caché de PHP
 api/cache/
 *.cache
+
+# Datos del hosting (credenciales y destino SSH): nunca a git
+api/config.local.php
+tools/desplegar.env

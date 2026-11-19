@@ -1,0 +1,12 @@
+# Glitch.TEC — Apache del hosting
+# Sin listado de carpetas (EntidadesGraficas, api...)
+Options -Indexes
+
+# Los modelos 3D del banco se leen como texto
+AddType text/plain .obj .mtl
+
+# HTTPS obligatorio. Activalo cuando el certificado (AutoSSL del cPanel) ya
+# esté emitido para el dominio; antes de eso redirigiría a una página con error.
+# RewriteEngine On
+# RewriteCond %{HTTPS} off
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
