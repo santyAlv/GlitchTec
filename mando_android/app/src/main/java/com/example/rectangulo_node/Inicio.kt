@@ -33,13 +33,14 @@ class Inicio : AppCompatActivity() {
             insets
         }
     }
-    // El relay muestra un QR con "IP:PUERTO"; al leerlo se llena la config y se entra al mando
+    // El relay muestra un QR con "IP:PUERTO" (en la PC) o "dominio:80/mando/SALA" (en el VPS);
+    // al leerlo se llena la config y se entra al mando. La ruta de la sala va pegada al puerto.
     fun escanearQr() {
         val opciones = GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
         GmsBarcodeScanning.getClient(this, opciones).startScan()
             .addOnSuccessListener { codigo ->
-                val partes = codigo.rawValue?.split(":")
-                if (partes?.size == 2 && partes[1].toIntOrNull() != null) {
+                val partes = codigo.rawValue?.split(":", limit = 2)
+                if (partes?.size == 2 && partes[1].substringBefore('/').toIntOrNull() != null) {
                     etIp.setText(partes[0])
                     etPuerto.setText(partes[1])
                     irAnalogico()

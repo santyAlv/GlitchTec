@@ -74,7 +74,7 @@
                 android:autofillHints="ip"
                 android:background="@drawable/campo"
                 android:hint="@string/_192_168_1_35"
-                android:inputType="numberDecimal"
+                android:inputType="textUri"
                 android:paddingHorizontal="16dp"
                 android:textColor="@color/white"
                 android:textColorHint="#7F89C9" />
@@ -87,7 +87,7 @@
                 android:autofillHints="puerto"
                 android:background="@drawable/campo"
                 android:hint="@string/_3000"
-                android:inputType="number"
+                android:inputType="textUri"
                 android:paddingHorizontal="16dp"
                 android:textColor="@color/white"
                 android:textColorHint="#7F89C9" />
